@@ -1,0 +1,1199 @@
+No.     Time           Source                Destination           Protocol Length Info
+   6220 3.610343       1.1.1                 host                  USB      69     URB_ISOCHRONOUS in
+
+Frame 6220: 69 bytes on wire (552 bits), 69 bytes captured (552 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 14:50:12.332728000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 12:50:12.332728000 UTC
+    Epoch Arrival Time: 1750683012.332728000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000120000 seconds]
+    [Time delta from previous displayed frame: 0.000120000 seconds]
+    [Time since reference or first frame: 3.610343000 seconds]
+    Frame Number: 6220
+    Frame Length: 69 bytes (552 bits)
+    Capture Length: 69 bytes (552 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.1]
+    [Destination: host]
+    USBPcap pseudoheader length: 63
+    IRP ID: 0xffff920720bdb050
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_ISOCH_TRANSFER (0x000a)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x81, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0001 = Endpoint number: 1
+    URB transfer type: URB_ISOCHRONOUS (0x00)
+    Packet Data Length: 6
+    [Request in: 6178]
+    [Time from request: 0.017803000 seconds]
+    Isochronous transfer start frame: 1671707
+    Isochronous transfer number of packets: 2
+    Isochronous transfer error count: 0
+USB isochronous packet
+    ISO Data offset: 0x00000000
+    ISO Data length: 0x00000003 (relevant)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+    ISO Data: 303030
+USB isochronous packet
+    ISO Data offset: 0x00000003
+    ISO Data length: 0x00000003 (relevant)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+    ISO Data: 303030
+
+No.     Time           Source                Destination           Protocol Length Info
+   6221 3.610423       host                  1.1.1                 USB      63     URB_ISOCHRONOUS in
+
+Frame 6221: 63 bytes on wire (504 bits), 63 bytes captured (504 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 14:50:12.332808000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 12:50:12.332808000 UTC
+    Epoch Arrival Time: 1750683012.332808000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000080000 seconds]
+    [Time delta from previous displayed frame: 0.000080000 seconds]
+    [Time since reference or first frame: 3.610423000 seconds]
+    Frame Number: 6221
+    Frame Length: 63 bytes (504 bits)
+    Capture Length: 63 bytes (504 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.1]
+    USBPcap pseudoheader length: 63
+    IRP ID: 0xffff920720bdb050
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_ISOCH_TRANSFER (0x000a)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x81, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0001 = Endpoint number: 1
+    URB transfer type: URB_ISOCHRONOUS (0x00)
+    Packet Data Length: 0
+    Isochronous transfer start frame: 1671725
+    Isochronous transfer number of packets: 2
+    Isochronous transfer error count: 0
+USB isochronous packet
+    ISO Data offset: 0x00000000
+    ISO Data length: 0x00000040 (irrelevant)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+USB isochronous packet
+    ISO Data offset: 0x00000040
+    ISO Data length: 0x00000040 (irrelevant)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+
+No.     Time           Source                Destination           Protocol Length Info
+   6222 3.610446       host                  1.1.2                 USB      3399   URB_ISOCHRONOUS out
+
+Frame 6222: 3399 bytes on wire (27192 bits), 3399 bytes captured (27192 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 14:50:12.332831000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 12:50:12.332831000 UTC
+    Epoch Arrival Time: 1750683012.332831000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000023000 seconds]
+    [Time delta from previous displayed frame: 0.000023000 seconds]
+    [Time since reference or first frame: 3.610446000 seconds]
+    Frame Number: 6222
+    Frame Length: 3399 bytes (27192 bits)
+    Capture Length: 3399 bytes (27192 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.2]
+    USBPcap pseudoheader length: 519
+    IRP ID: 0xffff9207209b65a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_ISOCH_TRANSFER (0x000a)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x02, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0010 = Endpoint number: 2
+    URB transfer type: URB_ISOCHRONOUS (0x00)
+    Packet Data Length: 2880
+    Isochronous transfer start frame: 1671719
+    Isochronous transfer number of packets: 40
+    Isochronous transfer error count: 0
+USB isochronous packet
+    ISO Data offset: 0x00000000
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 3400007800000000000000000300000b0000000000000000690000ab00000000000000001800000f00000000000000001b0000490000000000000000f2ffff270000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000048
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 6f00004a0000000000000000ffffff6400000000000000000e00006b00000000000000004000005600000000000000005d00006200000000000000002400008a0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000090
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 8900005d0000000000000000680000890000000000000000d7ffff8e0000000000000000a100008300000000000000006700005600000000000000004f00005e0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000000d8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 2b00006600000000000000003e00003400000000000000005900004300000000000000000d00006b00000000000000002e00005c0000000000000000fdffff4a0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000120
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 1f00002400000000000000002300003200000000000000003200002600000000000000001600005c00000000000000005d0000ceffff0000000000004200004e0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000168
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 0a0000fcffff0000000000006900003d0000000000000000390000510000000000000000d60000400000000000000000490000570000000000000000f8ffff1e0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000001b0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 2e00003f00000000000000003700003700000000000000003500004400000000000000001e00004e00000000000000002a00004700000000000000004f00005a0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000001f8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 7d0000200000000000000000400000690000000000000000550000910000000000000000fbffff3400000000000000004a0000b000000000000000004d0000feffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000240
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 450000f6ffff0000000000000e0000c00000000000000000d8ffff4b00000000000000003700006700000000000000002a00007e00000000000000004f00004a0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000288
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: caffff7700000000000000005b0000740000000000000000ebffff880000000000000000bd00002a0000000000000000ebffffedffff000000000000630000920000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000002d0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 2300001a0000000000000000090000f80000000000000000860000f0ffff0000000000007a0000860000000000000000bffffff8ffff000000000000520000710000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000318
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 480000e4ffff000000000000060000370000000000000000a30000ad0000000000000000b6ffff2e00000000000000004d00004a0000000000000000e4ffff5b0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000360
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 4200005c0000000000000000630000380000000000000000ebffff1e00000000000000003b00006c0000000000000000110000040000000000000000500000440000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000003a8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 670000700000000000000000120000800000000000000000d100003c0000000000000000caffff8100000000000000007d00001d0000000000000000220000190000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000003f0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: d4ffff090000000000000000510000680000000000000000cc00001900000000000000003b0000630000000000000000cbffff4a0000000000000000220000deffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000438
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 110000470000000000000000450000daffff0000000000006d00005b00000000000000006800009800000000000000001e00008900000000000000002f00003a0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000480
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 8800006b0000000000000000e2ffff1d00000000000000004400009a0000000000000000d7ffff690000000000000000610000f7ffff0000000000003600002e0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000004c8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: f8ffff3500000000000000001c0000010000000000000000daffff530000000000000000ccfffff3ffff0000000000003800001a0000000000000000daffff2f0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000510
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: f8ffffc1ffff0000000000007d0000380000000000000000170000ccffff0000000000003a0000beffff0000000000006e0000020000000000000000edffffb2ffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000558
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 8f00006d0000000000000000dfffff3900000000000000007e0000980000000000000000d6ffff1a0000000000000000d4ffff9b0000000000000000710000f7ffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x000005a0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: e9ffffa00000000000000000100000bbffff0000000000006d0000ad00000000000000001800003d00000000000000006700001d00000000000000001d00002e0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000005e8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 790000810000000000000000e1ffff4700000000000000007d00000000000000000000000200003600000000000000004000005f00000000000000000d0000360000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000630
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 4900007400000000000000006300006f00000000000000001e0000520000000000000000ad00005c0000000000000000d0ffff5d0000000000000000c40000340000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000678
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: d7ffff5f00000000000000006b00001a00000000000000005a00004900000000000000005800003d0000000000000000430000fcffff000000000000410000870000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000006c0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 0a0000eeffff0000000000003600005f00000000000000006800004c0000000000000000f4ffff770000000000000000780000830000000000000000faffff490000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000708
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 3d00000d0000000000000000460000460000000000000000210000370000000000000000e7ffff850000000000000000070000450000000000000000d4ffff200000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000750
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 1f00006700000000000000005700003d00000000000000002500002e00000000000000002800005c0000000000000000ffffff440000000000000000270000700000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000798
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: e3ffff6a00000000000000003f0000a7ffff000000000000d4ffffc300000000000000004d00004c0000000000000000eeffff470000000000000000f9ffff550000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000007e0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 1300004e0000000000000000640000650000000000000000afffffeaffff0000000000006d0000990000000000000000c1ffff2e0000000000000000d0ffff610000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000828
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: edffff5800000000000000007200000c0000000000000000f3ffff9e0000000000000000720000dfffff0000000000002a0000b20000000000000000f9ffff350000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000870
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: d3ffff830000000000000000e4ffff4400000000000000003500004400000000000000001e0000300000000000000000b1ffff7000000000000000007d0000050000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000008b8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: b7ffff000000000000000000bc00007f00000000000000002fffff0e00000000000000007f0000760000000000000000aaffff460000000000000000820000030000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000900
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: b7ffff7000000000000000003a00002f0000000000000000310000a30000000000000000efffff340000000000000000630000410000000000000000dcffff410000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000948
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 510000650000000000000000faffffd800000000000000005b0000270000000000000000160000400000000000000000dfffff350000000000000000220000460000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000990
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 310000ffffff0000000000001a0000df0000000000000000140000140000000000000000c7ffff9d00000000000000003e00006100000000000000001c0000930000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000009d8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 2000004b00000000000000002e0000740000000000000000a7ffff4200000000000000004900008a0000000000000000cdffff1b0000000000000000470000b70000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000a20
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 2d0000f8ffff0000000000000800009100000000000000002c00003000000000000000007a00004600000000000000002e0000b70000000000000000380000e6ffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000a68
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: c0ffff6a00000000000000006f00002c00000000000000001700003f0000000000000000330000200000000000000000040000790000000000000000f1ffff2b0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000ab0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 3c00004100000000000000003b00002200000000000000003f0000200000000000000000690000a40000000000000000390000360000000000000000820000220000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000af8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: b6ffff8d0000000000000000340000e8ffff000000000000dbffff590000000000000000840000580000000000000000d7ffff4a0000000000000000f9ffff0a0000000000000000
+
+No.     Time           Source                Destination           Protocol Length Info
+   6225 3.611797       1.1.6                 host                  USB      131099 URB_BULK in
+
+Frame 6225: 131099 bytes on wire (1048792 bits), 65535 bytes captured (524280 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 14:50:12.334182000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 12:50:12.334182000 UTC
+    Epoch Arrival Time: 1750683012.334182000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000427000 seconds]
+    [Time delta from previous displayed frame: 0.001351000 seconds]
+    [Time since reference or first frame: 3.611797000 seconds]
+    Frame Number: 6225
+    Frame Length: 131099 bytes (1048792 bits)
+    Capture Length: 65535 bytes (524280 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.6]
+    [Destination: host]
+    USBPcap pseudoheader length: 27
+    IRP ID: 0xffff92071af66ab0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER (0x0009)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x86, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0110 = Endpoint number: 6
+    URB transfer type: URB_BULK (0x03)
+    Packet Data Length: 131072
+    [Request in: 5546]
+    [Time from request: 0.297256000 seconds]
+    [bInterfaceClass: Vendor Specific (0xff)]
+Leftover Capture Data […]: 000000000000000000000000000000000001010100010000000000000000000000000000000000000000000000000000000100000000010000000000000000000000000000000000000000000000000000000101010000010000000000000000000000000000000000
+
+No.     Time           Source                Destination           Protocol Length Info
+   6226 3.612345       1.1.1                 host                  USB      69     URB_ISOCHRONOUS in
+
+Frame 6226: 69 bytes on wire (552 bits), 69 bytes captured (552 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 14:50:12.334730000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 12:50:12.334730000 UTC
+    Epoch Arrival Time: 1750683012.334730000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000548000 seconds]
+    [Time delta from previous displayed frame: 0.000548000 seconds]
+    [Time since reference or first frame: 3.612345000 seconds]
+    Frame Number: 6226
+    Frame Length: 69 bytes (552 bits)
+    Capture Length: 69 bytes (552 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.1]
+    [Destination: host]
+    USBPcap pseudoheader length: 63
+    IRP ID: 0xffff920719bd6560
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_ISOCH_TRANSFER (0x000a)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x81, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0001 = Endpoint number: 1
+    URB transfer type: URB_ISOCHRONOUS (0x00)
+    Packet Data Length: 6
+    [Request in: 6182]
+    [Time from request: 0.017887000 seconds]
+    Isochronous transfer start frame: 1671709
+    Isochronous transfer number of packets: 2
+    Isochronous transfer error count: 0
+USB isochronous packet
+    ISO Data offset: 0x00000000
+    ISO Data length: 0x00000003 (relevant)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+    ISO Data: 303030
+USB isochronous packet
+    ISO Data offset: 0x00000003
+    ISO Data length: 0x00000003 (relevant)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+    ISO Data: 303030
+
+No.     Time           Source                Destination           Protocol Length Info
+   6227 3.612566       host                  1.1.1                 USB      63     URB_ISOCHRONOUS in
+
+Frame 6227: 63 bytes on wire (504 bits), 63 bytes captured (504 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 14:50:12.334951000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 12:50:12.334951000 UTC
+    Epoch Arrival Time: 1750683012.334951000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000221000 seconds]
+    [Time delta from previous displayed frame: 0.000221000 seconds]
+    [Time since reference or first frame: 3.612566000 seconds]
+    Frame Number: 6227
+    Frame Length: 63 bytes (504 bits)
+    Capture Length: 63 bytes (504 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.1]
+    USBPcap pseudoheader length: 63
+    IRP ID: 0xffff920719bd6560
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_ISOCH_TRANSFER (0x000a)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x81, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0001 = Endpoint number: 1
+    URB transfer type: URB_ISOCHRONOUS (0x00)
+    Packet Data Length: 0
+    Isochronous transfer start frame: 1671727
+    Isochronous transfer number of packets: 2
+    Isochronous transfer error count: 0
+USB isochronous packet
+    ISO Data offset: 0x00000000
+    ISO Data length: 0x00000040 (irrelevant)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+USB isochronous packet
+    ISO Data offset: 0x00000040
+    ISO Data length: 0x00000040 (irrelevant)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+
+No.     Time           Source                Destination           Protocol Length Info
+   6228 3.612603       host                  1.1.6                 USB      27     URB_BULK in
+
+Frame 6228: 27 bytes on wire (216 bits), 27 bytes captured (216 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 14:50:12.334988000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 12:50:12.334988000 UTC
+    Epoch Arrival Time: 1750683012.334988000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000037000 seconds]
+    [Time delta from previous displayed frame: 0.000037000 seconds]
+    [Time since reference or first frame: 3.612603000 seconds]
+    Frame Number: 6228
+    Frame Length: 27 bytes (216 bits)
+    Capture Length: 27 bytes (216 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.6]
+    USBPcap pseudoheader length: 27
+    IRP ID: 0xffff92071af66ab0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER (0x0009)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x86, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0110 = Endpoint number: 6
+    URB transfer type: URB_BULK (0x03)
+    Packet Data Length: 0
+    [bInterfaceClass: Vendor Specific (0xff)]
+
+No.     Time           Source                Destination           Protocol Length Info
+   6231 3.614346       1.1.1                 host                  USB      69     URB_ISOCHRONOUS in
+
+Frame 6231: 69 bytes on wire (552 bits), 69 bytes captured (552 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 14:50:12.336731000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 12:50:12.336731000 UTC
+    Epoch Arrival Time: 1750683012.336731000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000978000 seconds]
+    [Time delta from previous displayed frame: 0.001743000 seconds]
+    [Time since reference or first frame: 3.614346000 seconds]
+    Frame Number: 6231
+    Frame Length: 69 bytes (552 bits)
+    Capture Length: 69 bytes (552 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.1]
+    [Destination: host]
+    USBPcap pseudoheader length: 63
+    IRP ID: 0xffff920720df8010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_ISOCH_TRANSFER (0x000a)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x81, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0001 = Endpoint number: 1
+    URB transfer type: URB_ISOCHRONOUS (0x00)
+    Packet Data Length: 6
+    [Request in: 6187]
+    [Time from request: 0.017893000 seconds]
+    Isochronous transfer start frame: 1671711
+    Isochronous transfer number of packets: 2
+    Isochronous transfer error count: 0
+USB isochronous packet
+    ISO Data offset: 0x00000000
+    ISO Data length: 0x00000003 (relevant)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+    ISO Data: 303030
+USB isochronous packet
+    ISO Data offset: 0x00000003
+    ISO Data length: 0x00000003 (relevant)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+    ISO Data: 303030
+
+No.     Time           Source                Destination           Protocol Length Info
+   6232 3.614461       host                  1.1.1                 USB      63     URB_ISOCHRONOUS in
+
+Frame 6232: 63 bytes on wire (504 bits), 63 bytes captured (504 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 14:50:12.336846000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 12:50:12.336846000 UTC
+    Epoch Arrival Time: 1750683012.336846000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000115000 seconds]
+    [Time delta from previous displayed frame: 0.000115000 seconds]
+    [Time since reference or first frame: 3.614461000 seconds]
+    Frame Number: 6232
+    Frame Length: 63 bytes (504 bits)
+    Capture Length: 63 bytes (504 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.1]
+    USBPcap pseudoheader length: 63
+    IRP ID: 0xffff920720df8010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_ISOCH_TRANSFER (0x000a)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x81, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0001 = Endpoint number: 1
+    URB transfer type: URB_ISOCHRONOUS (0x00)
+    Packet Data Length: 0
+    Isochronous transfer start frame: 1671729
+    Isochronous transfer number of packets: 2
+    Isochronous transfer error count: 0
+USB isochronous packet
+    ISO Data offset: 0x00000000
+    ISO Data length: 0x00000040 (irrelevant)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+USB isochronous packet
+    ISO Data offset: 0x00000040
+    ISO Data length: 0x00000040 (irrelevant)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+
+No.     Time           Source                Destination           Protocol Length Info
+   6233 3.615222       1.1.2                 host                  USB      519    URB_ISOCHRONOUS out
+
+Frame 6233: 519 bytes on wire (4152 bits), 519 bytes captured (4152 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 14:50:12.337607000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 12:50:12.337607000 UTC
+    Epoch Arrival Time: 1750683012.337607000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000761000 seconds]
+    [Time delta from previous displayed frame: 0.000761000 seconds]
+    [Time since reference or first frame: 3.615222000 seconds]
+    Frame Number: 6233
+    Frame Length: 519 bytes (4152 bits)
+    Capture Length: 519 bytes (4152 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.2]
+    [Destination: host]
+    USBPcap pseudoheader length: 519
+    IRP ID: 0xffff9207209b6050
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_ISOCH_TRANSFER (0x000a)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x02, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0010 = Endpoint number: 2
+    URB transfer type: URB_ISOCHRONOUS (0x00)
+    Packet Data Length: 0
+    [Request in: 6198]
+    [Time from request: 0.014772000 seconds]
+    Isochronous transfer start frame: 1671709
+    Isochronous transfer number of packets: 40
+    Isochronous transfer error count: 0
+USB isochronous packet
+    ISO Data offset: 0x00000000
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000048
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000090
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000000d8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000120
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000168
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000001b0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000001f8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000240
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000288
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000002d0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000318
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000360
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000003a8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000003f0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000438
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000480
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000004c8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000510
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000558
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000005a0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000005e8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000630
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000678
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000006c0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000708
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000750
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000798
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000007e0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000828
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000870
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000008b8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000900
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000948
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000990
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000009d8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000a20
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000a68
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000ab0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000af8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+
+No.     Time           Source                Destination           Protocol Length Info
+   6236 3.616346       1.1.1                 host                  USB      69     URB_ISOCHRONOUS in
+
+Frame 6236: 69 bytes on wire (552 bits), 69 bytes captured (552 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 14:50:12.338731000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 12:50:12.338731000 UTC
+    Epoch Arrival Time: 1750683012.338731000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000975000 seconds]
+    [Time delta from previous displayed frame: 0.001124000 seconds]
+    [Time since reference or first frame: 3.616346000 seconds]
+    Frame Number: 6236
+    Frame Length: 69 bytes (552 bits)
+    Capture Length: 69 bytes (552 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.1]
+    [Destination: host]
+    USBPcap pseudoheader length: 63
+    IRP ID: 0xffff920722de5560
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_ISOCH_TRANSFER (0x000a)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x81, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0001 = Endpoint number: 1
+    URB transfer type: URB_ISOCHRONOUS (0x00)
+    Packet Data Length: 6
+    [Request in: 6192]
+    [Time from request: 0.017807000 seconds]
+    Isochronous transfer start frame: 1671713
+    Isochronous transfer number of packets: 2
+    Isochronous transfer error count: 0
+USB isochronous packet
+    ISO Data offset: 0x00000000
+    ISO Data length: 0x00000003 (relevant)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+    ISO Data: 303030
+USB isochronous packet
+    ISO Data offset: 0x00000003
+    ISO Data length: 0x00000003 (relevant)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+    ISO Data: 303030
+
+No.     Time           Source                Destination           Protocol Length Info
+   6237 3.616460       host                  1.1.1                 USB      63     URB_ISOCHRONOUS in
+
+Frame 6237: 63 bytes on wire (504 bits), 63 bytes captured (504 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 14:50:12.338845000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 12:50:12.338845000 UTC
+    Epoch Arrival Time: 1750683012.338845000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000114000 seconds]
+    [Time delta from previous displayed frame: 0.000114000 seconds]
+    [Time since reference or first frame: 3.616460000 seconds]
+    Frame Number: 6237
+    Frame Length: 63 bytes (504 bits)
+    Capture Length: 63 bytes (504 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.1]
+    USBPcap pseudoheader length: 63
+    IRP ID: 0xffff920722de5560
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_ISOCH_TRANSFER (0x000a)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x81, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0001 = Endpoint number: 1
+    URB transfer type: URB_ISOCHRONOUS (0x00)
+    Packet Data Length: 0
+    Isochronous transfer start frame: 1671731
+    Isochronous transfer number of packets: 2
+    Isochronous transfer error count: 0
+USB isochronous packet
+    ISO Data offset: 0x00000000
+    ISO Data length: 0x00000040 (irrelevant)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+USB isochronous packet
+    ISO Data offset: 0x00000040
+    ISO Data length: 0x00000040 (irrelevant)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+
+No.     Time           Source                Destination           Protocol Length Info
+   6238 3.616484       host                  1.1.2                 USB      3399   URB_ISOCHRONOUS out
+
+Frame 6238: 3399 bytes on wire (27192 bits), 3399 bytes captured (27192 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 14:50:12.338869000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 12:50:12.338869000 UTC
+    Epoch Arrival Time: 1750683012.338869000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000024000 seconds]
+    [Time delta from previous displayed frame: 0.000024000 seconds]
+    [Time since reference or first frame: 3.616484000 seconds]
+    Frame Number: 6238
+    Frame Length: 3399 bytes (27192 bits)
+    Capture Length: 3399 bytes (27192 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.2]
+    USBPcap pseudoheader length: 519
+    IRP ID: 0xffff9207209b6050
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_ISOCH_TRANSFER (0x000a)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x02, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0010 = Endpoint number: 2
+    URB transfer type: URB_ISOCHRONOUS (0x00)
+    Packet Data Length: 2880
+    Isochronous transfer start frame: 1671724
+    Isochronous transfer number of packets: 40
+    Isochronous transfer error count: 0
+USB isochronous packet
+    ISO Data offset: 0x00000000
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 610000570000000000000000e0ffff95ffff000000000000f0ffffaa0000000000000000060000c0ffff000000000000430000850000000000000000ceffff200000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000048
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 1d00007700000000000000003b0000a2ffff0000000000001500009a0000000000000000600000c6ffff0000000000008000002a0000000000000000b1ffff260000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000090
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 6900005a0000000000000000270000f9ffff0000000000000a00006100000000000000001200002c0000000000000000190000240000000000000000eaffff840000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000000d8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: e4ffffd8ffff0000000000001d00009d0000000000000000ddffff95ffff0000000000001300007c0000000000000000f2ffff2e0000000000000000070000a70000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000120
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 3d00006c00000000000000000200002e00000000000000006700008b0000000000000000abfffff7ffff000000000000220000a20000000000000000200000f0ffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000168
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: f8ffff5c00000000000000009c0000100000000000000000d7ffff4100000000000000004b0000d7ffff000000000000b8ffff7f0000000000000000230000190000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000001b0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 010000b500000000000000002c0000efffff000000000000960000580000000000000000280000130000000000000000d7ffff330000000000000000b600003a0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000001f8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: e2ffff4300000000000000007000008100000000000000003400004c0000000000000000020000350000000000000000650000ffffff000000000000520000e9ffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000240
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: f5ffffa20000000000000000570000440000000000000000580000fcffff000000000000fdffff9d0000000000000000730000580000000000000000dfffffd0ffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000288
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 4d0000960000000000000000260000b3ffff0000000000003d00009000000000000000008c0000120000000000000000a6ffff7400000000000000003200006b0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000002d0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: f8ffff310000000000000000deffff8400000000000000002e00002900000000000000002d0000460000000000000000eaffff0b0000000000000000f8ffff470000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000318
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 1600001000000000000000002e0000790000000000000000b9ffff2600000000000000005d00009e0000000000000000bbffff050000000000000000f0ffff4d0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000360
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: f1ffff4b00000000000000000d00000a0000000000000000d2ffff600000000000000000e1fffff1ffff000000000000cdffff0300000000000000000500008fffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x000003a8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 2d00006c0000000000000000bdffff500000000000000000b500009a0000000000000000c8ffffcfffff000000000000f8ffff400000000000000000b000000a0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000003f0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: dbffff2600000000000000005f00003b00000000000000003400004c0000000000000000170000490000000000000000d4ffffecffff000000000000400000580000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000438
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: f5fffffaffff000000000000010000250000000000000000edfffffaffff0000000000003d00003d0000000000000000f0ffffffffff000000000000dfffff620000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000480
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 4c0000f3ffff000000000000c3ffffddffff0000000000008c00002700000000000000009dffff760000000000000000850000130000000000000000d9ffffe7ffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x000004c8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 0f00002700000000000000006700003e00000000000000006300001d00000000000000006c0000c1ffff000000000000cbffff430000000000000000f4ffff010000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000510
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 2a00005f00000000000000001400000b00000000000000003700004600000000000000003800000f00000000000000005200000e00000000000000000d0000fdffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000558
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 8b0000370000000000000000320000220000000000000000ecffffb2ffff0000000000003100000f0000000000000000110000f5ffff0000000000002500001c0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000005a0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 250000fdffff000000000000210000620000000000000000750000d9ffff0000000000007dffff5300000000000000002b0000f0ffff000000000000100000150000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000005e8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: f8ffff0c0000000000000000400000220000000000000000bf00001900000000000000000c0000390000000000000000fbffff120000000000000000250000c5ffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000630
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: c2ffff490000000000000000200000efffff0000000000002400006100000000000000001800004c0000000000000000100000d6ffff0000000000004d0000ad0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000678
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 5d00007affff000000000000ffffffa90000000000000000280000a9ffff0000000000003b00005300000000000000000c000075ffff000000000000140000350000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000006c0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 360000e5ffff0000000000003a0000520000000000000000f3ffffd8ffff000000000000470000fdffff000000000000f2ffffd4ffff000000000000d8ffffacffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000708
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: f3ffff5b0000000000000000150000f1ffff000000000000f8ffff410000000000000000e2ffffcaffff000000000000f8ffff5c0000000000000000540000ceffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000750
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 2b0000a100000000000000003d000090ffff000000000000290000030000000000000000f5ffffc0ffff0000000000001b00004f00000000000000000400000c0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000798
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 0c0000d8ffff000000000000470000690000000000000000c8ffffe0ffff0000000000003600004300000000000000006f0000180000000000000000060000480000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000007e0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 440000570000000000000000b9ffff1c00000000000000006100001f00000000000000008bffffc1ffff000000000000140000eaffff000000000000330000100000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000828
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 0100000100000000000000003a00008c0000000000000000010000f4ffff0000000000002c00002800000000000000001a00006fffff00000000000097ffff3c0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000870
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: deffffeeffff000000000000a6fffffcffff000000000000340000d9ffff000000000000eaffff700000000000000000e3ffff0700000000000000004f0000080000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000008b8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: b9ffff2f0000000000000000e3ffffd4ffff000000000000e1ffff130000000000000000f0ffffb8ffff000000000000e8ffff290000000000000000ccffff93ffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000900
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 5500005100000000000000008bffffe8ffff000000000000290000560000000000000000eeffffbcffff000000000000d9ffff270000000000000000270000a2ffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000948
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 0800005f0000000000000000b9ffffe2ffff0000000000005b00003300000000000000000c0000d7ffff000000000000010000580000000000000000a0ffffd6ffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000990
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 000000190000000000000000090000baffff0000000000000e0000d7ffff0000000000000100002e000000000000000099ffff8bffff0000000000002b0000150000000000000000
+USB isochronous packet
+    ISO Data offset: 0x000009d8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: d8ffffb7ffff000000000000330000faffff000000000000020000dcffff0000000000000200003a0000000000000000cfffffd6ffff000000000000c3ffff0c0000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000a20
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 2500005b0000000000000000120000dcffff0000000000003f0000e2ffff000000000000f8ffffbdffff0000000000004c0000540000000000000000fdffff310000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000a68
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: a7ffffb1ffff000000000000fcfffff7ffff0000000000000b00000f00000000000000008fffff4f0000000000000000dcffffbcffff000000000000a8ffff540000000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000ab0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 2b0000f6ffff000000000000c6ffffd9ffff0000000000000b0000630000000000000000c4ffffc0ffff000000000000d6ffff270000000000000000250000edffff000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000af8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: d8ffff4b0000000000000000ffffffb4ffff000000000000c7ffff0000000000000000004c0000e2ffff000000000000d8ffffeaffff000000000000230000300000000000000000

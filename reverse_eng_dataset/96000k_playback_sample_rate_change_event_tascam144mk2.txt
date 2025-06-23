@@ -1,0 +1,2846 @@
+No.     Time           Source                Destination           Protocol Length Info
+   4168 2.215149       host                  1.1.0                 USB      36     SET CONFIGURATION Request
+
+Frame 4168: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.487442000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.487442000 UTC
+    Epoch Arrival Time: 1750610210.487442000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.010523000 seconds]
+    [Time delta from previous displayed frame: 0.010523000 seconds]
+    [Time since reference or first frame: 2.215149000 seconds]
+    Frame Number: 4168
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3127c0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_SELECT_CONFIGURATION (0x0000)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4169]
+    Control transfer stage: Setup (0)
+Setup Data
+    bmRequestType: 0x00
+        0... .... = Direction: Host-to-device
+        .00. .... = Type: Standard (0x0)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: SET CONFIGURATION (9)
+    bConfigurationValue: 0
+    wIndex: 0 (0x0000)
+    wLength: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+   4169 2.215576       1.1.0                 host                  USB      28     SET CONFIGURATION Response
+
+Frame 4169: 28 bytes on wire (224 bits), 28 bytes captured (224 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.487869000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.487869000 UTC
+    Epoch Arrival Time: 1750610210.487869000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000427000 seconds]
+    [Time delta from previous displayed frame: 0.000427000 seconds]
+    [Time since reference or first frame: 2.215576000 seconds]
+    Frame Number: 4169
+    Frame Length: 28 bytes (224 bits)
+    Capture Length: 28 bytes (224 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3127c0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_SELECT_CONFIGURATION (0x0000)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 0
+    [Request in: 4168]
+    [Time from request: 0.000427000 seconds]
+    Control transfer stage: Complete (3)
+
+No.     Time           Source                Destination           Protocol Length Info
+   4170 2.215588       host                  1.1.0                 USB      36     GET DESCRIPTOR Request DEVICE
+
+Frame 4170: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.487881000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.487881000 UTC
+    Epoch Arrival Time: 1750610210.487881000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000012000 seconds]
+    [Time delta from previous displayed frame: 0.000012000 seconds]
+    [Time since reference or first frame: 2.215588000 seconds]
+    Frame Number: 4170
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3127c0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE (0x000b)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4171]
+    Control transfer stage: Setup (0)
+Setup Data
+    bmRequestType: 0x80
+        1... .... = Direction: Device-to-host
+        .00. .... = Type: Standard (0x0)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: GET DESCRIPTOR (6)
+    Descriptor Index: 0x00
+    bDescriptorType: DEVICE (0x01)
+    Language Id: no language specified (0x0000)
+    wLength: 18
+
+No.     Time           Source                Destination           Protocol Length Info
+   4171 2.215729       1.1.0                 host                  USB      46     GET DESCRIPTOR Response DEVICE
+
+Frame 4171: 46 bytes on wire (368 bits), 46 bytes captured (368 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.488022000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.488022000 UTC
+    Epoch Arrival Time: 1750610210.488022000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000141000 seconds]
+    [Time delta from previous displayed frame: 0.000141000 seconds]
+    [Time since reference or first frame: 2.215729000 seconds]
+    Frame Number: 4171
+    Frame Length: 46 bytes (368 bits)
+    Capture Length: 46 bytes (368 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3127c0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 18
+    [Request in: 4170]
+    [Time from request: 0.000141000 seconds]
+    Control transfer stage: Complete (3)
+DEVICE DESCRIPTOR
+    bLength: 18
+    bDescriptorType: 0x01 (DEVICE)
+    bcdUSB: 0x0200
+    bDeviceClass: Vendor Specific (0xff)
+    bDeviceSubClass: 255
+    bDeviceProtocol: 255
+    bMaxPacketSize0: 64
+    idVendor: TEAC Corp. (0x0644)
+    idProduct: Unknown (0x8020)
+    bcdDevice: 0x0100
+    iManufacturer: 1
+    iProduct: 2
+    iSerialNumber: 3
+    bNumConfigurations: 1
+
+No.     Time           Source                Destination           Protocol Length Info
+   4172 2.216977       host                  1.1.0                 USB      36     URB_CONTROL in
+
+Frame 4172: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.489270000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.489270000 UTC
+    Epoch Arrival Time: 1750610210.489270000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.001248000 seconds]
+    [Time delta from previous displayed frame: 0.001248000 seconds]
+    [Time since reference or first frame: 2.216977000 seconds]
+    Frame Number: 4172
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_VENDOR_DEVICE (0x0017)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4173]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Unknown (0xffff)]
+Setup Data
+    bmRequestType: 0xc0
+        1... .... = Direction: Device-to-host
+        .10. .... = Type: Vendor (0x2)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: 86
+    wValue: 0x0000
+    wIndex: 0 (0x0000)
+    wLength: 15
+
+No.     Time           Source                Destination           Protocol Length Info
+   4173 2.217107       1.1.0                 host                  USB      43     URB_CONTROL in
+
+Frame 4173: 43 bytes on wire (344 bits), 43 bytes captured (344 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.489400000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.489400000 UTC
+    Epoch Arrival Time: 1750610210.489400000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000130000 seconds]
+    [Time delta from previous displayed frame: 0.000130000 seconds]
+    [Time since reference or first frame: 2.217107000 seconds]
+    Frame Number: 4173
+    Frame Length: 43 bytes (344 bits)
+    Capture Length: 43 bytes (344 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 15
+    [Request in: 4172]
+    [Time from request: 0.000130000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Unknown (0xffff)]
+CONTROL response data: 31020356322e30332020202000ffff
+
+No.     Time           Source                Destination           Protocol Length Info
+   4174 2.217119       host                  1.1.0                 USB      36     URB_CONTROL in
+
+Frame 4174: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.489412000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.489412000 UTC
+    Epoch Arrival Time: 1750610210.489412000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000012000 seconds]
+    [Time delta from previous displayed frame: 0.000012000 seconds]
+    [Time since reference or first frame: 2.217119000 seconds]
+    Frame Number: 4174
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_VENDOR_DEVICE (0x0017)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4175]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Unknown (0xffff)]
+Setup Data
+    bmRequestType: 0xc0
+        1... .... = Direction: Device-to-host
+        .10. .... = Type: Vendor (0x2)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: 86
+    wValue: 0x0000
+    wIndex: 0 (0x0000)
+    wLength: 15
+
+No.     Time           Source                Destination           Protocol Length Info
+   4175 2.217301       1.1.0                 host                  USB      43     URB_CONTROL in
+
+Frame 4175: 43 bytes on wire (344 bits), 43 bytes captured (344 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.489594000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.489594000 UTC
+    Epoch Arrival Time: 1750610210.489594000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000182000 seconds]
+    [Time delta from previous displayed frame: 0.000182000 seconds]
+    [Time since reference or first frame: 2.217301000 seconds]
+    Frame Number: 4175
+    Frame Length: 43 bytes (344 bits)
+    Capture Length: 43 bytes (344 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 15
+    [Request in: 4174]
+    [Time from request: 0.000182000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Unknown (0xffff)]
+CONTROL response data: 31020356322e30332020202000ffff
+
+No.     Time           Source                Destination           Protocol Length Info
+   4176 2.217313       host                  1.1.0                 USB      36     GET DESCRIPTOR Request STRING
+
+Frame 4176: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.489606000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.489606000 UTC
+    Epoch Arrival Time: 1750610210.489606000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000012000 seconds]
+    [Time delta from previous displayed frame: 0.000012000 seconds]
+    [Time since reference or first frame: 2.217313000 seconds]
+    Frame Number: 4176
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: Unknown (0xffffde07)
+    URB Function: URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE (0x000b)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4177]
+    Control transfer stage: Setup (0)
+Setup Data
+    bmRequestType: 0x80
+        1... .... = Direction: Device-to-host
+        .00. .... = Type: Standard (0x0)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: GET DESCRIPTOR (6)
+    Descriptor Index: 0x01
+    bDescriptorType: STRING (0x03)
+    Language Id: no language specified (0x0000)
+    wLength: 514
+
+No.     Time           Source                Destination           Protocol Length Info
+   4177 2.217426       1.1.0                 host                  USB      42     GET DESCRIPTOR Response STRING
+
+Frame 4177: 42 bytes on wire (336 bits), 42 bytes captured (336 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.489719000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.489719000 UTC
+    Epoch Arrival Time: 1750610210.489719000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000113000 seconds]
+    [Time delta from previous displayed frame: 0.000113000 seconds]
+    [Time since reference or first frame: 2.217426000 seconds]
+    Frame Number: 4177
+    Frame Length: 42 bytes (336 bits)
+    Capture Length: 42 bytes (336 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 14
+    [Request in: 4176]
+    [Time from request: 0.000113000 seconds]
+    Control transfer stage: Complete (3)
+STRING DESCRIPTOR
+    bLength: 14
+    bDescriptorType: 0x03 (STRING)
+    bString: TASCAM
+
+No.     Time           Source                Destination           Protocol Length Info
+   4178 2.217442       host                  1.1.0                 USB      36     GET DESCRIPTOR Request STRING
+
+Frame 4178: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.489735000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.489735000 UTC
+    Epoch Arrival Time: 1750610210.489735000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000016000 seconds]
+    [Time delta from previous displayed frame: 0.000016000 seconds]
+    [Time since reference or first frame: 2.217442000 seconds]
+    Frame Number: 4178
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE (0x000b)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4179]
+    Control transfer stage: Setup (0)
+Setup Data
+    bmRequestType: 0x80
+        1... .... = Direction: Device-to-host
+        .00. .... = Type: Standard (0x0)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: GET DESCRIPTOR (6)
+    Descriptor Index: 0x02
+    bDescriptorType: STRING (0x03)
+    Language Id: no language specified (0x0000)
+    wLength: 514
+
+No.     Time           Source                Destination           Protocol Length Info
+   4179 2.217576       1.1.0                 host                  USB      52     GET DESCRIPTOR Response STRING
+
+Frame 4179: 52 bytes on wire (416 bits), 52 bytes captured (416 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.489869000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.489869000 UTC
+    Epoch Arrival Time: 1750610210.489869000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000134000 seconds]
+    [Time delta from previous displayed frame: 0.000134000 seconds]
+    [Time since reference or first frame: 2.217576000 seconds]
+    Frame Number: 4179
+    Frame Length: 52 bytes (416 bits)
+    Capture Length: 52 bytes (416 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 24
+    [Request in: 4178]
+    [Time from request: 0.000134000 seconds]
+    Control transfer stage: Complete (3)
+STRING DESCRIPTOR
+    bLength: 24
+    bDescriptorType: 0x03 (STRING)
+    bString: US-144 MKII
+
+No.     Time           Source                Destination           Protocol Length Info
+   4180 2.217588       host                  1.1.0                 USB      36     GET DESCRIPTOR Request STRING
+
+Frame 4180: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.489881000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.489881000 UTC
+    Epoch Arrival Time: 1750610210.489881000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000012000 seconds]
+    [Time delta from previous displayed frame: 0.000012000 seconds]
+    [Time since reference or first frame: 2.217588000 seconds]
+    Frame Number: 4180
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE (0x000b)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4181]
+    Control transfer stage: Setup (0)
+Setup Data
+    bmRequestType: 0x80
+        1... .... = Direction: Device-to-host
+        .00. .... = Type: Standard (0x0)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: GET DESCRIPTOR (6)
+    Descriptor Index: 0x03
+    bDescriptorType: STRING (0x03)
+    Language Id: no language specified (0x0000)
+    wLength: 514
+
+No.     Time           Source                Destination           Protocol Length Info
+   4181 2.217720       1.1.0                 host                  USB      62     GET DESCRIPTOR Response STRING
+
+Frame 4181: 62 bytes on wire (496 bits), 62 bytes captured (496 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.490013000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.490013000 UTC
+    Epoch Arrival Time: 1750610210.490013000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000132000 seconds]
+    [Time delta from previous displayed frame: 0.000132000 seconds]
+    [Time since reference or first frame: 2.217720000 seconds]
+    Frame Number: 4181
+    Frame Length: 62 bytes (496 bits)
+    Capture Length: 62 bytes (496 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 34
+    [Request in: 4180]
+    [Time from request: 0.000132000 seconds]
+    Control transfer stage: Complete (3)
+STRING DESCRIPTOR
+    bLength: 34
+    bDescriptorType: 0x03 (STRING)
+    bString: no serial number
+
+No.     Time           Source                Destination           Protocol Length Info
+   4182 2.217732       host                  1.1.0                 USB      36     GET DESCRIPTOR Request CONFIGURATION
+
+Frame 4182: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.490025000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.490025000 UTC
+    Epoch Arrival Time: 1750610210.490025000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000012000 seconds]
+    [Time delta from previous displayed frame: 0.000012000 seconds]
+    [Time since reference or first frame: 2.217732000 seconds]
+    Frame Number: 4182
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE (0x000b)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4183]
+    Control transfer stage: Setup (0)
+Setup Data
+    bmRequestType: 0x80
+        1... .... = Direction: Device-to-host
+        .00. .... = Type: Standard (0x0)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: GET DESCRIPTOR (6)
+    Descriptor Index: 0x00
+    bDescriptorType: CONFIGURATION (0x02)
+    Language Id: no language specified (0x0000)
+    wLength: 1033
+
+No.     Time           Source                Destination           Protocol Length Info
+   4183 2.218015       1.1.0                 host                  USB      108    GET DESCRIPTOR Response CONFIGURATION
+
+Frame 4183: 108 bytes on wire (864 bits), 108 bytes captured (864 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.490308000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.490308000 UTC
+    Epoch Arrival Time: 1750610210.490308000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000283000 seconds]
+    [Time delta from previous displayed frame: 0.000283000 seconds]
+    [Time since reference or first frame: 2.218015000 seconds]
+    Frame Number: 4183
+    Frame Length: 108 bytes (864 bits)
+    Capture Length: 108 bytes (864 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 80
+    [Request in: 4182]
+    [Time from request: 0.000283000 seconds]
+    Control transfer stage: Complete (3)
+CONFIGURATION DESCRIPTOR
+    bLength: 9
+    bDescriptorType: 0x02 (CONFIGURATION)
+    wTotalLength: 80
+    bNumInterfaces: 2
+    bConfigurationValue: 1
+    iConfiguration: 0
+    Configuration bmAttributes: 0x80  NOT SELF-POWERED  NO REMOTE-WAKEUP
+        1... .... = Must be 1: Must be 1 for USB 1.1 and higher
+        .0.. .... = Self-Powered: This device is powered from the USB bus
+        ..0. .... = Remote Wakeup: This device does NOT support remote wakeup
+    bMaxPower: 240  (480mA)
+INTERFACE DESCRIPTOR (0.0): class Vendor Specific
+    bLength: 9
+    bDescriptorType: 0x04 (INTERFACE)
+    bInterfaceNumber: 0
+    bAlternateSetting: 0
+    bNumEndpoints: 0
+    bInterfaceClass: Vendor Specific (0xff)
+    bInterfaceSubClass: 0x00
+    bInterfaceProtocol: 0x00
+    iInterface: 0
+INTERFACE DESCRIPTOR (0.1): class Vendor Specific
+    bLength: 9
+    bDescriptorType: 0x04 (INTERFACE)
+    bInterfaceNumber: 0
+    bAlternateSetting: 1
+    bNumEndpoints: 3
+    bInterfaceClass: Vendor Specific (0xff)
+    bInterfaceSubClass: 0x00
+    bInterfaceProtocol: 0x00
+    iInterface: 0
+ENDPOINT DESCRIPTOR
+    bLength: 7
+    bDescriptorType: 0x05 (ENDPOINT)
+    bEndpointAddress: 0x02  OUT  Endpoint:2
+        0... .... = Direction: OUT Endpoint
+        .... 0010 = Endpoint Number: 0x2
+    bmAttributes: 0x05
+        .... ..01 = Transfertype: Isochronous-Transfer (0x1)
+        .... 01.. = Synchronisationtype: Asynchronous (0x1)
+        ..00 .... = Behaviourtype: Data-Endpoint (0x0)
+    wMaxPacketSize: 156
+        ...0 0... .... .... = Transactions per microframe: 1 (0)
+        .... .000 1001 1100 = Maximum Packet Size: 156
+    bInterval: 1
+ENDPOINT DESCRIPTOR
+    bLength: 7
+    bDescriptorType: 0x05 (ENDPOINT)
+    bEndpointAddress: 0x83  IN  Endpoint:3
+        1... .... = Direction: IN Endpoint
+        .... 0011 = Endpoint Number: 0x3
+    bmAttributes: 0x02
+        .... ..10 = Transfertype: Bulk-Transfer (0x2)
+    wMaxPacketSize: 512
+        .... .010 0000 0000 = Maximum Packet Size: 512
+    bInterval: 4
+ENDPOINT DESCRIPTOR
+    bLength: 7
+    bDescriptorType: 0x05 (ENDPOINT)
+    bEndpointAddress: 0x04  OUT  Endpoint:4
+        0... .... = Direction: OUT Endpoint
+        .... 0100 = Endpoint Number: 0x4
+    bmAttributes: 0x02
+        .... ..10 = Transfertype: Bulk-Transfer (0x2)
+    wMaxPacketSize: 512
+        .... .010 0000 0000 = Maximum Packet Size: 512
+    bInterval: 4
+INTERFACE DESCRIPTOR (1.0): class Vendor Specific
+    bLength: 9
+    bDescriptorType: 0x04 (INTERFACE)
+    bInterfaceNumber: 1
+    bAlternateSetting: 0
+    bNumEndpoints: 0
+    bInterfaceClass: Vendor Specific (0xff)
+    bInterfaceSubClass: 0x00
+    bInterfaceProtocol: 0x00
+    iInterface: 0
+INTERFACE DESCRIPTOR (1.1): class Vendor Specific
+    bLength: 9
+    bDescriptorType: 0x04 (INTERFACE)
+    bInterfaceNumber: 1
+    bAlternateSetting: 1
+    bNumEndpoints: 2
+    bInterfaceClass: Vendor Specific (0xff)
+    bInterfaceSubClass: 0x00
+    bInterfaceProtocol: 0x00
+    iInterface: 0
+ENDPOINT DESCRIPTOR
+    bLength: 7
+    bDescriptorType: 0x05 (ENDPOINT)
+    bEndpointAddress: 0x81  IN  Endpoint:1
+        1... .... = Direction: IN Endpoint
+        .... 0001 = Endpoint Number: 0x1
+    bmAttributes: 0x05
+        .... ..01 = Transfertype: Isochronous-Transfer (0x1)
+        .... 01.. = Synchronisationtype: Asynchronous (0x1)
+        ..00 .... = Behaviourtype: Data-Endpoint (0x0)
+    wMaxPacketSize: 64
+        ...0 0... .... .... = Transactions per microframe: 1 (0)
+        .... .000 0100 0000 = Maximum Packet Size: 64
+    bInterval: 4
+ENDPOINT DESCRIPTOR
+    bLength: 7
+    bDescriptorType: 0x05 (ENDPOINT)
+    bEndpointAddress: 0x86  IN  Endpoint:6
+        1... .... = Direction: IN Endpoint
+        .... 0110 = Endpoint Number: 0x6
+    bmAttributes: 0x02
+        .... ..10 = Transfertype: Bulk-Transfer (0x2)
+    wMaxPacketSize: 512
+        .... .010 0000 0000 = Maximum Packet Size: 512
+    bInterval: 1
+
+No.     Time           Source                Destination           Protocol Length Info
+   4184 2.221312       host                  1.1.0                 USB      36     GET DESCRIPTOR Request DEVICE
+
+Frame 4184: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.493605000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.493605000 UTC
+    Epoch Arrival Time: 1750610210.493605000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.003297000 seconds]
+    [Time delta from previous displayed frame: 0.003297000 seconds]
+    [Time since reference or first frame: 2.221312000 seconds]
+    Frame Number: 4184
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: Unknown (0xffffde07)
+    URB Function: URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE (0x000b)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4185]
+    Control transfer stage: Setup (0)
+Setup Data
+    bmRequestType: 0x80
+        1... .... = Direction: Device-to-host
+        .00. .... = Type: Standard (0x0)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: GET DESCRIPTOR (6)
+    Descriptor Index: 0x00
+    bDescriptorType: DEVICE (0x01)
+    Language Id: no language specified (0x0000)
+    wLength: 18
+
+No.     Time           Source                Destination           Protocol Length Info
+   4185 2.221461       1.1.0                 host                  USB      46     GET DESCRIPTOR Response DEVICE
+
+Frame 4185: 46 bytes on wire (368 bits), 46 bytes captured (368 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.493754000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.493754000 UTC
+    Epoch Arrival Time: 1750610210.493754000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000149000 seconds]
+    [Time delta from previous displayed frame: 0.000149000 seconds]
+    [Time since reference or first frame: 2.221461000 seconds]
+    Frame Number: 4185
+    Frame Length: 46 bytes (368 bits)
+    Capture Length: 46 bytes (368 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 18
+    [Request in: 4184]
+    [Time from request: 0.000149000 seconds]
+    Control transfer stage: Complete (3)
+DEVICE DESCRIPTOR
+    bLength: 18
+    bDescriptorType: 0x01 (DEVICE)
+    bcdUSB: 0x0200
+    bDeviceClass: Vendor Specific (0xff)
+    bDeviceSubClass: 255
+    bDeviceProtocol: 255
+    bMaxPacketSize0: 64
+    idVendor: TEAC Corp. (0x0644)
+    idProduct: Unknown (0x8020)
+    bcdDevice: 0x0100
+    iManufacturer: 1
+    iProduct: 2
+    iSerialNumber: 3
+    bNumConfigurations: 1
+
+No.     Time           Source                Destination           Protocol Length Info
+   4186 2.221474       host                  1.1.0                 USB      36     SET CONFIGURATION Request
+
+Frame 4186: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.493767000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.493767000 UTC
+    Epoch Arrival Time: 1750610210.493767000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000013000 seconds]
+    [Time delta from previous displayed frame: 0.000013000 seconds]
+    [Time since reference or first frame: 2.221474000 seconds]
+    Frame Number: 4186
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_SELECT_CONFIGURATION (0x0000)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4287]
+    Control transfer stage: Setup (0)
+Setup Data
+    bmRequestType: 0x00
+        0... .... = Direction: Host-to-device
+        .00. .... = Type: Standard (0x0)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: SET CONFIGURATION (9)
+    bConfigurationValue: 1
+    wIndex: 0 (0x0000)
+    wLength: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+   4287 2.431796       1.1.0                 host                  USB      28     SET CONFIGURATION Response
+
+Frame 4287: 28 bytes on wire (224 bits), 28 bytes captured (224 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.704089000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.704089000 UTC
+    Epoch Arrival Time: 1750610210.704089000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.001095000 seconds]
+    [Time delta from previous displayed frame: 0.210322000 seconds]
+    [Time since reference or first frame: 2.431796000 seconds]
+    Frame Number: 4287
+    Frame Length: 28 bytes (224 bits)
+    Capture Length: 28 bytes (224 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_SELECT_CONFIGURATION (0x0000)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 0
+    [Request in: 4186]
+    [Time from request: 0.210322000 seconds]
+    Control transfer stage: Complete (3)
+
+No.     Time           Source                Destination           Protocol Length Info
+   4320 2.481365       host                  1.1.0                 USB      36     URB_CONTROL in
+
+Frame 4320: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.753658000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.753658000 UTC
+    Epoch Arrival Time: 1750610210.753658000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000664000 seconds]
+    [Time delta from previous displayed frame: 0.049569000 seconds]
+    [Time since reference or first frame: 2.481365000 seconds]
+    Frame Number: 4320
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3f4010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_VENDOR_DEVICE (0x0017)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4321]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Unknown (0xffff)]
+Setup Data
+    bmRequestType: 0xc0
+        1... .... = Direction: Device-to-host
+        .10. .... = Type: Vendor (0x2)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: 73
+    wValue: 0x0000
+    wIndex: 0 (0x0000)
+    wLength: 1
+
+No.     Time           Source                Destination           Protocol Length Info
+   4321 2.481608       1.1.0                 host                  USB      29     URB_CONTROL in
+
+Frame 4321: 29 bytes on wire (232 bits), 29 bytes captured (232 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.753901000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.753901000 UTC
+    Epoch Arrival Time: 1750610210.753901000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000243000 seconds]
+    [Time delta from previous displayed frame: 0.000243000 seconds]
+    [Time since reference or first frame: 2.481608000 seconds]
+    Frame Number: 4321
+    Frame Length: 29 bytes (232 bits)
+    Capture Length: 29 bytes (232 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3f4010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 1
+    [Request in: 4320]
+    [Time from request: 0.000243000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Unknown (0xffff)]
+CONTROL response data: 30
+
+No.     Time           Source                Destination           Protocol Length Info
+   4322 2.481639       host                  1.1.0                 USB      36     URB_CONTROL in
+
+Frame 4322: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.753932000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.753932000 UTC
+    Epoch Arrival Time: 1750610210.753932000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000031000 seconds]
+    [Time delta from previous displayed frame: 0.000031000 seconds]
+    [Time since reference or first frame: 2.481639000 seconds]
+    Frame Number: 4322
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3f4010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CLASS_ENDPOINT (0x001c)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4323]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Unknown (0xffff)]
+Setup Data
+    bmRequestType: 0xa2
+        1... .... = Direction: Device-to-host
+        .01. .... = Type: Class (0x1)
+        ...0 0010 = Recipient: Endpoint (0x02)
+    bRequest: 129
+    wValue: 0x0100
+    wIndex: 0 (0x0000)
+    wLength: 3
+
+No.     Time           Source                Destination           Protocol Length Info
+   4323 2.481808       1.1.0                 host                  USB      31     URB_CONTROL in
+
+Frame 4323: 31 bytes on wire (248 bits), 31 bytes captured (248 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.754101000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.754101000 UTC
+    Epoch Arrival Time: 1750610210.754101000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000169000 seconds]
+    [Time delta from previous displayed frame: 0.000169000 seconds]
+    [Time since reference or first frame: 2.481808000 seconds]
+    Frame Number: 4323
+    Frame Length: 31 bytes (248 bits)
+    Capture Length: 31 bytes (248 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3f4010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 3
+    [Request in: 4322]
+    [Time from request: 0.000169000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Unknown (0xffff)]
+CONTROL response data: 885801
+
+No.     Time           Source                Destination           Protocol Length Info
+   4324 2.481834       host                  1.1.0                 USB      39     URB_CONTROL out
+
+Frame 4324: 39 bytes on wire (312 bits), 39 bytes captured (312 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.754127000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.754127000 UTC
+    Epoch Arrival Time: 1750610210.754127000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000026000 seconds]
+    [Time delta from previous displayed frame: 0.000026000 seconds]
+    [Time since reference or first frame: 2.481834000 seconds]
+    Frame Number: 4324
+    Frame Length: 39 bytes (312 bits)
+    Capture Length: 39 bytes (312 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3f4010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CLASS_ENDPOINT (0x001c)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 11
+    [Response in: 4325]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Vendor Specific (0xff)]
+Setup Data
+    bmRequestType: 0x22
+        0... .... = Direction: Host-to-device
+        .01. .... = Type: Class (0x1)
+        ...0 0010 = Recipient: Endpoint (0x02)
+    bRequest: 1
+    wValue: 0x0100
+    wIndex: 134 (0x0086)
+    wLength: 3
+    Data Fragment: 007701
+
+No.     Time           Source                Destination           Protocol Length Info
+   4325 2.481966       1.1.0                 host                  USB      28     URB_CONTROL out
+
+Frame 4325: 28 bytes on wire (224 bits), 28 bytes captured (224 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.754259000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.754259000 UTC
+    Epoch Arrival Time: 1750610210.754259000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000132000 seconds]
+    [Time delta from previous displayed frame: 0.000132000 seconds]
+    [Time since reference or first frame: 2.481966000 seconds]
+    Frame Number: 4325
+    Frame Length: 28 bytes (224 bits)
+    Capture Length: 28 bytes (224 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3f4010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 0
+    [Request in: 4324]
+    [Time from request: 0.000132000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Vendor Specific (0xff)]
+
+No.     Time           Source                Destination           Protocol Length Info
+   4326 2.481989       host                  1.1.0                 USB      39     URB_CONTROL out
+
+Frame 4326: 39 bytes on wire (312 bits), 39 bytes captured (312 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.754282000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.754282000 UTC
+    Epoch Arrival Time: 1750610210.754282000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000023000 seconds]
+    [Time delta from previous displayed frame: 0.000023000 seconds]
+    [Time since reference or first frame: 2.481989000 seconds]
+    Frame Number: 4326
+    Frame Length: 39 bytes (312 bits)
+    Capture Length: 39 bytes (312 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3f4010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CLASS_ENDPOINT (0x001c)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 11
+    [Response in: 4327]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Vendor Specific (0xff)]
+Setup Data
+    bmRequestType: 0x22
+        0... .... = Direction: Host-to-device
+        .01. .... = Type: Class (0x1)
+        ...0 0010 = Recipient: Endpoint (0x02)
+    bRequest: 1
+    wValue: 0x0100
+    wIndex: 2 (0x0002)
+    wLength: 3
+    Data Fragment: 007701
+
+No.     Time           Source                Destination           Protocol Length Info
+   4327 2.482182       1.1.0                 host                  USB      28     URB_CONTROL out
+
+Frame 4327: 28 bytes on wire (224 bits), 28 bytes captured (224 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.754475000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.754475000 UTC
+    Epoch Arrival Time: 1750610210.754475000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000193000 seconds]
+    [Time delta from previous displayed frame: 0.000193000 seconds]
+    [Time since reference or first frame: 2.482182000 seconds]
+    Frame Number: 4327
+    Frame Length: 28 bytes (224 bits)
+    Capture Length: 28 bytes (224 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3f4010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 0
+    [Request in: 4326]
+    [Time from request: 0.000193000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Vendor Specific (0xff)]
+
+No.     Time           Source                Destination           Protocol Length Info
+   4330 2.487246       host                  1.1.0                 USB      39     URB_CONTROL out
+
+Frame 4330: 39 bytes on wire (312 bits), 39 bytes captured (312 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.759539000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.759539000 UTC
+    Epoch Arrival Time: 1750610210.759539000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000577000 seconds]
+    [Time delta from previous displayed frame: 0.005064000 seconds]
+    [Time since reference or first frame: 2.487246000 seconds]
+    Frame Number: 4330
+    Frame Length: 39 bytes (312 bits)
+    Capture Length: 39 bytes (312 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde0737827010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CLASS_ENDPOINT (0x001c)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 11
+    [Response in: 4331]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Vendor Specific (0xff)]
+Setup Data
+    bmRequestType: 0x22
+        0... .... = Direction: Host-to-device
+        .01. .... = Type: Class (0x1)
+        ...0 0010 = Recipient: Endpoint (0x02)
+    bRequest: 1
+    wValue: 0x0100
+    wIndex: 134 (0x0086)
+    wLength: 3
+    Data Fragment: 007701
+
+No.     Time           Source                Destination           Protocol Length Info
+   4331 2.487388       1.1.0                 host                  USB      28     URB_CONTROL out
+
+Frame 4331: 28 bytes on wire (224 bits), 28 bytes captured (224 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.759681000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.759681000 UTC
+    Epoch Arrival Time: 1750610210.759681000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000142000 seconds]
+    [Time delta from previous displayed frame: 0.000142000 seconds]
+    [Time since reference or first frame: 2.487388000 seconds]
+    Frame Number: 4331
+    Frame Length: 28 bytes (224 bits)
+    Capture Length: 28 bytes (224 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde0737827010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 0
+    [Request in: 4330]
+    [Time from request: 0.000142000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Vendor Specific (0xff)]
+
+No.     Time           Source                Destination           Protocol Length Info
+   4332 2.487418       host                  1.1.0                 USB      39     URB_CONTROL out
+
+Frame 4332: 39 bytes on wire (312 bits), 39 bytes captured (312 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.759711000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.759711000 UTC
+    Epoch Arrival Time: 1750610210.759711000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000030000 seconds]
+    [Time delta from previous displayed frame: 0.000030000 seconds]
+    [Time since reference or first frame: 2.487418000 seconds]
+    Frame Number: 4332
+    Frame Length: 39 bytes (312 bits)
+    Capture Length: 39 bytes (312 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073a54ea70
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CLASS_ENDPOINT (0x001c)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 11
+    [Response in: 4333]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Vendor Specific (0xff)]
+Setup Data
+    bmRequestType: 0x22
+        0... .... = Direction: Host-to-device
+        .01. .... = Type: Class (0x1)
+        ...0 0010 = Recipient: Endpoint (0x02)
+    bRequest: 1
+    wValue: 0x0100
+    wIndex: 2 (0x0002)
+    wLength: 3
+    Data Fragment: 007701
+
+No.     Time           Source                Destination           Protocol Length Info
+   4333 2.487603       1.1.0                 host                  USB      28     URB_CONTROL out
+
+Frame 4333: 28 bytes on wire (224 bits), 28 bytes captured (224 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.759896000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.759896000 UTC
+    Epoch Arrival Time: 1750610210.759896000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000185000 seconds]
+    [Time delta from previous displayed frame: 0.000185000 seconds]
+    [Time since reference or first frame: 2.487603000 seconds]
+    Frame Number: 4333
+    Frame Length: 28 bytes (224 bits)
+    Capture Length: 28 bytes (224 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073a54ea70
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 0
+    [Request in: 4332]
+    [Time from request: 0.000185000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Vendor Specific (0xff)]
+
+No.     Time           Source                Destination           Protocol Length Info
+   4334 2.487625       host                  1.1.0                 USB      36     URB_CONTROL in
+
+Frame 4334: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.759918000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.759918000 UTC
+    Epoch Arrival Time: 1750610210.759918000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000022000 seconds]
+    [Time delta from previous displayed frame: 0.000022000 seconds]
+    [Time since reference or first frame: 2.487625000 seconds]
+    Frame Number: 4334
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_VENDOR_DEVICE (0x0017)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4335]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Unknown (0xffff)]
+Setup Data
+    bmRequestType: 0xc0
+        1... .... = Direction: Device-to-host
+        .10. .... = Type: Vendor (0x2)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: 65
+    wValue: 0x0d00
+    wIndex: 257 (0x0101)
+    wLength: 5
+
+No.     Time           Source                Destination           Protocol Length Info
+   4335 2.487826       1.1.0                 host                  USB      33     URB_CONTROL in
+
+Frame 4335: 33 bytes on wire (264 bits), 33 bytes captured (264 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.760119000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.760119000 UTC
+    Epoch Arrival Time: 1750610210.760119000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000201000 seconds]
+    [Time delta from previous displayed frame: 0.000201000 seconds]
+    [Time since reference or first frame: 2.487826000 seconds]
+    Frame Number: 4335
+    Frame Length: 33 bytes (264 bits)
+    Capture Length: 33 bytes (264 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 5
+    [Request in: 4334]
+    [Time from request: 0.000201000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Unknown (0xffff)]
+CONTROL response data: 0000000a00
+
+No.     Time           Source                Destination           Protocol Length Info
+   4336 2.487843       host                  1.1.0                 USB      36     URB_CONTROL out
+
+Frame 4336: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.760136000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.760136000 UTC
+    Epoch Arrival Time: 1750610210.760136000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000017000 seconds]
+    [Time delta from previous displayed frame: 0.000017000 seconds]
+    [Time since reference or first frame: 2.487843000 seconds]
+    Frame Number: 4336
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_VENDOR_DEVICE (0x0017)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4337]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Unknown (0xffff)]
+Setup Data
+    bmRequestType: 0x40
+        0... .... = Direction: Host-to-device
+        .10. .... = Type: Vendor (0x2)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: 65
+    wValue: 0x0d04
+    wIndex: 257 (0x0101)
+    wLength: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+   4337 2.487907       1.1.0                 host                  USB      28     URB_CONTROL out
+
+Frame 4337: 28 bytes on wire (224 bits), 28 bytes captured (224 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.760200000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.760200000 UTC
+    Epoch Arrival Time: 1750610210.760200000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000064000 seconds]
+    [Time delta from previous displayed frame: 0.000064000 seconds]
+    [Time since reference or first frame: 2.487907000 seconds]
+    Frame Number: 4337
+    Frame Length: 28 bytes (224 bits)
+    Capture Length: 28 bytes (224 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 0
+    [Request in: 4336]
+    [Time from request: 0.000064000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Unknown (0xffff)]
+
+No.     Time           Source                Destination           Protocol Length Info
+   4338 2.487910       host                  1.1.0                 USB      36     URB_CONTROL out
+
+Frame 4338: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.760203000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.760203000 UTC
+    Epoch Arrival Time: 1750610210.760203000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000003000 seconds]
+    [Time delta from previous displayed frame: 0.000003000 seconds]
+    [Time since reference or first frame: 2.487910000 seconds]
+    Frame Number: 4338
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_VENDOR_DEVICE (0x0017)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4339]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Unknown (0xffff)]
+Setup Data
+    bmRequestType: 0x40
+        0... .... = Direction: Host-to-device
+        .10. .... = Type: Vendor (0x2)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: 65
+    wValue: 0x0e00
+    wIndex: 257 (0x0101)
+    wLength: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+   4339 2.487969       1.1.0                 host                  USB      28     URB_CONTROL out
+
+Frame 4339: 28 bytes on wire (224 bits), 28 bytes captured (224 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.760262000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.760262000 UTC
+    Epoch Arrival Time: 1750610210.760262000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000059000 seconds]
+    [Time delta from previous displayed frame: 0.000059000 seconds]
+    [Time since reference or first frame: 2.487969000 seconds]
+    Frame Number: 4339
+    Frame Length: 28 bytes (224 bits)
+    Capture Length: 28 bytes (224 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 0
+    [Request in: 4338]
+    [Time from request: 0.000059000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Unknown (0xffff)]
+
+No.     Time           Source                Destination           Protocol Length Info
+   4340 2.487973       host                  1.1.0                 USB      36     URB_CONTROL out
+
+Frame 4340: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.760266000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.760266000 UTC
+    Epoch Arrival Time: 1750610210.760266000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000004000 seconds]
+    [Time delta from previous displayed frame: 0.000004000 seconds]
+    [Time since reference or first frame: 2.487973000 seconds]
+    Frame Number: 4340
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_VENDOR_DEVICE (0x0017)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4341]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Unknown (0xffff)]
+Setup Data
+    bmRequestType: 0x40
+        0... .... = Direction: Host-to-device
+        .10. .... = Type: Vendor (0x2)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: 65
+    wValue: 0x0f00
+    wIndex: 257 (0x0101)
+    wLength: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+   4341 2.488031       1.1.0                 host                  USB      28     URB_CONTROL out
+
+Frame 4341: 28 bytes on wire (224 bits), 28 bytes captured (224 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.760324000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.760324000 UTC
+    Epoch Arrival Time: 1750610210.760324000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000058000 seconds]
+    [Time delta from previous displayed frame: 0.000058000 seconds]
+    [Time since reference or first frame: 2.488031000 seconds]
+    Frame Number: 4341
+    Frame Length: 28 bytes (224 bits)
+    Capture Length: 28 bytes (224 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 0
+    [Request in: 4340]
+    [Time from request: 0.000058000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Unknown (0xffff)]
+
+No.     Time           Source                Destination           Protocol Length Info
+   4342 2.488041       host                  1.1.0                 USB      36     URB_CONTROL out
+
+Frame 4342: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.760334000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.760334000 UTC
+    Epoch Arrival Time: 1750610210.760334000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000010000 seconds]
+    [Time delta from previous displayed frame: 0.000010000 seconds]
+    [Time since reference or first frame: 2.488041000 seconds]
+    Frame Number: 4342
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3f4010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_VENDOR_DEVICE (0x0017)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4343]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Unknown (0xffff)]
+Setup Data
+    bmRequestType: 0x40
+        0... .... = Direction: Host-to-device
+        .10. .... = Type: Vendor (0x2)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: 65
+    wValue: 0x100a
+    wIndex: 257 (0x0101)
+    wLength: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+   4343 2.488113       1.1.0                 host                  USB      28     URB_CONTROL out
+
+Frame 4343: 28 bytes on wire (224 bits), 28 bytes captured (224 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.760406000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.760406000 UTC
+    Epoch Arrival Time: 1750610210.760406000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000072000 seconds]
+    [Time delta from previous displayed frame: 0.000072000 seconds]
+    [Time since reference or first frame: 2.488113000 seconds]
+    Frame Number: 4343
+    Frame Length: 28 bytes (224 bits)
+    Capture Length: 28 bytes (224 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3f4010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 0
+    [Request in: 4342]
+    [Time from request: 0.000072000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Unknown (0xffff)]
+
+No.     Time           Source                Destination           Protocol Length Info
+   4344 2.488122       host                  1.1.0                 USB      36     URB_CONTROL out
+
+Frame 4344: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.760415000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.760415000 UTC
+    Epoch Arrival Time: 1750610210.760415000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000009000 seconds]
+    [Time delta from previous displayed frame: 0.000009000 seconds]
+    [Time since reference or first frame: 2.488122000 seconds]
+    Frame Number: 4344
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3f4010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_VENDOR_DEVICE (0x0017)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4345]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Unknown (0xffff)]
+Setup Data
+    bmRequestType: 0x40
+        0... .... = Direction: Host-to-device
+        .10. .... = Type: Vendor (0x2)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: 65
+    wValue: 0x110b
+    wIndex: 257 (0x0101)
+    wLength: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+   4345 2.488251       1.1.0                 host                  USB      28     URB_CONTROL out
+
+Frame 4345: 28 bytes on wire (224 bits), 28 bytes captured (224 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.760544000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.760544000 UTC
+    Epoch Arrival Time: 1750610210.760544000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000129000 seconds]
+    [Time delta from previous displayed frame: 0.000129000 seconds]
+    [Time since reference or first frame: 2.488251000 seconds]
+    Frame Number: 4345
+    Frame Length: 28 bytes (224 bits)
+    Capture Length: 28 bytes (224 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3f4010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 0
+    [Request in: 4344]
+    [Time from request: 0.000129000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Unknown (0xffff)]
+
+No.     Time           Source                Destination           Protocol Length Info
+   4346 2.488305       host                  1.1.0                 USB      39     URB_CONTROL out
+
+Frame 4346: 39 bytes on wire (312 bits), 39 bytes captured (312 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.760598000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.760598000 UTC
+    Epoch Arrival Time: 1750610210.760598000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000054000 seconds]
+    [Time delta from previous displayed frame: 0.000054000 seconds]
+    [Time since reference or first frame: 2.488305000 seconds]
+    Frame Number: 4346
+    Frame Length: 39 bytes (312 bits)
+    Capture Length: 39 bytes (312 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3f4010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CLASS_ENDPOINT (0x001c)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 11
+    [Response in: 4347]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Vendor Specific (0xff)]
+Setup Data
+    bmRequestType: 0x22
+        0... .... = Direction: Host-to-device
+        .01. .... = Type: Class (0x1)
+        ...0 0010 = Recipient: Endpoint (0x02)
+    bRequest: 1
+    wValue: 0x0100
+    wIndex: 134 (0x0086)
+    wLength: 3
+    Data Fragment: 007701
+
+No.     Time           Source                Destination           Protocol Length Info
+   4347 2.488422       1.1.0                 host                  USB      28     URB_CONTROL out
+
+Frame 4347: 28 bytes on wire (224 bits), 28 bytes captured (224 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.760715000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.760715000 UTC
+    Epoch Arrival Time: 1750610210.760715000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000117000 seconds]
+    [Time delta from previous displayed frame: 0.000117000 seconds]
+    [Time since reference or first frame: 2.488422000 seconds]
+    Frame Number: 4347
+    Frame Length: 28 bytes (224 bits)
+    Capture Length: 28 bytes (224 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e3f4010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 0
+    [Request in: 4346]
+    [Time from request: 0.000117000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Vendor Specific (0xff)]
+
+No.     Time           Source                Destination           Protocol Length Info
+   4348 2.488430       host                  1.1.0                 USB      39     URB_CONTROL out
+
+Frame 4348: 39 bytes on wire (312 bits), 39 bytes captured (312 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.760723000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.760723000 UTC
+    Epoch Arrival Time: 1750610210.760723000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000008000 seconds]
+    [Time delta from previous displayed frame: 0.000008000 seconds]
+    [Time since reference or first frame: 2.488430000 seconds]
+    Frame Number: 4348
+    Frame Length: 39 bytes (312 bits)
+    Capture Length: 39 bytes (312 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde0737827010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CLASS_ENDPOINT (0x001c)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 11
+    [Response in: 4349]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Vendor Specific (0xff)]
+Setup Data
+    bmRequestType: 0x22
+        0... .... = Direction: Host-to-device
+        .01. .... = Type: Class (0x1)
+        ...0 0010 = Recipient: Endpoint (0x02)
+    bRequest: 1
+    wValue: 0x0100
+    wIndex: 2 (0x0002)
+    wLength: 3
+    Data Fragment: 007701
+
+No.     Time           Source                Destination           Protocol Length Info
+   4349 2.488587       1.1.0                 host                  USB      28     URB_CONTROL out
+
+Frame 4349: 28 bytes on wire (224 bits), 28 bytes captured (224 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.760880000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.760880000 UTC
+    Epoch Arrival Time: 1750610210.760880000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000157000 seconds]
+    [Time delta from previous displayed frame: 0.000157000 seconds]
+    [Time since reference or first frame: 2.488587000 seconds]
+    Frame Number: 4349
+    Frame Length: 28 bytes (224 bits)
+    Capture Length: 28 bytes (224 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde0737827010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 0
+    [Request in: 4348]
+    [Time from request: 0.000157000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Vendor Specific (0xff)]
+
+No.     Time           Source                Destination           Protocol Length Info
+   4350 2.488614       host                  1.1.0                 USB      39     URB_CONTROL out
+
+Frame 4350: 39 bytes on wire (312 bits), 39 bytes captured (312 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.760907000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.760907000 UTC
+    Epoch Arrival Time: 1750610210.760907000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000027000 seconds]
+    [Time delta from previous displayed frame: 0.000027000 seconds]
+    [Time since reference or first frame: 2.488614000 seconds]
+    Frame Number: 4350
+    Frame Length: 39 bytes (312 bits)
+    Capture Length: 39 bytes (312 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CLASS_ENDPOINT (0x001c)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 11
+    [Response in: 4353]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Vendor Specific (0xff)]
+Setup Data
+    bmRequestType: 0x22
+        0... .... = Direction: Host-to-device
+        .01. .... = Type: Class (0x1)
+        ...0 0010 = Recipient: Endpoint (0x02)
+    bRequest: 1
+    wValue: 0x0100
+    wIndex: 134 (0x0086)
+    wLength: 3
+    Data Fragment: 007701
+
+No.     Time           Source                Destination           Protocol Length Info
+   4353 2.488745       1.1.0                 host                  USB      28     URB_CONTROL out
+
+Frame 4353: 28 bytes on wire (224 bits), 28 bytes captured (224 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.761038000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.761038000 UTC
+    Epoch Arrival Time: 1750610210.761038000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000092000 seconds]
+    [Time delta from previous displayed frame: 0.000131000 seconds]
+    [Time since reference or first frame: 2.488745000 seconds]
+    Frame Number: 4353
+    Frame Length: 28 bytes (224 bits)
+    Capture Length: 28 bytes (224 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 0
+    [Request in: 4350]
+    [Time from request: 0.000131000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Vendor Specific (0xff)]
+
+No.     Time           Source                Destination           Protocol Length Info
+   4354 2.488752       host                  1.1.0                 USB      36     URB_CONTROL in
+
+Frame 4354: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.761045000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.761045000 UTC
+    Epoch Arrival Time: 1750610210.761045000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000007000 seconds]
+    [Time delta from previous displayed frame: 0.000007000 seconds]
+    [Time since reference or first frame: 2.488752000 seconds]
+    Frame Number: 4354
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde0737827010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CLASS_ENDPOINT (0x001c)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4355]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Vendor Specific (0xff)]
+Setup Data
+    bmRequestType: 0xa2
+        1... .... = Direction: Device-to-host
+        .01. .... = Type: Class (0x1)
+        ...0 0010 = Recipient: Endpoint (0x02)
+    bRequest: 129
+    wValue: 0x0100
+    wIndex: 134 (0x0086)
+    wLength: 3
+
+No.     Time           Source                Destination           Protocol Length Info
+   4355 2.488950       1.1.0                 host                  USB      31     URB_CONTROL in
+
+Frame 4355: 31 bytes on wire (248 bits), 31 bytes captured (248 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.761243000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.761243000 UTC
+    Epoch Arrival Time: 1750610210.761243000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000198000 seconds]
+    [Time delta from previous displayed frame: 0.000198000 seconds]
+    [Time since reference or first frame: 2.488950000 seconds]
+    Frame Number: 4355
+    Frame Length: 31 bytes (248 bits)
+    Capture Length: 31 bytes (248 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde0737827010
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 3
+    [Request in: 4354]
+    [Time from request: 0.000198000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Vendor Specific (0xff)]
+CONTROL response data: 007701
+
+No.     Time           Source                Destination           Protocol Length Info
+   4356 2.488965       host                  1.1.0                 USB      36     URB_CONTROL in
+
+Frame 4356: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.761258000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.761258000 UTC
+    Epoch Arrival Time: 1750610210.761258000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000015000 seconds]
+    [Time delta from previous displayed frame: 0.000015000 seconds]
+    [Time since reference or first frame: 2.488965000 seconds]
+    Frame Number: 4356
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_VENDOR_DEVICE (0x0017)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4357]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Unknown (0xffff)]
+Setup Data
+    bmRequestType: 0xc0
+        1... .... = Direction: Device-to-host
+        .10. .... = Type: Vendor (0x2)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: 73
+    wValue: 0x0000
+    wIndex: 0 (0x0000)
+    wLength: 1
+
+No.     Time           Source                Destination           Protocol Length Info
+   4357 2.489124       1.1.0                 host                  USB      29     URB_CONTROL in
+
+Frame 4357: 29 bytes on wire (232 bits), 29 bytes captured (232 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.761417000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.761417000 UTC
+    Epoch Arrival Time: 1750610210.761417000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000159000 seconds]
+    [Time delta from previous displayed frame: 0.000159000 seconds]
+    [Time since reference or first frame: 2.489124000 seconds]
+    Frame Number: 4357
+    Frame Length: 29 bytes (232 bits)
+    Capture Length: 29 bytes (232 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x80, Direction: IN
+        1... .... = Direction: IN (1)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 1
+    [Request in: 4356]
+    [Time from request: 0.000159000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Unknown (0xffff)]
+CONTROL response data: 30
+
+No.     Time           Source                Destination           Protocol Length Info
+   4358 2.489138       host                  1.1.0                 USB      36     URB_CONTROL out
+
+Frame 4358: 36 bytes on wire (288 bits), 36 bytes captured (288 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.761431000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.761431000 UTC
+    Epoch Arrival Time: 1750610210.761431000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000014000 seconds]
+    [Time delta from previous displayed frame: 0.000014000 seconds]
+    [Time since reference or first frame: 2.489138000 seconds]
+    Frame Number: 4358
+    Frame Length: 36 bytes (288 bits)
+    Capture Length: 36 bytes (288 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.0]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_VENDOR_DEVICE (0x0017)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 8
+    [Response in: 4359]
+    Control transfer stage: Setup (0)
+    [bInterfaceClass: Unknown (0xffff)]
+Setup Data
+    bmRequestType: 0x40
+        0... .... = Direction: Host-to-device
+        .10. .... = Type: Vendor (0x2)
+        ...0 0000 = Recipient: Device (0x00)
+    bRequest: 73
+    wValue: 0x0030
+    wIndex: 0 (0x0000)
+    wLength: 0
+
+No.     Time           Source                Destination           Protocol Length Info
+   4359 2.489376       1.1.0                 host                  USB      28     URB_CONTROL out
+
+Frame 4359: 28 bytes on wire (224 bits), 28 bytes captured (224 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 22, 2025 18:36:50.761669000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 22, 2025 16:36:50.761669000 UTC
+    Epoch Arrival Time: 1750610210.761669000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000238000 seconds]
+    [Time delta from previous displayed frame: 0.000238000 seconds]
+    [Time since reference or first frame: 2.489376000 seconds]
+    Frame Number: 4359
+    Frame Length: 28 bytes (224 bits)
+    Capture Length: 28 bytes (224 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.0]
+    [Destination: host]
+    USBPcap pseudoheader length: 28
+    IRP ID: 0xffffde073e6bd8a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_CONTROL_TRANSFER (0x0008)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x00, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0000 = Endpoint number: 0
+    URB transfer type: URB_CONTROL (0x02)
+    Packet Data Length: 0
+    [Request in: 4358]
+    [Time from request: 0.000238000 seconds]
+    Control transfer stage: Complete (3)
+    [bInterfaceClass: Unknown (0xffff)]

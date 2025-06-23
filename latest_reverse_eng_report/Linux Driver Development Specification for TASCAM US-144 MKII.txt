@@ -1,0 +1,151 @@
+Final Analysis Report & Driver Development Specification for TASCAM US-144 MKII
+
+Document Version: 5.0
+Date: 2025-06-23
+Subject: This document provides a complete specification for the USB control protocol and core audio data flow of the TASCAM US-144 MKII. It is intended to serve as the primary technical reference for implementing a functional Linux driver.
+1. Device Identification
+
+    Vendor ID (VID): 0x0644
+
+    Product ID (PID): 0x8020
+
+2. USB Audio Architecture
+
+The device utilizes a vendor-specific protocol and does not implement a standard USB Audio Class (UAC) interface for streaming. The core architecture is a fixed 4-channel input / 4-channel output system over USB.
+
+    Playback (Host -> Device): A 4-channel Asynchronous Isochronous OUT stream on Endpoint 0x02. The host driver is responsible for populating all 4 channels. Unused channels should be filled with digital silence.
+
+    Capture (Device -> Host): A 4-channel continuous Bulk IN stream on Endpoint 0x86. This stream is active after device initialization and is preceded by a 2048-byte header in each transfer, which must be discarded before processing audio data.
+
+    Clocking: An associated Isochronous IN feedback endpoint (0x81) is used for playback clock drift correction. This endpoint does not carry audio data.
+
+    Sample Rates: 44.1, 48, 88.2, and 96 kHz.
+
+    Bit Depth: Fixed at 24-bit Little Endian PCM for all audio streams.
+
+3. Endpoint Map
+Endpoint	Direction	Type	Interface	Alternate Setting	Verified Function
+0x02	OUT	Isochronous	0	1	Audio Playback Data: 4-channel interleaved 24-bit PCM stream.
+0x81	IN	Isochronous	1	1	Playback Clock Feedback: Non-audio timing data. Consistently sends 303030.
+0x86	IN	Bulk	1	1	Audio Capture Data: 4-channel interleaved 24-bit PCM stream, preceded by a 2048-byte header.
+0x83	IN	Bulk	0	1	MIDI IN Data
+0x04	OUT	Bulk	0	1	MIDI OUT Data
+4. Device Initialization and Rate-Setting Sequence
+
+To initialize the device or change the sample rate, the following sequence of control transfers must be executed in order.
+
+    Step 1: Set Interfaces
+
+        Set Configuration: SET_CONFIGURATION, wValue: 1, wIndex: 0
+
+        Set Interface 0: SET_INTERFACE, wValue: 1, wIndex: 0
+
+        Set Interface 1: SET_INTERFACE, wValue: 1, wIndex: 1
+
+    Step 2: Initial Handshake & Status Check (Optional but Recommended)
+
+        bmRequestType: 0xc0, bRequest: 73, wValue: 0x0000, wIndex: 0x0000, wLength: 1
+
+        Expected Response Data: 0x12
+
+    Step 3: Set Initial Mode
+
+        bmRequestType: 0x40, bRequest: 73, wValue: 0x0010, wIndex: 0x0000, wLength: 0
+
+    Step 4: Set Sample Rate
+
+        This is a UAC-style command sent twice, once for each endpoint.
+
+        bmRequestType: 0x22, bRequest: 1 (SET_CUR), wValue: 0x0100 (SAMPLING_FREQ_CONTROL), wLength: 3
+
+        Send once with wIndex: 0x0086 (Capture EP) and once with wIndex: 0x0002 (Playback EP).
+
+        Payload Data:
+        | Sample Rate | 3-Byte Payload (Hex) |
+        | :--- | :--- |
+        | 44100 Hz | 44 ac 00 |
+        | 48000 Hz | 80 bb 00 |
+        | 88200 Hz | 88 58 01 |
+        | 96000 Hz | 00 77 01 |
+
+    Step 5: Configure Internal Registers
+
+        Static Register Writes:
+        | wValue | bRequest | bmRequestType | wIndex |
+        | :--- | :--- | :--- | :--- |
+        | 0x0d04 | 65 | 0x40 | 0x0101 |
+        | 0x0e00 | 65 | 0x40 | 0x0101 |
+        | 0x0f00 | 65 | 0x40 | 0x0101 |
+
+        Rate-Dependent Register Write:
+        | Sample Rate | wValue | bRequest | bmRequestType | wIndex |
+        | :--- | :--- | :--- | :--- | :--- |
+        | 44100 Hz | 0x1000 | 65 | 0x40 | 0x0101 |
+        | 48000 Hz | 0x1002 | 65 | 0x40 | 0x0101 |
+        | 88200 Hz | 0x1008 | 65 | 0x40 | 0x0101 |
+        | 96000 Hz | 0x100a | 65 | 0x40 | 0x0101 |
+
+        Final Static Register Write:
+        | wValue | bRequest | bmRequestType | wIndex |
+        | :--- | :--- | :--- | :--- |
+        | 0x110b | 65 | 0x40 | 0x0101 |
+
+    Step 6: Enable Streaming
+
+        bmRequestType: 0x40, bRequest: 73, wValue: 0x0030, wIndex: 0x0000, wLength: 0
+
+5. Audio Data Stream Format
+
+A single "audio frame" consists of one sample for each of the four channels and is 12 bytes long (4 channels x 3 bytes/channel). All samples are 24-bit Little Endian.
+
+    Type: Isochronous OUT.
+
+    Structure: The stream consists of a series of isochronous packets. At 48kHz, each packet is 72 bytes, containing 6 audio frames.
+
+    Frame Format (12 bytes):
+    | Byte Offset | Length | Channel Assignment |
+    | :--- | :--- | :--- |
+    | 0, 1, 2 | 3 bytes | Channel 1 (Analog Left Out) |
+    | 3, 4, 5 | 3 bytes | Channel 2 (Analog Right Out) |
+    | 6, 7, 8 | 3 bytes | Channel 3 (Digital Left Out) |
+    | 9, 10, 11 | 3 bytes | Channel 4 (Digital Right Out) |
+
+    Type: Bulk IN.
+
+    Structure: The stream consists of large bulk transfers (e.g., 131,072 bytes). Each transfer is composed of:
+
+        A 2048-byte (0x800) header. The purpose of this header is unknown; it must be read and discarded.
+
+        The subsequent data is a continuous stream of interleaved 12-byte audio frames.
+
+    Frame Format (12 bytes):
+    | Byte Offset | Length | Channel Assignment |
+    | :--- | :--- | :--- |
+    | 0, 1, 2 | 3 bytes | Channel 1 (Analog Left In) |
+    | 3, 4, 5 | 3 bytes | Channel 2 (Analog Right In) |
+    | 6, 7, 8 | 3 bytes | Channel 3 (Digital Left In) |
+    | 9, 10, 11 | 3 bytes | Channel 4 (Digital Right In) |
+
+6. Host-Side Audio Routing Logic
+
+The device's internal hardware routing is fixed. All channel routing, duplication, and mixing must be performed by the host-side driver. The TASCAM Control Panel application modifies the behavior of the driver, not the hardware.
+
+    Fixed Hardware Mapping:
+
+        USB IN Channels 1/2 are sourced from the physical Analog Inputs.
+
+        USB IN Channels 3/4 are sourced from the physical S/PDIF Input.
+
+        USB OUT Channels 1/2 are routed to the physical Analog Outputs (Line Out & Phones).
+
+        USB OUT Channels 3/4 are routed to the physical S/PDIF Output.
+
+    Driver Responsibility: The driver must act as a software patch bay. For example, to route system audio (typically stereo channels 1/2) to the S/PDIF output, the driver must copy the audio data from channels 1/2 into the channel 3/4 slots of the USB OUT stream before sending it to the device.
+
+7. Areas for Further Investigation
+
+    MIDI (EP 0x83/0x04): The data format for MIDI messages on the bulk endpoints requires analysis.
+
+    Digital Format Control: The specific USB control request to switch the S/PDIF output between professional (AES/EBU) and consumer formats needs to be identified.
+
+    Capture Stream Header: The content and purpose of the 2048-byte header on the Endpoint 0x86 data stream are unknown.

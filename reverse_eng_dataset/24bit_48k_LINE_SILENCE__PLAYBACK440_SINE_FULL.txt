@@ -1,0 +1,1612 @@
+No.     Time           Source                Destination           Protocol Length Info
+   5808 3.503366       host                  1.1.2                 USB      3399   URB_ISOCHRONOUS out
+
+Frame 5808: 3399 bytes on wire (27192 bits), 3399 bytes captured (27192 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 15:16:14.022894000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 13:16:14.022894000 UTC
+    Epoch Arrival Time: 1750684574.022894000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000005000 seconds]
+    [Time delta from previous displayed frame: 0.000005000 seconds]
+    [Time since reference or first frame: 3.503366000 seconds]
+    Frame Number: 5808
+    Frame Length: 3399 bytes (27192 bits)
+    Capture Length: 3399 bytes (27192 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.2]
+    USBPcap pseudoheader length: 519
+    IRP ID: 0xffff92072024f5a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_ISOCH_TRANSFER (0x000a)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x02, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0010 = Endpoint number: 2
+    URB transfer type: URB_ISOCHRONOUS (0x00)
+    Packet Data Length: 2880
+    [Response in: 5827]
+    Isochronous transfer start frame: 3233409
+    Isochronous transfer number of packets: 40
+    Isochronous transfer error count: 0
+USB isochronous packet
+    ISO Data offset: 0x00000000
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: fef59b8ef69b0000000000008bb6978ab59700000000000050cd934ccd930000000000005540903540900000000000001e128d54128d00000000000041488ab0468a000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000048
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 9cdc87f1dd870000000000008ddb851cdc850000000000009a42842341840000000000000b0e83361083000000000000f14782804882000000000000d8ec81f8eb81000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000090
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: fbf9812dfa81000000000000807382d17382000000000000a057838b578300000000000025a68497a584000000000000535b86e15b86000000000000527988c97988000000000000
+USB isochronous packet
+    ISO Data offset: 0x000000d8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: b6fc8a30fd8a00000000000009e38d57e38d000000000000dd2b91022b91000000000000b1d094ead094000000000000f5d098fcd098000000000000b6289d37299d000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000120
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 58d5a1f5d4a1000000000000b6d0a618d1a6000000000000c818ac0618ac000000000000aaa8b1ada7b10000000000002f79b78c78b7000000000000f086bd5a87bd000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000168
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 15d0c3a5cec3000000000000ea48ca1849ca0000000000003df0d063f0d00000000000008fbfd743c0d700000000000080b1de66b1de000000000000b8bfe58dbfe5000000000000
+USB isochronous packet
+    ISO Data offset: 0x000001b0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 4de5ec97e3ec0000000000000f19f49418f4000000000000a057fb2058fb000000000000f59a023c9b020000000000008adc091cdc09000000000000d11311861411000000000000
+USB isochronous packet
+    ISO Data offset: 0x000001f8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 2d3e18fc3e180000000000000e561f3e541f000000000000274f263a4f26000000000000492a2d94292d000000000000eedd334fdd3300000000000001653ad9653a000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000240
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 48bb40f1bb400000000000008bdb4663db4600000000000065bf4cb3be4c000000000000776052e660520000000000003cbe5747bd57000000000000ebce5cd3ce5c000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000288
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 549161fb9161000000000000c40266800166000000000000e31b6a991b6a0000000000003bdb6db2da6d000000000000853d717b3d71000000000000ca4074d73e74000000000000
+USB isochronous packet
+    ISO Data offset: 0x000002d0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 38de76cade760000000000003b18790719790000000000007aed7a82ec7a000000000000de577c9c577c00000000000065597d59597d000000000000ddf17da4f07d000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000318
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: b71d7e081d7e0000000000008ade7daede7d000000000000e0347d87347d00000000000008217c49217c000000000000dca27ab3a37a000000000000b7be7848be78000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000360
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 1e73768272760000000000000bc273dec173000000000000b9af7066af70000000000000f93e6d493e6d000000000000656f69f76f690000000000007648658c4865000000000000
+USB isochronous packet
+    ISO Data offset: 0x000003a8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: fbca60e8ca60000000000000acfa5b47fb5b00000000000000dd56b7dc56000000000000cc7551b6745100000000000096c74b6dc74b000000000000f2d945e6d945000000000000
+USB isochronous packet
+    ISO Data offset: 0x000003f0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: c4b03f5db03f000000000000fa50391d5139000000000000e6c032cbc0320000000000002d062ca8052c00000000000099242584242500000000000037231eba231e000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000438
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: ff0817210917000000000000ccda0f1ddb0f000000000000969e08d89e08000000000000f35b018d5b010000000000009917fa1017fa0000000000006ad8f2c4d7f2000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000480
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: cba3eba4a3eb0000000000006481e44380e40000000000000875ddf174dd000000000000b786d62386d6000000000000f8bbcf9dbbcf0000000000001e19c9cf18c9000000000000
+USB isochronous packet
+    ISO Data offset: 0x000004c8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 1ea6c2daa5c20000000000009166bc9265bc0000000000006160b64260b6000000000000d998b02598b00000000000004513aba314ab00000000000086d8a5a9d7a5000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000510
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: c6e8a054e9a0000000000000ca499ce4499c000000000000090098b00098000000000000fb0e946f0e94000000000000f87890037a90000000000000ab418d8f418d000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000558
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 6d6c8acd6c8a000000000000b5fb8761fb8700000000000084ef85afee85000000000000a94c84884b84000000000000541083da0f83000000000000a43f821d3f82000000000000
+USB isochronous packet
+    ISO Data offset: 0x000005a0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 6ed881f8d881000000000000a6dd81b9dd81000000000000834d82984d820000000000004e29836e2883000000000000626d84196d840000000000003f1a86851a86000000000000
+USB isochronous packet
+    ISO Data offset: 0x000005e8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 1f3088fa2f8800000000000041aa8a5caa8a00000000000042878d1b898d00000000000055c890dec7900000000000003c65943c6694000000000000265f98415f98000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000630
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 63b19cb7b09c000000000000f255a1c055a1000000000000e24ba6714ba6000000000000068eab368dab0000000000008c16b13e17b100000000000003e3b68ce3b6000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000678
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: bfedbcb9edbc000000000000dc31c35931c300000000000024a8c943a8c9000000000000c44dd07e4dd00000000000009e1ad7821ad7000000000000240ade9c0ade000000000000
+USB isochronous packet
+    ISO Data offset: 0x000006c0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 3d17e58a17e5000000000000983aecf73aec0000000000005570f37b6ff30000000000009eaefa80aefa000000000000b1f201e1f101000000000000a83309903309000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000708
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 3f6d10fe6d10000000000000569917b39817000000000000b4b01e16b11e0000000000004eaf255fae25000000000000ba8c2c1c8c2c000000000000f34333bd4333000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000750
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 06d139efcf39000000000000c629407b2b400000000000009e4f461d4f46000000000000ee374c0b384c000000000000c7df5122e0510000000000009e4257264257000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000798
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 425a5cd95a5c000000000000af25615b2461000000000000629a65869b6500000000000060bc697abc69000000000000cf836de9836d000000000000b3ec70baed70000000000000
+USB isochronous packet
+    ISO Data offset: 0x000007e0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 0ff9734af873000000000000cb9f76ec9f76000000000000bfe378dbe278000000000000ccbe7aa8bf7a00000000000092337c19337c000000000000633e7d6f3e7d000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000828
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: addc7de5de7d00000000000085157e83147e00000000000027df7d46df7d000000000000f73e7db73f7d00000000000021377cf0357c000000000000d6c17ac7c17a000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000870
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: cfe57856e678000000000000a3a2764ba37600000000000008fd73befc73000000000000f5f27060f270000000000000bf896d888a6d000000000000a0c66917c569000000000000
+USB isochronous packet
+    ISO Data offset: 0x000008b8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 46a465a3a565000000000000f22f61433061000000000000ee685c92675c000000000000b450576d515700000000000007ef51faef51000000000000f0494c7d494c000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000900
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: d06246426146000000000000193d40273e40000000000000d4e339bbe3390000000000005d5933b957330000000000009f9e2ce7a02c000000000000bdc32576c325000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000948
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 88c71e4cc51e00000000000057ac1726ae170000000000000682104b81100000000000009c47097a4709000000000000a80402ad0402000000000000cabffac5c0fa000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000990
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: f180f31381f30000000000008b4cec294cec0000000000000c26e59d27e5000000000000861cdef419de000000000000d129d7c029d7000000000000a159d03a5bd0000000000000
+USB isochronous packet
+    ISO Data offset: 0x000009d8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 05b7c91db6c90000000000009d3dc3223ec300000000000094fabc37fabc0000000000006fefb6a7efb60000000000004722b19421b10000000000008a98ab3f98ab000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000a20
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: d353a60655a60000000000009d61a1dc5fa10000000000009fb79ce7b89c0000000000003b6798316898000000000000737094066e94000000000000fcce9032d090000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000a68
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 8c918dcd908d000000000000edb08a38b28a000000000000103888713788000000000000e62186a422860000000000001f7384ab7484000000000000353383eb2f83000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000ab0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: a052827f558200000000000050e7819ee58100000000000086e08132e081000000000000b04482924682000000000000c81883fd1683000000000000a64f84025284000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000af8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: aaf785bef5850000000000004100882e0188000000000000bd738ad5728a000000000000b6488dcb478d0000000000000e7b90357e90000000000000d41594e71394000000000000
+
+0000  07 02 a0 f5 24 20 07 92 ff ff 00 00 00 00 0a 00   ....$ ..........
+0010  00 01 00 01 00 02 00 40 0b 00 00 81 56 31 00 28   .......@....V1.(
+0020  00 00 00 00 00 00 00 00 00 00 00 48 00 00 00 00   ...........H....
+0030  00 00 00 48 00 00 00 48 00 00 00 00 00 00 00 90   ...H...H........
+0040  00 00 00 48 00 00 00 00 00 00 00 d8 00 00 00 48   ...H...........H
+0050  00 00 00 00 00 00 00 20 01 00 00 48 00 00 00 00   ....... ...H....
+0060  00 00 00 68 01 00 00 48 00 00 00 00 00 00 00 b0   ...h...H........
+0070  01 00 00 48 00 00 00 00 00 00 00 f8 01 00 00 48   ...H...........H
+0080  00 00 00 00 00 00 00 40 02 00 00 48 00 00 00 00   .......@...H....
+0090  00 00 00 88 02 00 00 48 00 00 00 00 00 00 00 d0   .......H........
+00a0  02 00 00 48 00 00 00 00 00 00 00 18 03 00 00 48   ...H...........H
+00b0  00 00 00 00 00 00 00 60 03 00 00 48 00 00 00 00   .......`...H....
+00c0  00 00 00 a8 03 00 00 48 00 00 00 00 00 00 00 f0   .......H........
+00d0  03 00 00 48 00 00 00 00 00 00 00 38 04 00 00 48   ...H.......8...H
+00e0  00 00 00 00 00 00 00 80 04 00 00 48 00 00 00 00   ...........H....
+00f0  00 00 00 c8 04 00 00 48 00 00 00 00 00 00 00 10   .......H........
+0100  05 00 00 48 00 00 00 00 00 00 00 58 05 00 00 48   ...H.......X...H
+0110  00 00 00 00 00 00 00 a0 05 00 00 48 00 00 00 00   ...........H....
+0120  00 00 00 e8 05 00 00 48 00 00 00 00 00 00 00 30   .......H.......0
+0130  06 00 00 48 00 00 00 00 00 00 00 78 06 00 00 48   ...H.......x...H
+0140  00 00 00 00 00 00 00 c0 06 00 00 48 00 00 00 00   ...........H....
+0150  00 00 00 08 07 00 00 48 00 00 00 00 00 00 00 50   .......H.......P
+0160  07 00 00 48 00 00 00 00 00 00 00 98 07 00 00 48   ...H...........H
+0170  00 00 00 00 00 00 00 e0 07 00 00 48 00 00 00 00   ...........H....
+0180  00 00 00 28 08 00 00 48 00 00 00 00 00 00 00 70   ...(...H.......p
+0190  08 00 00 48 00 00 00 00 00 00 00 b8 08 00 00 48   ...H...........H
+01a0  00 00 00 00 00 00 00 00 09 00 00 48 00 00 00 00   ...........H....
+01b0  00 00 00 48 09 00 00 48 00 00 00 00 00 00 00 90   ...H...H........
+01c0  09 00 00 48 00 00 00 00 00 00 00 d8 09 00 00 48   ...H...........H
+01d0  00 00 00 00 00 00 00 20 0a 00 00 48 00 00 00 00   ....... ...H....
+01e0  00 00 00 68 0a 00 00 48 00 00 00 00 00 00 00 b0   ...h...H........
+01f0  0a 00 00 48 00 00 00 00 00 00 00 f8 0a 00 00 48   ...H...........H
+0200  00 00 00 00 00 00 00 fe f5 9b 8e f6 9b 00 00 00   ................
+0210  00 00 00 8b b6 97 8a b5 97 00 00 00 00 00 00 50   ...............P
+0220  cd 93 4c cd 93 00 00 00 00 00 00 55 40 90 35 40   ..L........U@.5@
+0230  90 00 00 00 00 00 00 1e 12 8d 54 12 8d 00 00 00   ..........T.....
+0240  00 00 00 41 48 8a b0 46 8a 00 00 00 00 00 00 9c   ...AH..F........
+0250  dc 87 f1 dd 87 00 00 00 00 00 00 8d db 85 1c dc   ................
+0260  85 00 00 00 00 00 00 9a 42 84 23 41 84 00 00 00   ........B.#A....
+0270  00 00 00 0b 0e 83 36 10 83 00 00 00 00 00 00 f1   ......6.........
+0280  47 82 80 48 82 00 00 00 00 00 00 d8 ec 81 f8 eb   G..H............
+0290  81 00 00 00 00 00 00 fb f9 81 2d fa 81 00 00 00   ..........-.....
+02a0  00 00 00 80 73 82 d1 73 82 00 00 00 00 00 00 a0   ....s..s........
+02b0  57 83 8b 57 83 00 00 00 00 00 00 25 a6 84 97 a5   W..W.......%....
+02c0  84 00 00 00 00 00 00 53 5b 86 e1 5b 86 00 00 00   .......S[..[....
+02d0  00 00 00 52 79 88 c9 79 88 00 00 00 00 00 00 b6   ...Ry..y........
+02e0  fc 8a 30 fd 8a 00 00 00 00 00 00 09 e3 8d 57 e3   ..0...........W.
+02f0  8d 00 00 00 00 00 00 dd 2b 91 02 2b 91 00 00 00   ........+..+....
+0300  00 00 00 b1 d0 94 ea d0 94 00 00 00 00 00 00 f5   ................
+0310  d0 98 fc d0 98 00 00 00 00 00 00 b6 28 9d 37 29   ............(.7)
+0320  9d 00 00 00 00 00 00 58 d5 a1 f5 d4 a1 00 00 00   .......X........
+0330  00 00 00 b6 d0 a6 18 d1 a6 00 00 00 00 00 00 c8   ................
+0340  18 ac 06 18 ac 00 00 00 00 00 00 aa a8 b1 ad a7   ................
+0350  b1 00 00 00 00 00 00 2f 79 b7 8c 78 b7 00 00 00   ......./y..x....
+0360  00 00 00 f0 86 bd 5a 87 bd 00 00 00 00 00 00 15   ......Z.........
+0370  d0 c3 a5 ce c3 00 00 00 00 00 00 ea 48 ca 18 49   ............H..I
+0380  ca 00 00 00 00 00 00 3d f0 d0 63 f0 d0 00 00 00   .......=..c.....
+0390  00 00 00 8f bf d7 43 c0 d7 00 00 00 00 00 00 80   ......C.........
+03a0  b1 de 66 b1 de 00 00 00 00 00 00 b8 bf e5 8d bf   ..f.............
+03b0  e5 00 00 00 00 00 00 4d e5 ec 97 e3 ec 00 00 00   .......M........
+03c0  00 00 00 0f 19 f4 94 18 f4 00 00 00 00 00 00 a0   ................
+03d0  57 fb 20 58 fb 00 00 00 00 00 00 f5 9a 02 3c 9b   W. X..........<.
+03e0  02 00 00 00 00 00 00 8a dc 09 1c dc 09 00 00 00   ................
+03f0  00 00 00 d1 13 11 86 14 11 00 00 00 00 00 00 2d   ...............-
+0400  3e 18 fc 3e 18 00 00 00 00 00 00 0e 56 1f 3e 54   >..>........V.>T
+0410  1f 00 00 00 00 00 00 27 4f 26 3a 4f 26 00 00 00   .......'O&:O&...
+0420  00 00 00 49 2a 2d 94 29 2d 00 00 00 00 00 00 ee   ...I*-.)-.......
+0430  dd 33 4f dd 33 00 00 00 00 00 00 01 65 3a d9 65   .3O.3.......e:.e
+0440  3a 00 00 00 00 00 00 48 bb 40 f1 bb 40 00 00 00   :......H.@..@...
+0450  00 00 00 8b db 46 63 db 46 00 00 00 00 00 00 65   .....Fc.F......e
+0460  bf 4c b3 be 4c 00 00 00 00 00 00 77 60 52 e6 60   .L..L......w`R.`
+0470  52 00 00 00 00 00 00 3c be 57 47 bd 57 00 00 00   R......<.WG.W...
+0480  00 00 00 eb ce 5c d3 ce 5c 00 00 00 00 00 00 54   .....\..\......T
+0490  91 61 fb 91 61 00 00 00 00 00 00 c4 02 66 80 01   .a..a........f..
+04a0  66 00 00 00 00 00 00 e3 1b 6a 99 1b 6a 00 00 00   f........j..j...
+04b0  00 00 00 3b db 6d b2 da 6d 00 00 00 00 00 00 85   ...;.m..m.......
+04c0  3d 71 7b 3d 71 00 00 00 00 00 00 ca 40 74 d7 3e   =q{=q.......@t.>
+04d0  74 00 00 00 00 00 00 38 de 76 ca de 76 00 00 00   t......8.v..v...
+04e0  00 00 00 3b 18 79 07 19 79 00 00 00 00 00 00 7a   ...;.y..y......z
+04f0  ed 7a 82 ec 7a 00 00 00 00 00 00 de 57 7c 9c 57   .z..z.......W|.W
+0500  7c 00 00 00 00 00 00 65 59 7d 59 59 7d 00 00 00   |......eY}YY}...
+0510  00 00 00 dd f1 7d a4 f0 7d 00 00 00 00 00 00 b7   .....}..}.......
+0520  1d 7e 08 1d 7e 00 00 00 00 00 00 8a de 7d ae de   .~..~........}..
+0530  7d 00 00 00 00 00 00 e0 34 7d 87 34 7d 00 00 00   }.......4}.4}...
+0540  00 00 00 08 21 7c 49 21 7c 00 00 00 00 00 00 dc   ....!|I!|.......
+0550  a2 7a b3 a3 7a 00 00 00 00 00 00 b7 be 78 48 be   .z..z........xH.
+0560  78 00 00 00 00 00 00 1e 73 76 82 72 76 00 00 00   x.......sv.rv...
+0570  00 00 00 0b c2 73 de c1 73 00 00 00 00 00 00 b9   .....s..s.......
+0580  af 70 66 af 70 00 00 00 00 00 00 f9 3e 6d 49 3e   .pf.p.......>mI>
+0590  6d 00 00 00 00 00 00 65 6f 69 f7 6f 69 00 00 00   m......eoi.oi...
+05a0  00 00 00 76 48 65 8c 48 65 00 00 00 00 00 00 fb   ...vHe.He.......
+05b0  ca 60 e8 ca 60 00 00 00 00 00 00 ac fa 5b 47 fb   .`..`........[G.
+05c0  5b 00 00 00 00 00 00 00 dd 56 b7 dc 56 00 00 00   [........V..V...
+05d0  00 00 00 cc 75 51 b6 74 51 00 00 00 00 00 00 96   ....uQ.tQ.......
+05e0  c7 4b 6d c7 4b 00 00 00 00 00 00 f2 d9 45 e6 d9   .Km.K........E..
+05f0  45 00 00 00 00 00 00 c4 b0 3f 5d b0 3f 00 00 00   E........?].?...
+0600  00 00 00 fa 50 39 1d 51 39 00 00 00 00 00 00 e6   ....P9.Q9.......
+0610  c0 32 cb c0 32 00 00 00 00 00 00 2d 06 2c a8 05   .2..2......-.,..
+0620  2c 00 00 00 00 00 00 99 24 25 84 24 25 00 00 00   ,.......$%.$%...
+0630  00 00 00 37 23 1e ba 23 1e 00 00 00 00 00 00 ff   ...7#..#........
+0640  08 17 21 09 17 00 00 00 00 00 00 cc da 0f 1d db   ..!.............
+0650  0f 00 00 00 00 00 00 96 9e 08 d8 9e 08 00 00 00   ................
+0660  00 00 00 f3 5b 01 8d 5b 01 00 00 00 00 00 00 99   ....[..[........
+0670  17 fa 10 17 fa 00 00 00 00 00 00 6a d8 f2 c4 d7   ...........j....
+0680  f2 00 00 00 00 00 00 cb a3 eb a4 a3 eb 00 00 00   ................
+0690  00 00 00 64 81 e4 43 80 e4 00 00 00 00 00 00 08   ...d..C.........
+06a0  75 dd f1 74 dd 00 00 00 00 00 00 b7 86 d6 23 86   u..t..........#.
+06b0  d6 00 00 00 00 00 00 f8 bb cf 9d bb cf 00 00 00   ................
+06c0  00 00 00 1e 19 c9 cf 18 c9 00 00 00 00 00 00 1e   ................
+06d0  a6 c2 da a5 c2 00 00 00 00 00 00 91 66 bc 92 65   ............f..e
+06e0  bc 00 00 00 00 00 00 61 60 b6 42 60 b6 00 00 00   .......a`.B`....
+06f0  00 00 00 d9 98 b0 25 98 b0 00 00 00 00 00 00 45   ......%........E
+0700  13 ab a3 14 ab 00 00 00 00 00 00 86 d8 a5 a9 d7   ................
+0710  a5 00 00 00 00 00 00 c6 e8 a0 54 e9 a0 00 00 00   ..........T.....
+0720  00 00 00 ca 49 9c e4 49 9c 00 00 00 00 00 00 09   ....I..I........
+0730  00 98 b0 00 98 00 00 00 00 00 00 fb 0e 94 6f 0e   ..............o.
+0740  94 00 00 00 00 00 00 f8 78 90 03 7a 90 00 00 00   ........x..z....
+0750  00 00 00 ab 41 8d 8f 41 8d 00 00 00 00 00 00 6d   ....A..A.......m
+0760  6c 8a cd 6c 8a 00 00 00 00 00 00 b5 fb 87 61 fb   l..l..........a.
+0770  87 00 00 00 00 00 00 84 ef 85 af ee 85 00 00 00   ................
+0780  00 00 00 a9 4c 84 88 4b 84 00 00 00 00 00 00 54   ....L..K.......T
+0790  10 83 da 0f 83 00 00 00 00 00 00 a4 3f 82 1d 3f   ............?..?
+07a0  82 00 00 00 00 00 00 6e d8 81 f8 d8 81 00 00 00   .......n........
+07b0  00 00 00 a6 dd 81 b9 dd 81 00 00 00 00 00 00 83   ................
+07c0  4d 82 98 4d 82 00 00 00 00 00 00 4e 29 83 6e 28   M..M.......N).n(
+07d0  83 00 00 00 00 00 00 62 6d 84 19 6d 84 00 00 00   .......bm..m....
+07e0  00 00 00 3f 1a 86 85 1a 86 00 00 00 00 00 00 1f   ...?............
+07f0  30 88 fa 2f 88 00 00 00 00 00 00 41 aa 8a 5c aa   0../.......A..\.
+0800  8a 00 00 00 00 00 00 42 87 8d 1b 89 8d 00 00 00   .......B........
+0810  00 00 00 55 c8 90 de c7 90 00 00 00 00 00 00 3c   ...U...........<
+0820  65 94 3c 66 94 00 00 00 00 00 00 26 5f 98 41 5f   e.<f.......&_.A_
+0830  98 00 00 00 00 00 00 63 b1 9c b7 b0 9c 00 00 00   .......c........
+0840  00 00 00 f2 55 a1 c0 55 a1 00 00 00 00 00 00 e2   ....U..U........
+0850  4b a6 71 4b a6 00 00 00 00 00 00 06 8e ab 36 8d   K.qK..........6.
+0860  ab 00 00 00 00 00 00 8c 16 b1 3e 17 b1 00 00 00   ..........>.....
+0870  00 00 00 03 e3 b6 8c e3 b6 00 00 00 00 00 00 bf   ................
+0880  ed bc b9 ed bc 00 00 00 00 00 00 dc 31 c3 59 31   ............1.Y1
+0890  c3 00 00 00 00 00 00 24 a8 c9 43 a8 c9 00 00 00   .......$..C.....
+08a0  00 00 00 c4 4d d0 7e 4d d0 00 00 00 00 00 00 9e   ....M.~M........
+08b0  1a d7 82 1a d7 00 00 00 00 00 00 24 0a de 9c 0a   ...........$....
+08c0  de 00 00 00 00 00 00 3d 17 e5 8a 17 e5 00 00 00   .......=........
+08d0  00 00 00 98 3a ec f7 3a ec 00 00 00 00 00 00 55   ....:..:.......U
+08e0  70 f3 7b 6f f3 00 00 00 00 00 00 9e ae fa 80 ae   p.{o............
+08f0  fa 00 00 00 00 00 00 b1 f2 01 e1 f1 01 00 00 00   ................
+0900  00 00 00 a8 33 09 90 33 09 00 00 00 00 00 00 3f   ....3..3.......?
+0910  6d 10 fe 6d 10 00 00 00 00 00 00 56 99 17 b3 98   m..m.......V....
+0920  17 00 00 00 00 00 00 b4 b0 1e 16 b1 1e 00 00 00   ................
+0930  00 00 00 4e af 25 5f ae 25 00 00 00 00 00 00 ba   ...N.%_.%.......
+0940  8c 2c 1c 8c 2c 00 00 00 00 00 00 f3 43 33 bd 43   .,..,.......C3.C
+0950  33 00 00 00 00 00 00 06 d1 39 ef cf 39 00 00 00   3........9..9...
+0960  00 00 00 c6 29 40 7b 2b 40 00 00 00 00 00 00 9e   ....)@{+@.......
+0970  4f 46 1d 4f 46 00 00 00 00 00 00 ee 37 4c 0b 38   OF.OF.......7L.8
+0980  4c 00 00 00 00 00 00 c7 df 51 22 e0 51 00 00 00   L........Q".Q...
+0990  00 00 00 9e 42 57 26 42 57 00 00 00 00 00 00 42   ....BW&BW......B
+09a0  5a 5c d9 5a 5c 00 00 00 00 00 00 af 25 61 5b 24   Z\.Z\.......%a[$
+09b0  61 00 00 00 00 00 00 62 9a 65 86 9b 65 00 00 00   a......b.e..e...
+09c0  00 00 00 60 bc 69 7a bc 69 00 00 00 00 00 00 cf   ...`.iz.i.......
+09d0  83 6d e9 83 6d 00 00 00 00 00 00 b3 ec 70 ba ed   .m..m........p..
+09e0  70 00 00 00 00 00 00 0f f9 73 4a f8 73 00 00 00   p........sJ.s...
+09f0  00 00 00 cb 9f 76 ec 9f 76 00 00 00 00 00 00 bf   .....v..v.......
+0a00  e3 78 db e2 78 00 00 00 00 00 00 cc be 7a a8 bf   .x..x........z..
+0a10  7a 00 00 00 00 00 00 92 33 7c 19 33 7c 00 00 00   z.......3|.3|...
+0a20  00 00 00 63 3e 7d 6f 3e 7d 00 00 00 00 00 00 ad   ...c>}o>}.......
+0a30  dc 7d e5 de 7d 00 00 00 00 00 00 85 15 7e 83 14   .}..}........~..
+0a40  7e 00 00 00 00 00 00 27 df 7d 46 df 7d 00 00 00   ~......'.}F.}...
+0a50  00 00 00 f7 3e 7d b7 3f 7d 00 00 00 00 00 00 21   ....>}.?}......!
+0a60  37 7c f0 35 7c 00 00 00 00 00 00 d6 c1 7a c7 c1   7|.5|........z..
+0a70  7a 00 00 00 00 00 00 cf e5 78 56 e6 78 00 00 00   z........xV.x...
+0a80  00 00 00 a3 a2 76 4b a3 76 00 00 00 00 00 00 08   .....vK.v.......
+0a90  fd 73 be fc 73 00 00 00 00 00 00 f5 f2 70 60 f2   .s..s........p`.
+0aa0  70 00 00 00 00 00 00 bf 89 6d 88 8a 6d 00 00 00   p........m..m...
+0ab0  00 00 00 a0 c6 69 17 c5 69 00 00 00 00 00 00 46   .....i..i......F
+0ac0  a4 65 a3 a5 65 00 00 00 00 00 00 f2 2f 61 43 30   .e..e......./aC0
+0ad0  61 00 00 00 00 00 00 ee 68 5c 92 67 5c 00 00 00   a.......h\.g\...
+0ae0  00 00 00 b4 50 57 6d 51 57 00 00 00 00 00 00 07   ....PWmQW.......
+0af0  ef 51 fa ef 51 00 00 00 00 00 00 f0 49 4c 7d 49   .Q..Q.......IL}I
+0b00  4c 00 00 00 00 00 00 d0 62 46 42 61 46 00 00 00   L.......bFBaF...
+0b10  00 00 00 19 3d 40 27 3e 40 00 00 00 00 00 00 d4   ....=@'>@.......
+0b20  e3 39 bb e3 39 00 00 00 00 00 00 5d 59 33 b9 57   .9..9......]Y3.W
+0b30  33 00 00 00 00 00 00 9f 9e 2c e7 a0 2c 00 00 00   3........,..,...
+0b40  00 00 00 bd c3 25 76 c3 25 00 00 00 00 00 00 88   .....%v.%.......
+0b50  c7 1e 4c c5 1e 00 00 00 00 00 00 57 ac 17 26 ae   ..L........W..&.
+0b60  17 00 00 00 00 00 00 06 82 10 4b 81 10 00 00 00   ..........K.....
+0b70  00 00 00 9c 47 09 7a 47 09 00 00 00 00 00 00 a8   ....G.zG........
+0b80  04 02 ad 04 02 00 00 00 00 00 00 ca bf fa c5 c0   ................
+0b90  fa 00 00 00 00 00 00 f1 80 f3 13 81 f3 00 00 00   ................
+0ba0  00 00 00 8b 4c ec 29 4c ec 00 00 00 00 00 00 0c   ....L.)L........
+0bb0  26 e5 9d 27 e5 00 00 00 00 00 00 86 1c de f4 19   &..'............
+0bc0  de 00 00 00 00 00 00 d1 29 d7 c0 29 d7 00 00 00   ........)..)....
+0bd0  00 00 00 a1 59 d0 3a 5b d0 00 00 00 00 00 00 05   ....Y.:[........
+0be0  b7 c9 1d b6 c9 00 00 00 00 00 00 9d 3d c3 22 3e   ............=.">
+0bf0  c3 00 00 00 00 00 00 94 fa bc 37 fa bc 00 00 00   ..........7.....
+0c00  00 00 00 6f ef b6 a7 ef b6 00 00 00 00 00 00 47   ...o...........G
+0c10  22 b1 94 21 b1 00 00 00 00 00 00 8a 98 ab 3f 98   "..!..........?.
+0c20  ab 00 00 00 00 00 00 d3 53 a6 06 55 a6 00 00 00   ........S..U....
+0c30  00 00 00 9d 61 a1 dc 5f a1 00 00 00 00 00 00 9f   ....a.._........
+0c40  b7 9c e7 b8 9c 00 00 00 00 00 00 3b 67 98 31 68   ...........;g.1h
+0c50  98 00 00 00 00 00 00 73 70 94 06 6e 94 00 00 00   .......sp..n....
+0c60  00 00 00 fc ce 90 32 d0 90 00 00 00 00 00 00 8c   ......2.........
+0c70  91 8d cd 90 8d 00 00 00 00 00 00 ed b0 8a 38 b2   ..............8.
+0c80  8a 00 00 00 00 00 00 10 38 88 71 37 88 00 00 00   ........8.q7....
+0c90  00 00 00 e6 21 86 a4 22 86 00 00 00 00 00 00 1f   ....!.."........
+0ca0  73 84 ab 74 84 00 00 00 00 00 00 35 33 83 eb 2f   s..t.......53../
+0cb0  83 00 00 00 00 00 00 a0 52 82 7f 55 82 00 00 00   ........R..U....
+0cc0  00 00 00 50 e7 81 9e e5 81 00 00 00 00 00 00 86   ...P............
+0cd0  e0 81 32 e0 81 00 00 00 00 00 00 b0 44 82 92 46   ..2.........D..F
+0ce0  82 00 00 00 00 00 00 c8 18 83 fd 16 83 00 00 00   ................
+0cf0  00 00 00 a6 4f 84 02 52 84 00 00 00 00 00 00 aa   ....O..R........
+0d00  f7 85 be f5 85 00 00 00 00 00 00 41 00 88 2e 01   ...........A....
+0d10  88 00 00 00 00 00 00 bd 73 8a d5 72 8a 00 00 00   ........s..r....
+0d20  00 00 00 b6 48 8d cb 47 8d 00 00 00 00 00 00 0e   ....H..G........
+0d30  7b 90 35 7e 90 00 00 00 00 00 00 d4 15 94 e7 13   {.5~............
+0d40  94 00 00 00 00 00 00                              .......
+
+No.     Time           Source                Destination           Protocol Length Info
+   5816 3.509428       host                  1.1.2                 USB      3399   URB_ISOCHRONOUS out
+
+Frame 5816: 3399 bytes on wire (27192 bits), 3399 bytes captured (27192 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 15:16:14.028956000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 13:16:14.028956000 UTC
+    Epoch Arrival Time: 1750684574.028956000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000007000 seconds]
+    [Time delta from previous displayed frame: 0.000007000 seconds]
+    [Time since reference or first frame: 3.509428000 seconds]
+    Frame Number: 5816
+    Frame Length: 3399 bytes (27192 bits)
+    Capture Length: 3399 bytes (27192 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.2]
+    USBPcap pseudoheader length: 519
+    IRP ID: 0xffff9207209b65a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_ISOCH_TRANSFER (0x000a)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x02, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0010 = Endpoint number: 2
+    URB transfer type: URB_ISOCHRONOUS (0x00)
+    Packet Data Length: 2880
+    [Response in: 5833]
+    Isochronous transfer start frame: 3233414
+    Isochronous transfer number of packets: 40
+    Isochronous transfer error count: 0
+USB isochronous packet
+    ISO Data offset: 0x00000000
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 4002988c0398000000000000cd4b9cf94c9c0000000000002ceca05aeaa00000000000001cd8a5bbd8a50000000000003b15abe713ab000000000000b294b08196b0000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000048
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: c15eb6545cb60000000000006460bcd560bc000000000000859ec2ae9fc20000000000002b14c92811c9000000000000d4afcf93b2cf000000000000af7cd63b7cd6000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000090
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 1f6addd068dd000000000000e371e49a73e40000000000004895ebfb94eb0000000000009cc6f265c7f20000000000002507faa605fa000000000000594701f14801000000000000
+USB isochronous packet
+    ISO Data offset: 0x000000d8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: b58b08578a08000000000000fcc60f85c50f000000000000f7ef161cf216000000000000c00e1e840c1e000000000000ab0b252a0c25000000000000cbeb2b12ed2b000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000120
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: aea832f3a7320000000000008538392b3839000000000000f3983fe5973f0000000000001fc04575c14500000000000084b14b1fb04b0000000000003d5c51745d51000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000168
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 23c556bbc656000000000000c1e75b12e65b00000000000074b560d7b660000000000000683665f73565000000000000635f697b5f69000000000000fe2e6dd02e6d000000000000
+USB isochronous packet
+    ISO Data offset: 0x000001b0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 0ca170cba17000000000000025b473c1b473000000000000f66676dd65760000000000001db1782cb27800000000000048987a0b987a000000000000f4167cf9157c000000000000
+USB isochronous packet
+    ISO Data offset: 0x000001f8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 99287d7a2a7d0000000000004ad67db1d47d00000000000012147e72147e00000000000097e87d01e97d00000000000046547d60537d000000000000f1527c28527c000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000240
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 6ae97acde87a0000000000007e1579311679000000000000a1dd769fdc76000000000000c73d74d33e74000000000000d73c71db3d71000000000000b5de6d9bde6d000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000288
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 1b216a97206a000000000000bc09667109660000000000007f9c61d39b6100000000000022db5cabda5c000000000000a9c957efca570000000000002470521a7052000000000000
+USB isochronous packet
+    ISO Data offset: 0x000002d0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: b5d04c3dd04c0000000000002fec466fed46000000000000f0ce4025cf40000000000000c97b3a6d793a00000000000018f0334bf233000000000000283e2da43e2d000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000318
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: d264267c6426000000000000d9691fb1691f000000000000c95218145418000000000000b029118c2911000000000000c6f0093bf009000000000000d7ab02f4ad02000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000360
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 206afbe269fb000000000000762bf40129f400000000000028f0ec35f3ec00000000000014cde5bfcce500000000000032bfde65bdde00000000000069c8d766c9d7000000000000
+USB isochronous packet
+    ISO Data offset: 0x000003a8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 7af6d0a1f7d0000000000000d150ca954eca00000000000008d1c353d2c30000000000000187bdbc89bd000000000000ce7bb74879b7000000000000cea6b1d3a5b1000000000000
+USB isochronous packet
+    ISO Data offset: 0x000003f0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: d012acc315ac00000000000003cea689cca600000000000089d1a1e3cea1000000000000601f9d14229d00000000000026c8983cc89800000000000094c894bdc694000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000438
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: e01c910d2091000000000000c4d78dbbd78d00000000000032f48aeff08a000000000000da6a880f6c88000000000000124c86314e86000000000000359984de9684000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000480
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: f74783a948830000000000006e61822764820000000000001fed8178ea810000000000007adc8116dc810000000000001c3582ba378200000000000030028355ff82000000000000
+USB isochronous packet
+    ISO Data offset: 0x000004c8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 0931847f308400000000000037c88577ca85000000000000fccc87e2cc87000000000000f6368a07358a00000000000032ff8c61018d000000000000f52d901e2f90000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000510
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: f7be9305bb930000000000007ba197eba39700000000000033e49b30e59b000000000000a87da0507ba00000000000000c61a58062a5000000000000be94aa1396aa000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000558
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 4f14b0c112b00000000000004fd3b510d3b500000000000056d1bbb0d2bb000000000000cf0bc2bb0bc2000000000000587ac82779c8000000000000e812cfe315cf000000000000
+USB isochronous packet
+    ISO Data offset: 0x000005a0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: c5ddd55fdcd50000000000002fc7dc75c6dc000000000000afcbe303cee3000000000000c3eeea5feeea0000000000004020f2061ff2000000000000b55af9fc5cf9000000000000
+USB isochronous packet
+    ISO Data offset: 0x000005e8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 3d9f004f9f0000000000000053e2074ce207000000000000281d0f311d0f000000000000ea4b16684c160000000000009b691d10681d000000000000436b24f56a24000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000630
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: e34c2b574e2b000000000000cc0e32910d320000000000008fa138eda13800000000000089043f7c063f000000000000b736451c354500000000000042294b29294b000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000678
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: fbdb50fbdc50000000000000ff4c568d4c5600000000000010745b8f725b000000000000c349605b4b600000000000006ed164acd164000000000000140669570369000000000000
+USB isochronous packet
+    ISO Data offset: 0x000006c0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 76da6c94da6c000000000000da54707a5670000000000000e47673797273000000000000472b76002d76000000000000ae81780e827800000000000021737a83717a000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000708
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: cdf97b2ff97b000000000000e6157dc4167d000000000000cfcb7dfeca7d000000000000ff167e8c147e00000000000091ee7d04f37d000000000000a6667d7f667d000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000750
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 03737cc36f7c000000000000050b7bf80e7b000000000000624779334679000000000000991777dd1577000000000000cf7f74fe8074000000000000d48771c08871000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000798
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 16336ec4316e000000000000177e6a1b7d6a000000000000e16966e96d66000000000000910b62360762000000000000d24e5dd04d5d000000000000474158e34458000000000000
+USB isochronous packet
+    ISO Data offset: 0x000007e0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 7ef452a9f052000000000000de554d06564d000000000000717847fb7947000000000000c96041e5604100000000000081123b15103b000000000000348b34b28c34000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000828
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 53db2d55dd2d000000000000350a27c90527000000000000930b20dd0d20000000000000c7f81895f9180000000000003bd41189d111000000000000ae960a1d980a000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000870
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: d95703295703000000000000c213fc7e12fc00000000000000d2f4afd1f4000000000000f097ed0c9aed000000000000e571e60072e6000000000000b660df835fdf000000000000
+USB isochronous packet
+    ISO Data offset: 0x000008b8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 4c65d80269d80000000000005296d1eb93d100000000000064e7ca6ee6ca0000000000009063c4b065c40000000000004019befa17be000000000000c101b8f401b8000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000900
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: ad27b21229b2000000000000c291acdf92ac0000000000001c44a7a242a7000000000000cd3ca2e33da200000000000038899df9889d000000000000522999d02799000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000948
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 0c1d95cc1d95000000000000bf6c91a36e910000000000001f1f8ec51d8e0000000000000b2d8bf12c8b000000000000069f88a3a088000000000000c67a86767886000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000990
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 44b884fab784000000000000645e83fe5f830000000000000b7382917182000000000000f0ee8162ee81000000000000d0d38140d581000000000000162882cc2882000000000000
+USB isochronous packet
+    ISO Data offset: 0x000009d8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 02e88286e582000000000000240c84b40d84000000000000629d855d9e8500000000000066998722978700000000000046f38944f689000000000000fdb88c1db98c000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000a20
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: a6e08f41de8f0000000000006b6393816293000000000000f04197324397000000000000607d9b4a7c9b000000000000d20ca0c50aa000000000000093e7a4ffeaa4000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000a68
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: c018aafb17aa0000000000002291af558eaf0000000000007f45b5e848b50000000000001944bbb342bb0000000000002c79c13f77c1000000000000a0dec782e0c7000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000ab0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 2978ce3379ce0000000000009c3dd5353cd5000000000000d323dcc522dc000000000000c724e39328e3000000000000e04aeac946ea0000000000006976f1c376f1000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000af8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 2bb0f83db3f80000000000009df9ffb9f6ff000000000000153907f3380700000000000004730eee750e000000000000dca61514a615000000000000aec61cc6c31c000000000000
+
+0000  07 02 a0 65 9b 20 07 92 ff ff 00 00 00 00 0a 00   ...e. ..........
+0010  00 01 00 01 00 02 00 40 0b 00 00 86 56 31 00 28   .......@....V1.(
+0020  00 00 00 00 00 00 00 00 00 00 00 48 00 00 00 00   ...........H....
+0030  00 00 00 48 00 00 00 48 00 00 00 00 00 00 00 90   ...H...H........
+0040  00 00 00 48 00 00 00 00 00 00 00 d8 00 00 00 48   ...H...........H
+0050  00 00 00 00 00 00 00 20 01 00 00 48 00 00 00 00   ....... ...H....
+0060  00 00 00 68 01 00 00 48 00 00 00 00 00 00 00 b0   ...h...H........
+0070  01 00 00 48 00 00 00 00 00 00 00 f8 01 00 00 48   ...H...........H
+0080  00 00 00 00 00 00 00 40 02 00 00 48 00 00 00 00   .......@...H....
+0090  00 00 00 88 02 00 00 48 00 00 00 00 00 00 00 d0   .......H........
+00a0  02 00 00 48 00 00 00 00 00 00 00 18 03 00 00 48   ...H...........H
+00b0  00 00 00 00 00 00 00 60 03 00 00 48 00 00 00 00   .......`...H....
+00c0  00 00 00 a8 03 00 00 48 00 00 00 00 00 00 00 f0   .......H........
+00d0  03 00 00 48 00 00 00 00 00 00 00 38 04 00 00 48   ...H.......8...H
+00e0  00 00 00 00 00 00 00 80 04 00 00 48 00 00 00 00   ...........H....
+00f0  00 00 00 c8 04 00 00 48 00 00 00 00 00 00 00 10   .......H........
+0100  05 00 00 48 00 00 00 00 00 00 00 58 05 00 00 48   ...H.......X...H
+0110  00 00 00 00 00 00 00 a0 05 00 00 48 00 00 00 00   ...........H....
+0120  00 00 00 e8 05 00 00 48 00 00 00 00 00 00 00 30   .......H.......0
+0130  06 00 00 48 00 00 00 00 00 00 00 78 06 00 00 48   ...H.......x...H
+0140  00 00 00 00 00 00 00 c0 06 00 00 48 00 00 00 00   ...........H....
+0150  00 00 00 08 07 00 00 48 00 00 00 00 00 00 00 50   .......H.......P
+0160  07 00 00 48 00 00 00 00 00 00 00 98 07 00 00 48   ...H...........H
+0170  00 00 00 00 00 00 00 e0 07 00 00 48 00 00 00 00   ...........H....
+0180  00 00 00 28 08 00 00 48 00 00 00 00 00 00 00 70   ...(...H.......p
+0190  08 00 00 48 00 00 00 00 00 00 00 b8 08 00 00 48   ...H...........H
+01a0  00 00 00 00 00 00 00 00 09 00 00 48 00 00 00 00   ...........H....
+01b0  00 00 00 48 09 00 00 48 00 00 00 00 00 00 00 90   ...H...H........
+01c0  09 00 00 48 00 00 00 00 00 00 00 d8 09 00 00 48   ...H...........H
+01d0  00 00 00 00 00 00 00 20 0a 00 00 48 00 00 00 00   ....... ...H....
+01e0  00 00 00 68 0a 00 00 48 00 00 00 00 00 00 00 b0   ...h...H........
+01f0  0a 00 00 48 00 00 00 00 00 00 00 f8 0a 00 00 48   ...H...........H
+0200  00 00 00 00 00 00 00 40 02 98 8c 03 98 00 00 00   .......@........
+0210  00 00 00 cd 4b 9c f9 4c 9c 00 00 00 00 00 00 2c   ....K..L.......,
+0220  ec a0 5a ea a0 00 00 00 00 00 00 1c d8 a5 bb d8   ..Z.............
+0230  a5 00 00 00 00 00 00 3b 15 ab e7 13 ab 00 00 00   .......;........
+0240  00 00 00 b2 94 b0 81 96 b0 00 00 00 00 00 00 c1   ................
+0250  5e b6 54 5c b6 00 00 00 00 00 00 64 60 bc d5 60   ^.T\.......d`..`
+0260  bc 00 00 00 00 00 00 85 9e c2 ae 9f c2 00 00 00   ................
+0270  00 00 00 2b 14 c9 28 11 c9 00 00 00 00 00 00 d4   ...+..(.........
+0280  af cf 93 b2 cf 00 00 00 00 00 00 af 7c d6 3b 7c   ............|.;|
+0290  d6 00 00 00 00 00 00 1f 6a dd d0 68 dd 00 00 00   ........j..h....
+02a0  00 00 00 e3 71 e4 9a 73 e4 00 00 00 00 00 00 48   ....q..s.......H
+02b0  95 eb fb 94 eb 00 00 00 00 00 00 9c c6 f2 65 c7   ..............e.
+02c0  f2 00 00 00 00 00 00 25 07 fa a6 05 fa 00 00 00   .......%........
+02d0  00 00 00 59 47 01 f1 48 01 00 00 00 00 00 00 b5   ...YG..H........
+02e0  8b 08 57 8a 08 00 00 00 00 00 00 fc c6 0f 85 c5   ..W.............
+02f0  0f 00 00 00 00 00 00 f7 ef 16 1c f2 16 00 00 00   ................
+0300  00 00 00 c0 0e 1e 84 0c 1e 00 00 00 00 00 00 ab   ................
+0310  0b 25 2a 0c 25 00 00 00 00 00 00 cb eb 2b 12 ed   .%*.%........+..
+0320  2b 00 00 00 00 00 00 ae a8 32 f3 a7 32 00 00 00   +........2..2...
+0330  00 00 00 85 38 39 2b 38 39 00 00 00 00 00 00 f3   ....89+89.......
+0340  98 3f e5 97 3f 00 00 00 00 00 00 1f c0 45 75 c1   .?..?........Eu.
+0350  45 00 00 00 00 00 00 84 b1 4b 1f b0 4b 00 00 00   E........K..K...
+0360  00 00 00 3d 5c 51 74 5d 51 00 00 00 00 00 00 23   ...=\Qt]Q......#
+0370  c5 56 bb c6 56 00 00 00 00 00 00 c1 e7 5b 12 e6   .V..V........[..
+0380  5b 00 00 00 00 00 00 74 b5 60 d7 b6 60 00 00 00   [......t.`..`...
+0390  00 00 00 68 36 65 f7 35 65 00 00 00 00 00 00 63   ...h6e.5e......c
+03a0  5f 69 7b 5f 69 00 00 00 00 00 00 fe 2e 6d d0 2e   _i{_i........m..
+03b0  6d 00 00 00 00 00 00 0c a1 70 cb a1 70 00 00 00   m........p..p...
+03c0  00 00 00 25 b4 73 c1 b4 73 00 00 00 00 00 00 f6   ...%.s..s.......
+03d0  66 76 dd 65 76 00 00 00 00 00 00 1d b1 78 2c b2   fv.ev........x,.
+03e0  78 00 00 00 00 00 00 48 98 7a 0b 98 7a 00 00 00   x......H.z..z...
+03f0  00 00 00 f4 16 7c f9 15 7c 00 00 00 00 00 00 99   .....|..|.......
+0400  28 7d 7a 2a 7d 00 00 00 00 00 00 4a d6 7d b1 d4   (}z*}......J.}..
+0410  7d 00 00 00 00 00 00 12 14 7e 72 14 7e 00 00 00   }........~r.~...
+0420  00 00 00 97 e8 7d 01 e9 7d 00 00 00 00 00 00 46   .....}..}......F
+0430  54 7d 60 53 7d 00 00 00 00 00 00 f1 52 7c 28 52   T}`S}.......R|(R
+0440  7c 00 00 00 00 00 00 6a e9 7a cd e8 7a 00 00 00   |......j.z..z...
+0450  00 00 00 7e 15 79 31 16 79 00 00 00 00 00 00 a1   ...~.y1.y.......
+0460  dd 76 9f dc 76 00 00 00 00 00 00 c7 3d 74 d3 3e   .v..v.......=t.>
+0470  74 00 00 00 00 00 00 d7 3c 71 db 3d 71 00 00 00   t.......<q.=q...
+0480  00 00 00 b5 de 6d 9b de 6d 00 00 00 00 00 00 1b   .....m..m.......
+0490  21 6a 97 20 6a 00 00 00 00 00 00 bc 09 66 71 09   !j. j........fq.
+04a0  66 00 00 00 00 00 00 7f 9c 61 d3 9b 61 00 00 00   f........a..a...
+04b0  00 00 00 22 db 5c ab da 5c 00 00 00 00 00 00 a9   ...".\..\.......
+04c0  c9 57 ef ca 57 00 00 00 00 00 00 24 70 52 1a 70   .W..W......$pR.p
+04d0  52 00 00 00 00 00 00 b5 d0 4c 3d d0 4c 00 00 00   R........L=.L...
+04e0  00 00 00 2f ec 46 6f ed 46 00 00 00 00 00 00 f0   .../.Fo.F.......
+04f0  ce 40 25 cf 40 00 00 00 00 00 00 c9 7b 3a 6d 79   .@%.@.......{:my
+0500  3a 00 00 00 00 00 00 18 f0 33 4b f2 33 00 00 00   :........3K.3...
+0510  00 00 00 28 3e 2d a4 3e 2d 00 00 00 00 00 00 d2   ...(>-.>-.......
+0520  64 26 7c 64 26 00 00 00 00 00 00 d9 69 1f b1 69   d&|d&.......i..i
+0530  1f 00 00 00 00 00 00 c9 52 18 14 54 18 00 00 00   ........R..T....
+0540  00 00 00 b0 29 11 8c 29 11 00 00 00 00 00 00 c6   ....)..)........
+0550  f0 09 3b f0 09 00 00 00 00 00 00 d7 ab 02 f4 ad   ..;.............
+0560  02 00 00 00 00 00 00 20 6a fb e2 69 fb 00 00 00   ....... j..i....
+0570  00 00 00 76 2b f4 01 29 f4 00 00 00 00 00 00 28   ...v+..).......(
+0580  f0 ec 35 f3 ec 00 00 00 00 00 00 14 cd e5 bf cc   ..5.............
+0590  e5 00 00 00 00 00 00 32 bf de 65 bd de 00 00 00   .......2..e.....
+05a0  00 00 00 69 c8 d7 66 c9 d7 00 00 00 00 00 00 7a   ...i..f........z
+05b0  f6 d0 a1 f7 d0 00 00 00 00 00 00 d1 50 ca 95 4e   ............P..N
+05c0  ca 00 00 00 00 00 00 08 d1 c3 53 d2 c3 00 00 00   ..........S.....
+05d0  00 00 00 01 87 bd bc 89 bd 00 00 00 00 00 00 ce   ................
+05e0  7b b7 48 79 b7 00 00 00 00 00 00 ce a6 b1 d3 a5   {.Hy............
+05f0  b1 00 00 00 00 00 00 d0 12 ac c3 15 ac 00 00 00   ................
+0600  00 00 00 03 ce a6 89 cc a6 00 00 00 00 00 00 89   ................
+0610  d1 a1 e3 ce a1 00 00 00 00 00 00 60 1f 9d 14 22   ...........`..."
+0620  9d 00 00 00 00 00 00 26 c8 98 3c c8 98 00 00 00   .......&..<.....
+0630  00 00 00 94 c8 94 bd c6 94 00 00 00 00 00 00 e0   ................
+0640  1c 91 0d 20 91 00 00 00 00 00 00 c4 d7 8d bb d7   ... ............
+0650  8d 00 00 00 00 00 00 32 f4 8a ef f0 8a 00 00 00   .......2........
+0660  00 00 00 da 6a 88 0f 6c 88 00 00 00 00 00 00 12   ....j..l........
+0670  4c 86 31 4e 86 00 00 00 00 00 00 35 99 84 de 96   L.1N.......5....
+0680  84 00 00 00 00 00 00 f7 47 83 a9 48 83 00 00 00   ........G..H....
+0690  00 00 00 6e 61 82 27 64 82 00 00 00 00 00 00 1f   ...na.'d........
+06a0  ed 81 78 ea 81 00 00 00 00 00 00 7a dc 81 16 dc   ..x........z....
+06b0  81 00 00 00 00 00 00 1c 35 82 ba 37 82 00 00 00   ........5..7....
+06c0  00 00 00 30 02 83 55 ff 82 00 00 00 00 00 00 09   ...0..U.........
+06d0  31 84 7f 30 84 00 00 00 00 00 00 37 c8 85 77 ca   1..0.......7..w.
+06e0  85 00 00 00 00 00 00 fc cc 87 e2 cc 87 00 00 00   ................
+06f0  00 00 00 f6 36 8a 07 35 8a 00 00 00 00 00 00 32   ....6..5.......2
+0700  ff 8c 61 01 8d 00 00 00 00 00 00 f5 2d 90 1e 2f   ..a.........-../
+0710  90 00 00 00 00 00 00 f7 be 93 05 bb 93 00 00 00   ................
+0720  00 00 00 7b a1 97 eb a3 97 00 00 00 00 00 00 33   ...{...........3
+0730  e4 9b 30 e5 9b 00 00 00 00 00 00 a8 7d a0 50 7b   ..0.........}.P{
+0740  a0 00 00 00 00 00 00 0c 61 a5 80 62 a5 00 00 00   ........a..b....
+0750  00 00 00 be 94 aa 13 96 aa 00 00 00 00 00 00 4f   ...............O
+0760  14 b0 c1 12 b0 00 00 00 00 00 00 4f d3 b5 10 d3   ...........O....
+0770  b5 00 00 00 00 00 00 56 d1 bb b0 d2 bb 00 00 00   .......V........
+0780  00 00 00 cf 0b c2 bb 0b c2 00 00 00 00 00 00 58   ...............X
+0790  7a c8 27 79 c8 00 00 00 00 00 00 e8 12 cf e3 15   z.'y............
+07a0  cf 00 00 00 00 00 00 c5 dd d5 5f dc d5 00 00 00   .........._.....
+07b0  00 00 00 2f c7 dc 75 c6 dc 00 00 00 00 00 00 af   .../..u.........
+07c0  cb e3 03 ce e3 00 00 00 00 00 00 c3 ee ea 5f ee   .............._.
+07d0  ea 00 00 00 00 00 00 40 20 f2 06 1f f2 00 00 00   .......@ .......
+07e0  00 00 00 b5 5a f9 fc 5c f9 00 00 00 00 00 00 3d   ....Z..\.......=
+07f0  9f 00 4f 9f 00 00 00 00 00 00 00 53 e2 07 4c e2   ..O........S..L.
+0800  07 00 00 00 00 00 00 28 1d 0f 31 1d 0f 00 00 00   .......(..1.....
+0810  00 00 00 ea 4b 16 68 4c 16 00 00 00 00 00 00 9b   ....K.hL........
+0820  69 1d 10 68 1d 00 00 00 00 00 00 43 6b 24 f5 6a   i..h.......Ck$.j
+0830  24 00 00 00 00 00 00 e3 4c 2b 57 4e 2b 00 00 00   $.......L+WN+...
+0840  00 00 00 cc 0e 32 91 0d 32 00 00 00 00 00 00 8f   .....2..2.......
+0850  a1 38 ed a1 38 00 00 00 00 00 00 89 04 3f 7c 06   .8..8........?|.
+0860  3f 00 00 00 00 00 00 b7 36 45 1c 35 45 00 00 00   ?.......6E.5E...
+0870  00 00 00 42 29 4b 29 29 4b 00 00 00 00 00 00 fb   ...B)K))K.......
+0880  db 50 fb dc 50 00 00 00 00 00 00 ff 4c 56 8d 4c   .P..P.......LV.L
+0890  56 00 00 00 00 00 00 10 74 5b 8f 72 5b 00 00 00   V.......t[.r[...
+08a0  00 00 00 c3 49 60 5b 4b 60 00 00 00 00 00 00 6e   ....I`[K`......n
+08b0  d1 64 ac d1 64 00 00 00 00 00 00 14 06 69 57 03   .d..d........iW.
+08c0  69 00 00 00 00 00 00 76 da 6c 94 da 6c 00 00 00   i......v.l..l...
+08d0  00 00 00 da 54 70 7a 56 70 00 00 00 00 00 00 e4   ....TpzVp.......
+08e0  76 73 79 72 73 00 00 00 00 00 00 47 2b 76 00 2d   vsyrs......G+v.-
+08f0  76 00 00 00 00 00 00 ae 81 78 0e 82 78 00 00 00   v........x..x...
+0900  00 00 00 21 73 7a 83 71 7a 00 00 00 00 00 00 cd   ...!sz.qz.......
+0910  f9 7b 2f f9 7b 00 00 00 00 00 00 e6 15 7d c4 16   .{/.{........}..
+0920  7d 00 00 00 00 00 00 cf cb 7d fe ca 7d 00 00 00   }........}..}...
+0930  00 00 00 ff 16 7e 8c 14 7e 00 00 00 00 00 00 91   .....~..~.......
+0940  ee 7d 04 f3 7d 00 00 00 00 00 00 a6 66 7d 7f 66   .}..}.......f}.f
+0950  7d 00 00 00 00 00 00 03 73 7c c3 6f 7c 00 00 00   }.......s|.o|...
+0960  00 00 00 05 0b 7b f8 0e 7b 00 00 00 00 00 00 62   .....{..{......b
+0970  47 79 33 46 79 00 00 00 00 00 00 99 17 77 dd 15   Gy3Fy........w..
+0980  77 00 00 00 00 00 00 cf 7f 74 fe 80 74 00 00 00   w........t..t...
+0990  00 00 00 d4 87 71 c0 88 71 00 00 00 00 00 00 16   .....q..q.......
+09a0  33 6e c4 31 6e 00 00 00 00 00 00 17 7e 6a 1b 7d   3n.1n.......~j.}
+09b0  6a 00 00 00 00 00 00 e1 69 66 e9 6d 66 00 00 00   j.......if.mf...
+09c0  00 00 00 91 0b 62 36 07 62 00 00 00 00 00 00 d2   .....b6.b.......
+09d0  4e 5d d0 4d 5d 00 00 00 00 00 00 47 41 58 e3 44   N].M]......GAX.D
+09e0  58 00 00 00 00 00 00 7e f4 52 a9 f0 52 00 00 00   X......~.R..R...
+09f0  00 00 00 de 55 4d 06 56 4d 00 00 00 00 00 00 71   ....UM.VM......q
+0a00  78 47 fb 79 47 00 00 00 00 00 00 c9 60 41 e5 60   xG.yG.......`A.`
+0a10  41 00 00 00 00 00 00 81 12 3b 15 10 3b 00 00 00   A........;..;...
+0a20  00 00 00 34 8b 34 b2 8c 34 00 00 00 00 00 00 53   ...4.4..4......S
+0a30  db 2d 55 dd 2d 00 00 00 00 00 00 35 0a 27 c9 05   .-U.-......5.'..
+0a40  27 00 00 00 00 00 00 93 0b 20 dd 0d 20 00 00 00   '........ .. ...
+0a50  00 00 00 c7 f8 18 95 f9 18 00 00 00 00 00 00 3b   ...............;
+0a60  d4 11 89 d1 11 00 00 00 00 00 00 ae 96 0a 1d 98   ................
+0a70  0a 00 00 00 00 00 00 d9 57 03 29 57 03 00 00 00   ........W.)W....
+0a80  00 00 00 c2 13 fc 7e 12 fc 00 00 00 00 00 00 00   ......~.........
+0a90  d2 f4 af d1 f4 00 00 00 00 00 00 f0 97 ed 0c 9a   ................
+0aa0  ed 00 00 00 00 00 00 e5 71 e6 00 72 e6 00 00 00   ........q..r....
+0ab0  00 00 00 b6 60 df 83 5f df 00 00 00 00 00 00 4c   ....`.._.......L
+0ac0  65 d8 02 69 d8 00 00 00 00 00 00 52 96 d1 eb 93   e..i.......R....
+0ad0  d1 00 00 00 00 00 00 64 e7 ca 6e e6 ca 00 00 00   .......d..n.....
+0ae0  00 00 00 90 63 c4 b0 65 c4 00 00 00 00 00 00 40   ....c..e.......@
+0af0  19 be fa 17 be 00 00 00 00 00 00 c1 01 b8 f4 01   ................
+0b00  b8 00 00 00 00 00 00 ad 27 b2 12 29 b2 00 00 00   ........'..)....
+0b10  00 00 00 c2 91 ac df 92 ac 00 00 00 00 00 00 1c   ................
+0b20  44 a7 a2 42 a7 00 00 00 00 00 00 cd 3c a2 e3 3d   D..B........<..=
+0b30  a2 00 00 00 00 00 00 38 89 9d f9 88 9d 00 00 00   .......8........
+0b40  00 00 00 52 29 99 d0 27 99 00 00 00 00 00 00 0c   ...R)..'........
+0b50  1d 95 cc 1d 95 00 00 00 00 00 00 bf 6c 91 a3 6e   ............l..n
+0b60  91 00 00 00 00 00 00 1f 1f 8e c5 1d 8e 00 00 00   ................
+0b70  00 00 00 0b 2d 8b f1 2c 8b 00 00 00 00 00 00 06   ....-..,........
+0b80  9f 88 a3 a0 88 00 00 00 00 00 00 c6 7a 86 76 78   ............z.vx
+0b90  86 00 00 00 00 00 00 44 b8 84 fa b7 84 00 00 00   .......D........
+0ba0  00 00 00 64 5e 83 fe 5f 83 00 00 00 00 00 00 0b   ...d^.._........
+0bb0  73 82 91 71 82 00 00 00 00 00 00 f0 ee 81 62 ee   s..q..........b.
+0bc0  81 00 00 00 00 00 00 d0 d3 81 40 d5 81 00 00 00   ..........@.....
+0bd0  00 00 00 16 28 82 cc 28 82 00 00 00 00 00 00 02   ....(..(........
+0be0  e8 82 86 e5 82 00 00 00 00 00 00 24 0c 84 b4 0d   ...........$....
+0bf0  84 00 00 00 00 00 00 62 9d 85 5d 9e 85 00 00 00   .......b..].....
+0c00  00 00 00 66 99 87 22 97 87 00 00 00 00 00 00 46   ...f.."........F
+0c10  f3 89 44 f6 89 00 00 00 00 00 00 fd b8 8c 1d b9   ..D.............
+0c20  8c 00 00 00 00 00 00 a6 e0 8f 41 de 8f 00 00 00   ..........A.....
+0c30  00 00 00 6b 63 93 81 62 93 00 00 00 00 00 00 f0   ...kc..b........
+0c40  41 97 32 43 97 00 00 00 00 00 00 60 7d 9b 4a 7c   A.2C.......`}.J|
+0c50  9b 00 00 00 00 00 00 d2 0c a0 c5 0a a0 00 00 00   ................
+0c60  00 00 00 93 e7 a4 ff ea a4 00 00 00 00 00 00 c0   ................
+0c70  18 aa fb 17 aa 00 00 00 00 00 00 22 91 af 55 8e   ..........."..U.
+0c80  af 00 00 00 00 00 00 7f 45 b5 e8 48 b5 00 00 00   ........E..H....
+0c90  00 00 00 19 44 bb b3 42 bb 00 00 00 00 00 00 2c   ....D..B.......,
+0ca0  79 c1 3f 77 c1 00 00 00 00 00 00 a0 de c7 82 e0   y.?w............
+0cb0  c7 00 00 00 00 00 00 29 78 ce 33 79 ce 00 00 00   .......)x.3y....
+0cc0  00 00 00 9c 3d d5 35 3c d5 00 00 00 00 00 00 d3   ....=.5<........
+0cd0  23 dc c5 22 dc 00 00 00 00 00 00 c7 24 e3 93 28   #.."........$..(
+0ce0  e3 00 00 00 00 00 00 e0 4a ea c9 46 ea 00 00 00   ........J..F....
+0cf0  00 00 00 69 76 f1 c3 76 f1 00 00 00 00 00 00 2b   ...iv..v.......+
+0d00  b0 f8 3d b3 f8 00 00 00 00 00 00 9d f9 ff b9 f6   ..=.............
+0d10  ff 00 00 00 00 00 00 15 39 07 f3 38 07 00 00 00   ........9..8....
+0d20  00 00 00 04 73 0e ee 75 0e 00 00 00 00 00 00 dc   ....s..u........
+0d30  a6 15 14 a6 15 00 00 00 00 00 00 ae c6 1c c6 c3   ................
+0d40  1c 00 00 00 00 00 00                              .......
+
+No.     Time           Source                Destination           Protocol Length Info
+   5822 3.513364       host                  1.1.2                 USB      3399   URB_ISOCHRONOUS out
+
+Frame 5822: 3399 bytes on wire (27192 bits), 3399 bytes captured (27192 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 15:16:14.032892000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 13:16:14.032892000 UTC
+    Epoch Arrival Time: 1750684574.032892000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000006000 seconds]
+    [Time delta from previous displayed frame: 0.000006000 seconds]
+    [Time since reference or first frame: 3.513364000 seconds]
+    Frame Number: 5822
+    Frame Length: 3399 bytes (27192 bits)
+    Capture Length: 3399 bytes (27192 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: host]
+    [Destination: 1.1.2]
+    USBPcap pseudoheader length: 519
+    IRP ID: 0xffff9207209b6050
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_ISOCH_TRANSFER (0x000a)
+    IRP information: 0x00, Direction: FDO -> PDO
+        0000 000. = Reserved: 0x00
+        .... ...0 = Direction: FDO -> PDO (0x0)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x02, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0010 = Endpoint number: 2
+    URB transfer type: URB_ISOCHRONOUS (0x00)
+    Packet Data Length: 2880
+    [Response in: 5841]
+    Isochronous transfer start frame: 3233419
+    Isochronous transfer number of packets: 40
+    Isochronous transfer error count: 0
+USB isochronous packet
+    ISO Data offset: 0x00000000
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: e2c7239fc923000000000000eeaf2a3fb02a000000000000b07631ef7231000000000000af0838690b38000000000000ce743e25753e000000000000a5ad4494a844000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000048
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: aca14aa8a24a000000000000515c50905c50000000000000ead455f9d2550000000000003d015b93ff5a000000000000a3dc5fc2df5f000000000000af6f64086e64000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000090
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: f1a6682da768000000000000d9846c2a876c000000000000750d70a60b70000000000000bb31734a30730000000000007ff17536f375000000000000cb5278655278000000000000
+USB isochronous packet
+    ISO Data offset: 0x000000d8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 654b7ad14a7a0000000000005bdb7bf7db7b000000000000ae037d8b037d00000000000032c27d5fc17d00000000000013147ea7147e000000000000a5fb7d91fb7d000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000120
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 4f7a7de5787d000000000000778a7c1e8b7c00000000000035337ba8337b0000000000002e7479fe7379000000000000934c77a14c770000000000001ec07404c174000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000168
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: ecd271a7d17100000000000045816e12826e00000000000028d56a89d56a000000000000adce66b1ce6600000000000035706208706200000000000012bd5d1abe5d000000000000
+USB isochronous packet
+    ISO Data offset: 0x000001b0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 5dbc5881bc58000000000000946f53c06e53000000000000f6d84d49da4d000000000000d4034868044800000000000016f0414ff041000000000000e0a33b94a43b000000000000
+USB isochronous packet
+    ISO Data offset: 0x000001f8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 3e2535832535000000000000ed7a2eca792e000000000000fda5270da62700000000000061b020fcb020000000000000a9a019319f19000000000000bc7712767812000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000240
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 943f0bd4400b0000000000000f0104c20004000000000000b8bcfcfdbbfc000000000000a279f5837af50000000000009f42ee9b41ee0000000000004f19e71518e7000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000288
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 5e02e07903e0000000000000f809d97f0ad90000000000003f33d2fc31d2000000000000e47fcbf280cb00000000000073fbc429fcc4000000000000aaaabe7ea9be000000000000
+USB isochronous packet
+    ISO Data offset: 0x000002d0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 5a8eb82e8eb800000000000047aeb2f0afb2000000000000de13ad3513ad00000000000089bca793bca70000000000001aafa25ab1a2000000000000d2f59dcaf49d000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000318
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: e58b99ea8b99000000000000ef7895d17995000000000000b9c291d3c29100000000000074698e77688e000000000000326e8ba16f8b000000000000e1d788d2d888000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000360
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 2baa8615a88600000000000071dc84d8dd84000000000000347c83237c83000000000000a986820f8482000000000000baf581faf681000000000000cad281a2d481000000000000
+USB isochronous packet
+    ISO Data offset: 0x000003a8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 2a1e82741d8200000000000085d18221d182000000000000a2ed83fbee83000000000000897785d07685000000000000a86687f9658700000000000045b98956bb89000000000000
+USB isochronous packet
+    ISO Data offset: 0x000003f0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 22768c83758c00000000000097918f75918f000000000000ab0b93ff0c9300000000000016e59603e59600000000000067189be5169b000000000000e29c9fdb9c9f000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000438
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 9c75a47676a40000000000006f9ea9569ca9000000000000090baf750caf00000000000024c0b485c0b4000000000000b7b5ba4fb5ba00000000000063e4c0a0e3c0000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000480
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: e647c7d148c70000000000005ddecd46ddcd000000000000469cd4de9cd40000000000003880dbf180db000000000000b184e23484e2000000000000259fe90aa0e9000000000000
+USB isochronous packet
+    ISO Data offset: 0x000004c8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 87cef097cef0000000000000940bf86f0bf8000000000000644dffbf4cff0000000000009b8f06799006000000000000b8cd0dfdcd0d00000000000073ff149cff14000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000510
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 6a1e1c271f1c000000000000a227238a272300000000000015122ad4112a000000000000b3d730c9d7300000000000003174370e753700000000000088e23d5ee23d000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000558
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 331b44b61b44000000000000ab1a4aa61a4a000000000000bddb4faadb4f000000000000fe5755ad5755000000000000468b5aed8b5a0000000000005e735f07735f000000000000
+USB isochronous packet
+    ISO Data offset: 0x000005a0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 630964a10864000000000000154968374a6800000000000067326cdc326c000000000000c9c06f87bf6f000000000000f0ec7249ed72000000000000f0b9759eb975000000000000
+USB isochronous packet
+    ISO Data offset: 0x000005e8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 0b2478ca217800000000000065237a19247a00000000000092be7bc3be7b00000000000021f17ce8ef7c0000000000004eb87db3b77d00000000000055147eed137e000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000630
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: b8067e3b067e000000000000d98d7d338c7d000000000000a1a77cfaa87c000000000000115b7b8c5a7b00000000000069a47975a479000000000000908477a48677000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000678
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: c003755b0375000000000000631e72a41c72000000000000c6d46e11d56e000000000000312f6b0b306b000000000000353067622f67000000000000d0d66230d762000000000000
+USB isochronous packet
+    ISO Data offset: 0x000006c0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: d6295e0c2c5e000000000000d23059712f590000000000000be85303e85300000000000076584e0d594e0000000000009c89485c8848000000000000c57842877842000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000708
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: eb2f3c66323c00000000000055b7359eb735000000000000ba102fb90f2f000000000000463f28084128000000000000454f21ed4e21000000000000ef421a5a411a000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000750
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 001b13aa1c1300000000000040e70b23e80b00000000000089aa04c7a8040000000000006864fd7865fd0000000000005c23f67424f600000000000090edeebcebee000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000798
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: d9c2e799c1e7000000000000e1aae085ace000000000000090b2d929b1d9000000000000d2d6d2ead6d2000000000000e81fcc5722cc0000000000005a9cc53b9bc5000000000000
+USB isochronous packet
+    ISO Data offset: 0x000007e0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 0a45bf1644bf000000000000ab23b91425b9000000000000cc41b36541b300000000000032a0ad669fad0000000000002843a8fc42a80000000000001830a3d530a3000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000828
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: a86e9e486e9e000000000000d8fd992dfe99000000000000f4e395e5e495000000000000982792682592000000000000f6c18e36c38e0000000000008cc18bf7c08b000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000870
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 962089d42189000000000000aae68600e7860000000000008b1385b11385000000000000b7a783eda78300000000000030a782dba6820000000000003b0e82480f82000000000000
+USB isochronous packet
+    ISO Data offset: 0x000008b8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: d6e28128e3810000000000007f22826221820000000000003ac98208cb8200000000000046df83c1de83000000000000465c85885c85000000000000cf4187364187000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000900
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: ab8e89988d89000000000000913d8ca73d8c000000000000b8518fad508f000000000000e8c09213c292000000000000519096608f96000000000000d9b79aceb79a000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000948
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 21349f77349f0000000000007e06a48e05a4000000000000e022a9c722a9000000000000b48aae718bae0000000000001538b41a38b40000000000001525ba4c26ba000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000990
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: a14fc0e74ec00000000000005faec6e9aec60000000000000240cdcd3ecd00000000000043fad37afad30000000000005fdbda3adbda000000000000e6dce11ddce1000000000000
+USB isochronous packet
+    ISO Data offset: 0x000009d8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: dbf4e8b3f6e80000000000000525f0ba24f00000000000005161f7b760f700000000000069a3fe69a3fe0000000000001de9056de80500000000000010280de8270d000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000a20
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 8f5c14bc5b14000000000000467e1b307f1b000000000000898a22728a22000000000000767a29187929000000000000ca4230114430000000000000b3e736a5e636000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000a68
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 015a3d7c593d000000000000f49843c49943000000000000b79f49529f490000000000006f664f6a674f0000000000008beb5434eb540000000000004b275a47275a000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000ab0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 5f175f16175f00000000000072b66359b56300000000000006fe6705006800000000000049f36b24f16b0000000000009e856faa866f00000000000056bd72a0bd72000000000000
+USB isochronous packet
+    ISO Data offset: 0x00000af8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (irrelevant)
+    ISO Data: 7094752a93750000000000008304780c05780000000000001c127ae0107a00000000000026b47b57b57b0000000000007af17cccef7c00000000000043c07dacc17d000000000000
+
+0000  07 02 50 60 9b 20 07 92 ff ff 00 00 00 00 0a 00   ..P`. ..........
+0010  00 01 00 01 00 02 00 40 0b 00 00 8b 56 31 00 28   .......@....V1.(
+0020  00 00 00 00 00 00 00 00 00 00 00 48 00 00 00 00   ...........H....
+0030  00 00 00 48 00 00 00 48 00 00 00 00 00 00 00 90   ...H...H........
+0040  00 00 00 48 00 00 00 00 00 00 00 d8 00 00 00 48   ...H...........H
+0050  00 00 00 00 00 00 00 20 01 00 00 48 00 00 00 00   ....... ...H....
+0060  00 00 00 68 01 00 00 48 00 00 00 00 00 00 00 b0   ...h...H........
+0070  01 00 00 48 00 00 00 00 00 00 00 f8 01 00 00 48   ...H...........H
+0080  00 00 00 00 00 00 00 40 02 00 00 48 00 00 00 00   .......@...H....
+0090  00 00 00 88 02 00 00 48 00 00 00 00 00 00 00 d0   .......H........
+00a0  02 00 00 48 00 00 00 00 00 00 00 18 03 00 00 48   ...H...........H
+00b0  00 00 00 00 00 00 00 60 03 00 00 48 00 00 00 00   .......`...H....
+00c0  00 00 00 a8 03 00 00 48 00 00 00 00 00 00 00 f0   .......H........
+00d0  03 00 00 48 00 00 00 00 00 00 00 38 04 00 00 48   ...H.......8...H
+00e0  00 00 00 00 00 00 00 80 04 00 00 48 00 00 00 00   ...........H....
+00f0  00 00 00 c8 04 00 00 48 00 00 00 00 00 00 00 10   .......H........
+0100  05 00 00 48 00 00 00 00 00 00 00 58 05 00 00 48   ...H.......X...H
+0110  00 00 00 00 00 00 00 a0 05 00 00 48 00 00 00 00   ...........H....
+0120  00 00 00 e8 05 00 00 48 00 00 00 00 00 00 00 30   .......H.......0
+0130  06 00 00 48 00 00 00 00 00 00 00 78 06 00 00 48   ...H.......x...H
+0140  00 00 00 00 00 00 00 c0 06 00 00 48 00 00 00 00   ...........H....
+0150  00 00 00 08 07 00 00 48 00 00 00 00 00 00 00 50   .......H.......P
+0160  07 00 00 48 00 00 00 00 00 00 00 98 07 00 00 48   ...H...........H
+0170  00 00 00 00 00 00 00 e0 07 00 00 48 00 00 00 00   ...........H....
+0180  00 00 00 28 08 00 00 48 00 00 00 00 00 00 00 70   ...(...H.......p
+0190  08 00 00 48 00 00 00 00 00 00 00 b8 08 00 00 48   ...H...........H
+01a0  00 00 00 00 00 00 00 00 09 00 00 48 00 00 00 00   ...........H....
+01b0  00 00 00 48 09 00 00 48 00 00 00 00 00 00 00 90   ...H...H........
+01c0  09 00 00 48 00 00 00 00 00 00 00 d8 09 00 00 48   ...H...........H
+01d0  00 00 00 00 00 00 00 20 0a 00 00 48 00 00 00 00   ....... ...H....
+01e0  00 00 00 68 0a 00 00 48 00 00 00 00 00 00 00 b0   ...h...H........
+01f0  0a 00 00 48 00 00 00 00 00 00 00 f8 0a 00 00 48   ...H...........H
+0200  00 00 00 00 00 00 00 e2 c7 23 9f c9 23 00 00 00   .........#..#...
+0210  00 00 00 ee af 2a 3f b0 2a 00 00 00 00 00 00 b0   .....*?.*.......
+0220  76 31 ef 72 31 00 00 00 00 00 00 af 08 38 69 0b   v1.r1........8i.
+0230  38 00 00 00 00 00 00 ce 74 3e 25 75 3e 00 00 00   8.......t>%u>...
+0240  00 00 00 a5 ad 44 94 a8 44 00 00 00 00 00 00 ac   .....D..D.......
+0250  a1 4a a8 a2 4a 00 00 00 00 00 00 51 5c 50 90 5c   .J..J......Q\P.\
+0260  50 00 00 00 00 00 00 ea d4 55 f9 d2 55 00 00 00   P........U..U...
+0270  00 00 00 3d 01 5b 93 ff 5a 00 00 00 00 00 00 a3   ...=.[..Z.......
+0280  dc 5f c2 df 5f 00 00 00 00 00 00 af 6f 64 08 6e   ._.._.......od.n
+0290  64 00 00 00 00 00 00 f1 a6 68 2d a7 68 00 00 00   d........h-.h...
+02a0  00 00 00 d9 84 6c 2a 87 6c 00 00 00 00 00 00 75   .....l*.l......u
+02b0  0d 70 a6 0b 70 00 00 00 00 00 00 bb 31 73 4a 30   .p..p.......1sJ0
+02c0  73 00 00 00 00 00 00 7f f1 75 36 f3 75 00 00 00   s........u6.u...
+02d0  00 00 00 cb 52 78 65 52 78 00 00 00 00 00 00 65   ....RxeRx......e
+02e0  4b 7a d1 4a 7a 00 00 00 00 00 00 5b db 7b f7 db   Kz.Jz......[.{..
+02f0  7b 00 00 00 00 00 00 ae 03 7d 8b 03 7d 00 00 00   {........}..}...
+0300  00 00 00 32 c2 7d 5f c1 7d 00 00 00 00 00 00 13   ...2.}_.}.......
+0310  14 7e a7 14 7e 00 00 00 00 00 00 a5 fb 7d 91 fb   .~..~........}..
+0320  7d 00 00 00 00 00 00 4f 7a 7d e5 78 7d 00 00 00   }......Oz}.x}...
+0330  00 00 00 77 8a 7c 1e 8b 7c 00 00 00 00 00 00 35   ...w.|..|......5
+0340  33 7b a8 33 7b 00 00 00 00 00 00 2e 74 79 fe 73   3{.3{.......ty.s
+0350  79 00 00 00 00 00 00 93 4c 77 a1 4c 77 00 00 00   y.......Lw.Lw...
+0360  00 00 00 1e c0 74 04 c1 74 00 00 00 00 00 00 ec   .....t..t.......
+0370  d2 71 a7 d1 71 00 00 00 00 00 00 45 81 6e 12 82   .q..q......E.n..
+0380  6e 00 00 00 00 00 00 28 d5 6a 89 d5 6a 00 00 00   n......(.j..j...
+0390  00 00 00 ad ce 66 b1 ce 66 00 00 00 00 00 00 35   .....f..f......5
+03a0  70 62 08 70 62 00 00 00 00 00 00 12 bd 5d 1a be   pb.pb........]..
+03b0  5d 00 00 00 00 00 00 5d bc 58 81 bc 58 00 00 00   ]......].X..X...
+03c0  00 00 00 94 6f 53 c0 6e 53 00 00 00 00 00 00 f6   ....oS.nS.......
+03d0  d8 4d 49 da 4d 00 00 00 00 00 00 d4 03 48 68 04   .MI.M........Hh.
+03e0  48 00 00 00 00 00 00 16 f0 41 4f f0 41 00 00 00   H........AO.A...
+03f0  00 00 00 e0 a3 3b 94 a4 3b 00 00 00 00 00 00 3e   .....;..;......>
+0400  25 35 83 25 35 00 00 00 00 00 00 ed 7a 2e ca 79   %5.%5.......z..y
+0410  2e 00 00 00 00 00 00 fd a5 27 0d a6 27 00 00 00   .........'..'...
+0420  00 00 00 61 b0 20 fc b0 20 00 00 00 00 00 00 a9   ...a. .. .......
+0430  a0 19 31 9f 19 00 00 00 00 00 00 bc 77 12 76 78   ..1.........w.vx
+0440  12 00 00 00 00 00 00 94 3f 0b d4 40 0b 00 00 00   ........?..@....
+0450  00 00 00 0f 01 04 c2 00 04 00 00 00 00 00 00 b8   ................
+0460  bc fc fd bb fc 00 00 00 00 00 00 a2 79 f5 83 7a   ............y..z
+0470  f5 00 00 00 00 00 00 9f 42 ee 9b 41 ee 00 00 00   ........B..A....
+0480  00 00 00 4f 19 e7 15 18 e7 00 00 00 00 00 00 5e   ...O...........^
+0490  02 e0 79 03 e0 00 00 00 00 00 00 f8 09 d9 7f 0a   ..y.............
+04a0  d9 00 00 00 00 00 00 3f 33 d2 fc 31 d2 00 00 00   .......?3..1....
+04b0  00 00 00 e4 7f cb f2 80 cb 00 00 00 00 00 00 73   ...............s
+04c0  fb c4 29 fc c4 00 00 00 00 00 00 aa aa be 7e a9   ..)...........~.
+04d0  be 00 00 00 00 00 00 5a 8e b8 2e 8e b8 00 00 00   .......Z........
+04e0  00 00 00 47 ae b2 f0 af b2 00 00 00 00 00 00 de   ...G............
+04f0  13 ad 35 13 ad 00 00 00 00 00 00 89 bc a7 93 bc   ..5.............
+0500  a7 00 00 00 00 00 00 1a af a2 5a b1 a2 00 00 00   ..........Z.....
+0510  00 00 00 d2 f5 9d ca f4 9d 00 00 00 00 00 00 e5   ................
+0520  8b 99 ea 8b 99 00 00 00 00 00 00 ef 78 95 d1 79   ............x..y
+0530  95 00 00 00 00 00 00 b9 c2 91 d3 c2 91 00 00 00   ................
+0540  00 00 00 74 69 8e 77 68 8e 00 00 00 00 00 00 32   ...ti.wh.......2
+0550  6e 8b a1 6f 8b 00 00 00 00 00 00 e1 d7 88 d2 d8   n..o............
+0560  88 00 00 00 00 00 00 2b aa 86 15 a8 86 00 00 00   .......+........
+0570  00 00 00 71 dc 84 d8 dd 84 00 00 00 00 00 00 34   ...q...........4
+0580  7c 83 23 7c 83 00 00 00 00 00 00 a9 86 82 0f 84   |.#|............
+0590  82 00 00 00 00 00 00 ba f5 81 fa f6 81 00 00 00   ................
+05a0  00 00 00 ca d2 81 a2 d4 81 00 00 00 00 00 00 2a   ...............*
+05b0  1e 82 74 1d 82 00 00 00 00 00 00 85 d1 82 21 d1   ..t...........!.
+05c0  82 00 00 00 00 00 00 a2 ed 83 fb ee 83 00 00 00   ................
+05d0  00 00 00 89 77 85 d0 76 85 00 00 00 00 00 00 a8   ....w..v........
+05e0  66 87 f9 65 87 00 00 00 00 00 00 45 b9 89 56 bb   f..e.......E..V.
+05f0  89 00 00 00 00 00 00 22 76 8c 83 75 8c 00 00 00   ......."v..u....
+0600  00 00 00 97 91 8f 75 91 8f 00 00 00 00 00 00 ab   ......u.........
+0610  0b 93 ff 0c 93 00 00 00 00 00 00 16 e5 96 03 e5   ................
+0620  96 00 00 00 00 00 00 67 18 9b e5 16 9b 00 00 00   .......g........
+0630  00 00 00 e2 9c 9f db 9c 9f 00 00 00 00 00 00 9c   ................
+0640  75 a4 76 76 a4 00 00 00 00 00 00 6f 9e a9 56 9c   u.vv.......o..V.
+0650  a9 00 00 00 00 00 00 09 0b af 75 0c af 00 00 00   ..........u.....
+0660  00 00 00 24 c0 b4 85 c0 b4 00 00 00 00 00 00 b7   ...$............
+0670  b5 ba 4f b5 ba 00 00 00 00 00 00 63 e4 c0 a0 e3   ..O........c....
+0680  c0 00 00 00 00 00 00 e6 47 c7 d1 48 c7 00 00 00   ........G..H....
+0690  00 00 00 5d de cd 46 dd cd 00 00 00 00 00 00 46   ...]..F........F
+06a0  9c d4 de 9c d4 00 00 00 00 00 00 38 80 db f1 80   ...........8....
+06b0  db 00 00 00 00 00 00 b1 84 e2 34 84 e2 00 00 00   ..........4.....
+06c0  00 00 00 25 9f e9 0a a0 e9 00 00 00 00 00 00 87   ...%............
+06d0  ce f0 97 ce f0 00 00 00 00 00 00 94 0b f8 6f 0b   ..............o.
+06e0  f8 00 00 00 00 00 00 64 4d ff bf 4c ff 00 00 00   .......dM..L....
+06f0  00 00 00 9b 8f 06 79 90 06 00 00 00 00 00 00 b8   ......y.........
+0700  cd 0d fd cd 0d 00 00 00 00 00 00 73 ff 14 9c ff   ...........s....
+0710  14 00 00 00 00 00 00 6a 1e 1c 27 1f 1c 00 00 00   .......j..'.....
+0720  00 00 00 a2 27 23 8a 27 23 00 00 00 00 00 00 15   ....'#.'#.......
+0730  12 2a d4 11 2a 00 00 00 00 00 00 b3 d7 30 c9 d7   .*..*........0..
+0740  30 00 00 00 00 00 00 31 74 37 0e 75 37 00 00 00   0......1t7.u7...
+0750  00 00 00 88 e2 3d 5e e2 3d 00 00 00 00 00 00 33   .....=^.=......3
+0760  1b 44 b6 1b 44 00 00 00 00 00 00 ab 1a 4a a6 1a   .D..D........J..
+0770  4a 00 00 00 00 00 00 bd db 4f aa db 4f 00 00 00   J........O..O...
+0780  00 00 00 fe 57 55 ad 57 55 00 00 00 00 00 00 46   ....WU.WU......F
+0790  8b 5a ed 8b 5a 00 00 00 00 00 00 5e 73 5f 07 73   .Z..Z......^s_.s
+07a0  5f 00 00 00 00 00 00 63 09 64 a1 08 64 00 00 00   _......c.d..d...
+07b0  00 00 00 15 49 68 37 4a 68 00 00 00 00 00 00 67   ....Ih7Jh......g
+07c0  32 6c dc 32 6c 00 00 00 00 00 00 c9 c0 6f 87 bf   2l.2l........o..
+07d0  6f 00 00 00 00 00 00 f0 ec 72 49 ed 72 00 00 00   o........rI.r...
+07e0  00 00 00 f0 b9 75 9e b9 75 00 00 00 00 00 00 0b   .....u..u.......
+07f0  24 78 ca 21 78 00 00 00 00 00 00 65 23 7a 19 24   $x.!x......e#z.$
+0800  7a 00 00 00 00 00 00 92 be 7b c3 be 7b 00 00 00   z........{..{...
+0810  00 00 00 21 f1 7c e8 ef 7c 00 00 00 00 00 00 4e   ...!.|..|......N
+0820  b8 7d b3 b7 7d 00 00 00 00 00 00 55 14 7e ed 13   .}..}......U.~..
+0830  7e 00 00 00 00 00 00 b8 06 7e 3b 06 7e 00 00 00   ~........~;.~...
+0840  00 00 00 d9 8d 7d 33 8c 7d 00 00 00 00 00 00 a1   .....}3.}.......
+0850  a7 7c fa a8 7c 00 00 00 00 00 00 11 5b 7b 8c 5a   .|..|.......[{.Z
+0860  7b 00 00 00 00 00 00 69 a4 79 75 a4 79 00 00 00   {......i.yu.y...
+0870  00 00 00 90 84 77 a4 86 77 00 00 00 00 00 00 c0   .....w..w.......
+0880  03 75 5b 03 75 00 00 00 00 00 00 63 1e 72 a4 1c   .u[.u......c.r..
+0890  72 00 00 00 00 00 00 c6 d4 6e 11 d5 6e 00 00 00   r........n..n...
+08a0  00 00 00 31 2f 6b 0b 30 6b 00 00 00 00 00 00 35   ...1/k.0k......5
+08b0  30 67 62 2f 67 00 00 00 00 00 00 d0 d6 62 30 d7   0gb/g........b0.
+08c0  62 00 00 00 00 00 00 d6 29 5e 0c 2c 5e 00 00 00   b.......)^.,^...
+08d0  00 00 00 d2 30 59 71 2f 59 00 00 00 00 00 00 0b   ....0Yq/Y.......
+08e0  e8 53 03 e8 53 00 00 00 00 00 00 76 58 4e 0d 59   .S..S......vXN.Y
+08f0  4e 00 00 00 00 00 00 9c 89 48 5c 88 48 00 00 00   N........H\.H...
+0900  00 00 00 c5 78 42 87 78 42 00 00 00 00 00 00 eb   ....xB.xB.......
+0910  2f 3c 66 32 3c 00 00 00 00 00 00 55 b7 35 9e b7   /<f2<......U.5..
+0920  35 00 00 00 00 00 00 ba 10 2f b9 0f 2f 00 00 00   5......../../...
+0930  00 00 00 46 3f 28 08 41 28 00 00 00 00 00 00 45   ...F?(.A(......E
+0940  4f 21 ed 4e 21 00 00 00 00 00 00 ef 42 1a 5a 41   O!.N!.......B.ZA
+0950  1a 00 00 00 00 00 00 00 1b 13 aa 1c 13 00 00 00   ................
+0960  00 00 00 40 e7 0b 23 e8 0b 00 00 00 00 00 00 89   ...@..#.........
+0970  aa 04 c7 a8 04 00 00 00 00 00 00 68 64 fd 78 65   ...........hd.xe
+0980  fd 00 00 00 00 00 00 5c 23 f6 74 24 f6 00 00 00   .......\#.t$....
+0990  00 00 00 90 ed ee bc eb ee 00 00 00 00 00 00 d9   ................
+09a0  c2 e7 99 c1 e7 00 00 00 00 00 00 e1 aa e0 85 ac   ................
+09b0  e0 00 00 00 00 00 00 90 b2 d9 29 b1 d9 00 00 00   ..........).....
+09c0  00 00 00 d2 d6 d2 ea d6 d2 00 00 00 00 00 00 e8   ................
+09d0  1f cc 57 22 cc 00 00 00 00 00 00 5a 9c c5 3b 9b   ..W".......Z..;.
+09e0  c5 00 00 00 00 00 00 0a 45 bf 16 44 bf 00 00 00   ........E..D....
+09f0  00 00 00 ab 23 b9 14 25 b9 00 00 00 00 00 00 cc   ....#..%........
+0a00  41 b3 65 41 b3 00 00 00 00 00 00 32 a0 ad 66 9f   A.eA.......2..f.
+0a10  ad 00 00 00 00 00 00 28 43 a8 fc 42 a8 00 00 00   .......(C..B....
+0a20  00 00 00 18 30 a3 d5 30 a3 00 00 00 00 00 00 a8   ....0..0........
+0a30  6e 9e 48 6e 9e 00 00 00 00 00 00 d8 fd 99 2d fe   n.Hn..........-.
+0a40  99 00 00 00 00 00 00 f4 e3 95 e5 e4 95 00 00 00   ................
+0a50  00 00 00 98 27 92 68 25 92 00 00 00 00 00 00 f6   ....'.h%........
+0a60  c1 8e 36 c3 8e 00 00 00 00 00 00 8c c1 8b f7 c0   ..6.............
+0a70  8b 00 00 00 00 00 00 96 20 89 d4 21 89 00 00 00   ........ ..!....
+0a80  00 00 00 aa e6 86 00 e7 86 00 00 00 00 00 00 8b   ................
+0a90  13 85 b1 13 85 00 00 00 00 00 00 b7 a7 83 ed a7   ................
+0aa0  83 00 00 00 00 00 00 30 a7 82 db a6 82 00 00 00   .......0........
+0ab0  00 00 00 3b 0e 82 48 0f 82 00 00 00 00 00 00 d6   ...;..H.........
+0ac0  e2 81 28 e3 81 00 00 00 00 00 00 7f 22 82 62 21   ..(.........".b!
+0ad0  82 00 00 00 00 00 00 3a c9 82 08 cb 82 00 00 00   .......:........
+0ae0  00 00 00 46 df 83 c1 de 83 00 00 00 00 00 00 46   ...F...........F
+0af0  5c 85 88 5c 85 00 00 00 00 00 00 cf 41 87 36 41   \..\........A.6A
+0b00  87 00 00 00 00 00 00 ab 8e 89 98 8d 89 00 00 00   ................
+0b10  00 00 00 91 3d 8c a7 3d 8c 00 00 00 00 00 00 b8   ....=..=........
+0b20  51 8f ad 50 8f 00 00 00 00 00 00 e8 c0 92 13 c2   Q..P............
+0b30  92 00 00 00 00 00 00 51 90 96 60 8f 96 00 00 00   .......Q..`.....
+0b40  00 00 00 d9 b7 9a ce b7 9a 00 00 00 00 00 00 21   ...............!
+0b50  34 9f 77 34 9f 00 00 00 00 00 00 7e 06 a4 8e 05   4.w4.......~....
+0b60  a4 00 00 00 00 00 00 e0 22 a9 c7 22 a9 00 00 00   ........".."....
+0b70  00 00 00 b4 8a ae 71 8b ae 00 00 00 00 00 00 15   ......q.........
+0b80  38 b4 1a 38 b4 00 00 00 00 00 00 15 25 ba 4c 26   8..8........%.L&
+0b90  ba 00 00 00 00 00 00 a1 4f c0 e7 4e c0 00 00 00   ........O..N....
+0ba0  00 00 00 5f ae c6 e9 ae c6 00 00 00 00 00 00 02   ..._............
+0bb0  40 cd cd 3e cd 00 00 00 00 00 00 43 fa d3 7a fa   @..>.......C..z.
+0bc0  d3 00 00 00 00 00 00 5f db da 3a db da 00 00 00   ......._..:.....
+0bd0  00 00 00 e6 dc e1 1d dc e1 00 00 00 00 00 00 db   ................
+0be0  f4 e8 b3 f6 e8 00 00 00 00 00 00 05 25 f0 ba 24   ............%..$
+0bf0  f0 00 00 00 00 00 00 51 61 f7 b7 60 f7 00 00 00   .......Qa..`....
+0c00  00 00 00 69 a3 fe 69 a3 fe 00 00 00 00 00 00 1d   ...i..i.........
+0c10  e9 05 6d e8 05 00 00 00 00 00 00 10 28 0d e8 27   ..m.........(..'
+0c20  0d 00 00 00 00 00 00 8f 5c 14 bc 5b 14 00 00 00   ........\..[....
+0c30  00 00 00 46 7e 1b 30 7f 1b 00 00 00 00 00 00 89   ...F~.0.........
+0c40  8a 22 72 8a 22 00 00 00 00 00 00 76 7a 29 18 79   ."r."......vz).y
+0c50  29 00 00 00 00 00 00 ca 42 30 11 44 30 00 00 00   ).......B0.D0...
+0c60  00 00 00 b3 e7 36 a5 e6 36 00 00 00 00 00 00 01   .....6..6.......
+0c70  5a 3d 7c 59 3d 00 00 00 00 00 00 f4 98 43 c4 99   Z=|Y=........C..
+0c80  43 00 00 00 00 00 00 b7 9f 49 52 9f 49 00 00 00   C........IR.I...
+0c90  00 00 00 6f 66 4f 6a 67 4f 00 00 00 00 00 00 8b   ...ofOjgO.......
+0ca0  eb 54 34 eb 54 00 00 00 00 00 00 4b 27 5a 47 27   .T4.T......K'ZG'
+0cb0  5a 00 00 00 00 00 00 5f 17 5f 16 17 5f 00 00 00   Z......_._.._...
+0cc0  00 00 00 72 b6 63 59 b5 63 00 00 00 00 00 00 06   ...r.cY.c.......
+0cd0  fe 67 05 00 68 00 00 00 00 00 00 49 f3 6b 24 f1   .g..h......I.k$.
+0ce0  6b 00 00 00 00 00 00 9e 85 6f aa 86 6f 00 00 00   k........o..o...
+0cf0  00 00 00 56 bd 72 a0 bd 72 00 00 00 00 00 00 70   ...V.r..r......p
+0d00  94 75 2a 93 75 00 00 00 00 00 00 83 04 78 0c 05   .u*.u........x..
+0d10  78 00 00 00 00 00 00 1c 12 7a e0 10 7a 00 00 00   x........z..z...
+0d20  00 00 00 26 b4 7b 57 b5 7b 00 00 00 00 00 00 7a   ...&.{W.{......z
+0d30  f1 7c cc ef 7c 00 00 00 00 00 00 43 c0 7d ac c1   .|..|......C.}..
+0d40  7d 00 00 00 00 00 00                              }......
+
+No.     Time           Source                Destination           Protocol Length Info
+   5827 3.518150       1.1.2                 host                  USB      519    URB_ISOCHRONOUS out
+
+Frame 5827: 519 bytes on wire (4152 bits), 519 bytes captured (4152 bits) on interface \\.\USBPcap1, id 0
+    Section number: 1
+    Interface id: 0 (\\.\USBPcap1)
+        Interface name: \\.\USBPcap1
+        Interface description: USBPcap1
+    Encapsulation type: USB packets with USBPcap header (152)
+    Arrival Time: Jun 23, 2025 15:16:14.037678000 Central Europe Daylight Time
+    UTC Arrival Time: Jun 23, 2025 13:16:14.037678000 UTC
+    Epoch Arrival Time: 1750684574.037678000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 0.000765000 seconds]
+    [Time delta from previous displayed frame: 0.000765000 seconds]
+    [Time since reference or first frame: 3.518150000 seconds]
+    Frame Number: 5827
+    Frame Length: 519 bytes (4152 bits)
+    Capture Length: 519 bytes (4152 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: usb]
+USB URB
+    [Source: 1.1.2]
+    [Destination: host]
+    USBPcap pseudoheader length: 519
+    IRP ID: 0xffff92072024f5a0
+    IRP USBD_STATUS: USBD_STATUS_SUCCESS (0x00000000)
+    URB Function: URB_FUNCTION_ISOCH_TRANSFER (0x000a)
+    IRP information: 0x01, Direction: PDO -> FDO
+        0000 000. = Reserved: 0x00
+        .... ...1 = Direction: PDO -> FDO (0x1)
+    URB bus id: 1
+    Device address: 1
+    Endpoint: 0x02, Direction: OUT
+        0... .... = Direction: OUT (0)
+        .... 0010 = Endpoint number: 2
+    URB transfer type: URB_ISOCHRONOUS (0x00)
+    Packet Data Length: 0
+    [Request in: 5808]
+    [Time from request: 0.014784000 seconds]
+    Isochronous transfer start frame: 3233409
+    Isochronous transfer number of packets: 40
+    Isochronous transfer error count: 0
+USB isochronous packet
+    ISO Data offset: 0x00000000
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000048
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000090
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000000d8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000120
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000168
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000001b0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000001f8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000240
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000288
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000002d0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000318
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000360
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000003a8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000003f0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000438
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000480
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000004c8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000510
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000558
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000005a0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000005e8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000630
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000678
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000006c0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000708
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000750
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000798
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000007e0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000828
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000870
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000008b8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000900
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000948
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000990
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x000009d8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000a20
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000a68
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000ab0
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+USB isochronous packet
+    ISO Data offset: 0x00000af8
+    ISO Data length: 0x00000048 (not used)
+    ISO USBD status: USBD_STATUS_SUCCESS (0x00000000) (relevant)
+
+0000  07 02 a0 f5 24 20 07 92 ff ff 00 00 00 00 0a 00   ....$ ..........
+0010  01 01 00 01 00 02 00 00 00 00 00 81 56 31 00 28   ............V1.(
+0020  00 00 00 00 00 00 00 00 00 00 00 48 00 00 00 00   ...........H....
+0030  00 00 00 48 00 00 00 48 00 00 00 00 00 00 00 90   ...H...H........
+0040  00 00 00 48 00 00 00 00 00 00 00 d8 00 00 00 48   ...H...........H
+0050  00 00 00 00 00 00 00 20 01 00 00 48 00 00 00 00   ....... ...H....
+0060  00 00 00 68 01 00 00 48 00 00 00 00 00 00 00 b0   ...h...H........
+0070  01 00 00 48 00 00 00 00 00 00 00 f8 01 00 00 48   ...H...........H
+0080  00 00 00 00 00 00 00 40 02 00 00 48 00 00 00 00   .......@...H....
+0090  00 00 00 88 02 00 00 48 00 00 00 00 00 00 00 d0   .......H........
+00a0  02 00 00 48 00 00 00 00 00 00 00 18 03 00 00 48   ...H...........H
+00b0  00 00 00 00 00 00 00 60 03 00 00 48 00 00 00 00   .......`...H....
+00c0  00 00 00 a8 03 00 00 48 00 00 00 00 00 00 00 f0   .......H........
+00d0  03 00 00 48 00 00 00 00 00 00 00 38 04 00 00 48   ...H.......8...H
+00e0  00 00 00 00 00 00 00 80 04 00 00 48 00 00 00 00   ...........H....
+00f0  00 00 00 c8 04 00 00 48 00 00 00 00 00 00 00 10   .......H........
+0100  05 00 00 48 00 00 00 00 00 00 00 58 05 00 00 48   ...H.......X...H
+0110  00 00 00 00 00 00 00 a0 05 00 00 48 00 00 00 00   ...........H....
+0120  00 00 00 e8 05 00 00 48 00 00 00 00 00 00 00 30   .......H.......0
+0130  06 00 00 48 00 00 00 00 00 00 00 78 06 00 00 48   ...H.......x...H
+0140  00 00 00 00 00 00 00 c0 06 00 00 48 00 00 00 00   ...........H....
+0150  00 00 00 08 07 00 00 48 00 00 00 00 00 00 00 50   .......H.......P
+0160  07 00 00 48 00 00 00 00 00 00 00 98 07 00 00 48   ...H...........H
+0170  00 00 00 00 00 00 00 e0 07 00 00 48 00 00 00 00   ...........H....
+0180  00 00 00 28 08 00 00 48 00 00 00 00 00 00 00 70   ...(...H.......p
+0190  08 00 00 48 00 00 00 00 00 00 00 b8 08 00 00 48   ...H...........H
+01a0  00 00 00 00 00 00 00 00 09 00 00 48 00 00 00 00   ...........H....
+01b0  00 00 00 48 09 00 00 48 00 00 00 00 00 00 00 90   ...H...H........
+01c0  09 00 00 48 00 00 00 00 00 00 00 d8 09 00 00 48   ...H...........H
+01d0  00 00 00 00 00 00 00 20 0a 00 00 48 00 00 00 00   ....... ...H....
+01e0  00 00 00 68 0a 00 00 48 00 00 00 00 00 00 00 b0   ...h...H........
+01f0  0a 00 00 48 00 00 00 00 00 00 00 f8 0a 00 00 48   ...H...........H
+0200  00 00 00 00 00 00 00                              .......
