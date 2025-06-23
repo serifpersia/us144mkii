@@ -1,8 +1,6 @@
 
-# MIT License
-
-#Copyright (c) 2025 serifpersia
-
+// MIT License Copyright (c) 2025 serifpersia
+    
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
