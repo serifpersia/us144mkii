@@ -1,6 +1,8 @@
 
 
-Current feat: Working Playback with glitches due to missing feedback clock resync
+Current feat: 
+- Vendor Specific Config & Initialization,
+- Working Playback with glitches due to missing feedback clock resync(maybe)
 
 To run or compile you need pulseaudio and libusb:
 
