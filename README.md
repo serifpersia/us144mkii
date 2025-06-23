@@ -4,7 +4,7 @@ Current feat:
 - Vendor Specific Config & Initialization,
 - Working Playback with glitches due to missing feedback clock resync(maybe)
 
-To run or compile you need pulseaudio and libusb:
+To run need pulseaudio and libusb, to compile you need dev packages like gcc to compile the src c code.
 
 debian:
 sudo apt update
