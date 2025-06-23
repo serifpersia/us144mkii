@@ -1,7 +1,5 @@
 
-# MIT License
-
-#Copyright (c) 2025 serifpersia
+# MIT License Copyright (c) 2025 serifpersia
 
 #!/bin/bash
 
