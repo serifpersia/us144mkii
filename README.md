@@ -4,6 +4,16 @@ Current feat:
 - Vendor Specific Config & Initialization,
 - Working Playback with glitches due to missing feedback clock resync(maybe)
 
+- migrated working playback(with some glitches still) to kernel ALSA driver
+    - To compile and run it follow these steps:
+        - Blacklist us122l driver in order to be able to use this custom driver
+        - Get your linux headers via your package manager
+        - cd to driver directory & run sudo insmod us144mk2.ko
+        - Under sound setting you should see TASCAM US144MKII device
+        - the device should produce audio playback with glitches
+    - The release alsa custom driver might not work on newer kernel versions currently its been written on 
+    debian 12 6.1 kernel. You might need to compile kernel with `make` and sudo insmod it.
+
 To run need pulseaudio and libusb, to compile you need dev packages like gcc to compile the src c code.
 
 debian:
