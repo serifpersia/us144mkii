@@ -2,7 +2,7 @@
 
 Current feat: 
 - Vendor Specific Config & Initialization,
-- Working Playback with glitches due to missing feedback clock resync(maybe)
+- Working Playback(not fully tested but works without issues at 48khz)
 
 - migrated working playback(with some glitches still) to kernel ALSA driver
     - To compile and run it follow these steps:
