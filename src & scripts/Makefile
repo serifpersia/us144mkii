@@ -1,4 +1,4 @@
-obj-m += us144mk2.o
+obj-m += us144mkii.o
 
 KDIR := /lib/modules/$(shell uname -r)/build
 PWD  := $(shell pwd)
