@@ -16,6 +16,14 @@ Current feat:
 
 To run need pulseaudio and libusb, to compile you need dev packages like gcc to compile the src c code.
 
+To make the compiled or release kernel module run on boot execute these commands
+`echo "us144mkii" | sudo tee /etc/modules-load.d/us144mkii.conf`
+`sudo mkdir -p /lib/modules/$(uname -r)/extra/us144mkii/`
+`sudo cp us144mkii.ko /lib/modules/$(uname -r)/extra/us144mkii/`
+`sudo depmod -a`
+`sudo systemctl restart systemd-modules-load.service`
+
+
 debian:
 sudo apt update
 sudo apt install build-essential pulseaudio pulseaudio-utils libusb-1.0-0-dev
