@@ -1,291 +1,425 @@
-Analysis Report & Driver Development Specification for TASCAM US-144 MKII (48kHz Playback)
-
-Document Version: 8.0
-Date: 2025-06-25
-Subject: This document provides a complete specification for the 48kHz playback protocol of the TASCAM US-144 MKII, based on reverse-engineering of the official Windows driver. It is intended as a technical reference for implementing a functional Linux driver.
-
-1. Core Architecture (48kHz)
+Document Version: 13.0
+Date: 2025-06-27
+Subject: This document provides a complete and re-verified specification for the TASCAM US-144 MKII's playback and feedback mechanism across all supported sample rates, based on extensive reverse-engineering of the official macOS and Windows drivers, including dynamic USB sniffing data and static USB device descriptor reports. It is intended as a precise technical reference for implementing a functional Linux driver.
+1. Core Architecture
 
 Playback is achieved via a host-paced asynchronous isochronous feedback loop.
 
-Audio Data (OUT): Endpoint 0x02. The host sends continuous audio data.
+    Audio Data (OUT): Endpoint 0x02. The host sends continuous audio data.
 
-Clock Feedback (IN): Endpoint 0x81. The device sends its master clock rate to the host, allowing the driver to correct for drift.
+    Clock Feedback (IN): Endpoint 0x81. The device sends its master clock rate to the host, allowing the driver to correct for drift.
 
-2. Data Stream Format (48kHz)
+2. USB Device Descriptors & Configuration (Verified by USB Report)
 
-Audio Frame: A single sample for all four channels, formatted as 24-bit Little Endian PCM. Total Frame Size: 12 bytes (4 channels * 3 bytes/sample).
+    Device Descriptor:
 
-Host Driver Responsibility: The driver must always populate all 4 channels. For standard stereo playback, channels 1 & 2 contain the audio data, and channels 3 & 4 must be padded with digital silence (zeros).
+        bLength: 0x12 (18 bytes), bDescriptorType: 0x01 (Device Descriptor), bcdUSB: 0x200 (USB Version 2.0)
 
-3. Playback OUT Stream (Endpoint 0x02)
+        bDeviceClass: 0xFF (Vendor Specific), bDeviceSubClass: 0xFF, bDeviceProtocol: 0xFF
 
-URB Structure: Analysis of all latency settings shows that the playback URB structure is constant and independent of the latency setting.
+        bMaxPacketSize0: 0x40 (64 bytes)
 
-Packets per URB: 40
+        idVendor: 0x0644 (TEAC Corporation), idProduct: 0x8020
 
-Packet Size: 72 bytes
+        bcdDevice: 0x0100
 
-Frames per Packet: 6 (72 bytes / 12 bytes/frame)
+        iManufacturer: 0x01 (String "TASCAM"), iProduct: 0x02 (String "US-144 MKII"), iSerialNumber: 0x03 (String "no serial number")
 
-Total Frames per URB: 240 (40 packets * 6 frames)
+        bNumConfigurations: 0x01 (1 Configuration)
 
-Total Audio Data per URB: 2880 bytes (240 frames * 12 bytes/frame)
+    Configuration Descriptor (Configuration 1):
 
-Nominal Time per URB: 5.0 ms (240 frames / 48000 Hz)
+        bLength: 0x09 (9 bytes), bDescriptorType: 0x02 (Configuration Descriptor)
 
-4. Feedback IN Stream (Endpoint 0x81)
+        wTotalLength: 0x0050 (80 bytes) - This is the total size of the configuration descriptor including all interface and endpoint descriptors.
 
-This is the core of the latency control and clock synchronization. The "Latency" setting in the control panel directly maps to the number of feedback packets requested per URB, which in turn dictates the feedback interval.
+        bNumInterfaces: 0x02 (2 Interfaces), bConfigurationValue: 0x01 (Configuration 1)
 
-Feedback Packet Format: 3 bytes. For 48kHz, the nominal value is 0x303030. The first byte (0x30 = 48) represents the number of audio frames the device consumes per 125µs USB microframe, which translates to a nominal 48kHz rate.
+        bmAttributes: 0x80 (Bus Powered, No Remote Wakeup), MaxPower: 0xF0 (480 mA)
 
-Latency Setting to URB Mapping:
-| Setting Name | App Buffer | Feedback URB Size (Packets) | Feedback Interval |
-| :--- | :--- | :--- | :--- |
-| Lowest | 48 smp | 1 packet | ~1 ms |
-| Low | 64 smp | 1 packet | ~1 ms |
-| Normal | 128 smp| 2 packets | ~2 ms |
-| High | 256 smp| 5 packets | ~5 ms |
-| Highest | 512 smp| 5 packets | ~5 ms |
+    Interfaces & Alternate Settings:
 
-5. Driver Implementation Logic ("Packet Fixing")
+        Interface 0 (Audio/MIDI Control):
 
-A functional driver must implement the following logic for Normal Latency:
+            bInterfaceNumber: 0x00
 
-Audio OUT URBs (Playback):
+            Alternate Setting 0: bNumEndpoints=0x00. bInterfaceClass=0xFF (Vendor Specific).
 
-Continuously prepare and submit URBs to EP 0x02.
+            Alternate Setting 1: bNumEndpoints=0x03. bInterfaceClass=0xFF (Vendor Specific). This is the active setting for audio streaming.
 
-Each URB must contain exactly 40 isochronous packet descriptors.
+        Interface 1 (Audio/MIDI Streaming):
 
-Each packet must be exactly 72 bytes long.
+            bInterfaceNumber: 0x01
 
-Feedback IN URBs (Clocking):
+            Alternate Setting 0: bNumEndpoints=0x00. bInterfaceClass=0xFF (Vendor Specific).
 
-Continuously prepare and submit URBs to EP 0x81.
+            Alternate Setting 1: bNumEndpoints=0x02. bInterfaceClass=0xFF (Vendor Specific). This is the active setting for audio streaming.
 
-For Normal Latency, each URB must request 2 isochronous packets.
+    Endpoints (Detailed from Descriptors):
 
-Each packet descriptor will be for 3 bytes.
+        Interface 0, Alternate Setting 1 Endpoints:
 
-These URBs will complete approximately every 2ms.
+            Endpoint 0x02 (Playback OUT): bEndpointAddress=0x02 (OUT, EP 2), bmAttributes=0x05 (Isochronous, Asynchronous, Data), wMaxPacketSize=0x009C (156 bytes), bInterval=0x01 (1 microframe -> 0.125 ms).
 
-Clock Drift Correction (The "Fixing" Mechanism):
+            Endpoint 0x83 (MIDI/Control IN): bEndpointAddress=0x83 (IN, EP 3), bmAttributes=0x02 (Bulk), wMaxPacketSize=0x0200 (512 bytes), bInterval=0x04 (0.5 ms).
 
-The driver must maintain a high-precision accumulator (e.g., a 16.16 fixed-point number) representing the number of frames to send.
+            Endpoint 0x04 (MIDI/Control OUT): bEndpointAddress=0x04 (OUT, EP 4), bmAttributes=0x02 (Bulk), wMaxPacketSize=0x0200 (512 bytes), bInterval=0x04 (0.5 ms).
 
-On Feedback URB completion:
+        Interface 1, Alternate Setting 1 Endpoints:
 
-Read the feedback value from the received packet (e.g., 0x30).
+            Endpoint 0x81 (Feedback IN): bEndpointAddress=0x81 (IN, EP 1), bmAttributes=0x05 (Isochronous, Asynchronous, Data), wMaxPacketSize=0x0040 (64 bytes), bInterval=0x04 (8 microframes -> 1 ms).
 
-Add this value (adjusted for the feedback interval) to the accumulator. For Normal latency (2ms interval), this means adding 48 * 2 = 96 frames to the accumulator's integer part.
+            Endpoint 0x86 (Capture IN): bEndpointAddress=0x86 (IN, EP 6), bmAttributes=0x02 (Bulk), wMaxPacketSize=0x0200 (512 bytes), bInterval=0x01 (0.125 ms).
 
-On Playback URB completion:
+    Initial Control Messages (Detailed Sequence from Sniffing Data):
+    The following sequence of usb_control_msg calls is observed during device initialization and sample rate setting. These are crucial for putting the device into an operational state. The bmRequestType values are interpreted as (Direction << 7) | (Type << 5) | Recipient.
 
-Consult the accumulator to determine the exact number of frames to send in the next URB (N_frames). This will be the integer part of the accumulator.
+        SET_CONFIGURATION (Standard Request):
 
-Subtract N_frames from the accumulator, leaving the fractional part for the next calculation.
+            bmRequestType: 0x00 (Host-to-Device, Standard, Device)
 
-Copy N_frames of audio from the ALSA ring buffer into the new URB's transfer buffer.
+            bRequest: 0x09 (SET_CONFIGURATION)
 
-The total audio data in a playback URB is fixed at 240 frames (2880 bytes). If N_frames is less than 240, the remaining (240 - N_frames) of the URB must be padded with digital silence (zeros). If N_frames is greater than 240, this implies the host is running slow and needs to "stuff" an extra frame. This is handled by copying N_frames and ensuring the total data size still fits within the URB buffer (which it should, as N_frames will only differ from 240 by a small amount).
+            wValue: 0x0001 (Configuration 1)
 
-This process ensures that the average rate of audio data sent perfectly matches the device's master clock, preventing buffer over/underruns.
+            wIndex: 0x0000
 
+            wLength: 0
 
+            (Observed during a sample rate change event, indicating a re-configuration)
 
+        GET DESCRIPTOR (DEVICE, STRING, CONFIGURATION) (Standard Requests):
 
-is report summarizes the critical findings from the macOS driver reverse engineering, focusing on the playback data path and the "Packet Fixing" synchronization logic. It's designed to be a standalone reference for implementing or debugging the Linux driver.
+            Standard USB enumeration requests to retrieve device, string (Manufacturer, Product, Serial), and configuration descriptors. These are standard and typically handled by the USB core.
 
-Device Overview:
+        Handshake Read (Device-to-Host Vendor Request):
 
-    Model: TASCAM US-144 MKII
+            bmRequestType: 0xc0 (D2H, Vendor, Device)
 
-    USB Mode: USB 2.0 High Speed (VID: 0x0644, PID: 0x8020)
+            bRequest: 0x49 (73, VENDOR_REQ_MODE_CONTROL)
 
-    Supported Playback Rate: 48kHz (primary focus)
+            wValue: 0x0000
 
-    Audio Format: 24-bit Little Endian PCM
+            wIndex: 0x0000
 
-    Channels: 4 (Stereo input duplicated to 4 channels)
+            wLength: 1
 
-1. USB Device Configuration & Initialization:
+            Expected Response Data: 0x12 (1 byte)
 
-    Interfaces:
+        Set Initial Mode (Host-to-Device Vendor Request):
 
-        Interface 0: Primary Audio/MIDI. Select Alternate Setting 1.
+            bmRequestType: 0x40 (H2D, Vendor, Device)
 
-        Interface 1: Additional Audio/MIDI. Select Alternate Setting 1.
+            bRequest: 0x49 (73, VENDOR_REQ_MODE_CONTROL)
 
-    Endpoints:
+            wValue: 0x0010
 
-        Playback (OUT): Endpoint 0x02 (Isochronous OUT)
+            wIndex: 0x0000
 
-        Feedback (IN): Endpoint 0x81 (Isochronous IN)
+            wLength: 0
 
-        Capture (IN): Endpoint 0x86 (Bulk IN) - Not covered in detail for playback.
+        Set Sample Rate on Capture EP (Host-to-Device Class Request):
 
-        MIDI (IN/OUT): Endpoints 0x83 (Bulk IN), 0x04 (Bulk OUT) - Not covered in detail.
+            bmRequestType: 0x22 (H2D, Class, Endpoint)
 
-    Initial Control Messages (from PGKernelDeviceTascamUSB2MKII::configureDevice):
+            bRequest: 0x01 (1, UAC_SET_CUR)
 
-        After usb_set_interface calls, a sequence of usb_control_msg (vendor-specific and UAC) is sent.
+            wValue: 0x0100 (UAC_SAMPLING_FREQ_CONTROL)
 
-        Vendor Requests:
+            wIndex: 0x0086 (Endpoint 0x86 - Capture IN)
 
-            VENDOR_REQ_MODE_CONTROL (0x49):
+            wLength: 3
 
-                bmRequestType=0x40 (Host to Device, Vendor, Device)
+            Data Fragment (3 bytes, Rate-Dependent):
+            | Sample Rate | Hex Payload |
+            | :---------- | :---------- |
+            | 44100 Hz | 0x44ac00 |
+            | 48000 Hz | 0x80bb00 |
+            | 88200 Hz | 0x885801 |
+            | 96000 Hz | 0x007701 |
 
-                wValue=0x0010, wIndex=0x0000, wLength=0 (Set Initial Mode)
+        Set Sample Rate on Playback EP (Host-to-Device Class Request):
 
-                wValue=0x0030, wIndex=0x0000, wLength=0 (Enable Streaming)
+            bmRequestType: 0x22 (H2D, Class, Endpoint)
 
-            VENDOR_REQ_REGISTER_WRITE (0x41):
+            bRequest: 0x01 (1, UAC_SET_CUR)
 
-                bmRequestType=0x40 (Host to Device, Vendor, Device)
+            wValue: 0x0100 (UAC_SAMPLING_FREQ_CONTROL)
 
-                wValue=0x0d04, wIndex=0x0101, wLength=0
+            wIndex: 0x0002 (Endpoint 0x02 - Playback OUT)
 
-                wValue=0x0e00, wIndex=0x0101, wLength=0
+            wLength: 3
 
-                wValue=0x0f00, wIndex=0x0101, wLength=0
+            Data Fragment (3 bytes, Rate-Dependent): (Same as for Capture EP)
+            | Sample Rate | Hex Payload |
+            | :---------- | :---------- |
+            | 44100 Hz | 0x44ac00 |
+            | 48000 Hz | 0x80bb00 |
+            | 88200 Hz | 0x885801 |
+            | 96000 Hz | 0x007701 |
 
-                wValue=0x110b, wIndex=0x0101, wLength=0
+        Vendor Register Write 1 (Host-to-Device Vendor Request):
 
-                wValue=0x1002 (for 48kHz), wIndex=0x0101, wLength=0 (Rate-dependent register write)
+            bmRequestType: 0x40 (H2D, Vendor, Device)
 
-        UAC Requests:
+            bRequest: 0x41 (65, VENDOR_REQ_REGISTER_WRITE)
 
-            UAC_SET_CUR (0x01) for UAC_SAMPLING_FREQ_CONTROL (0x0100):
+            wValue: 0x0d04
 
-                bmRequestType=0x22 (Host to Device, Class, Endpoint)
+            wIndex: 0x0101 (257)
 
-                wIndex=EP_CAPTURE_DATA (0x86), wLength=3, data=3-byte_rate_payload (e.g., 0x80, 0xbb, 0x00 for 48kHz)
+            wLength: 0
 
-                wIndex=EP_AUDIO_OUT (0x02), wLength=3, data=3-byte_rate_payload (e.g., 0x80, 0xbb, 0x00 for 48kHz)
+        Vendor Register Write 2 (Host-to-Device Vendor Request):
 
-        Action: Replicate these usb_control_msg calls in the Linux driver's us144mkii_configure_device_for_rate function.
+            bmRequestType: 0x40 (H2D, Vendor, Device)
 
-2. Playback (OUT) Stream (Endpoint 0x02):
+            bRequest: 0x41 (65, VENDOR_REQ_REGISTER_WRITE)
 
-    URB Structure:
+            wValue: 0x0e00
+
+            wIndex: 0x0101 (257)
+
+            wLength: 0
+
+        Vendor Register Write 3 (Host-to-Device Vendor Request):
+
+            bmRequestType: 0x40 (H2D, Vendor, Device)
+
+            bRequest: 0x41 (65, VENDOR_REQ_REGISTER_WRITE)
+
+            wValue: 0x0f00
+
+            wIndex: 0x0101 (257)
+
+            wLength: 0
+
+        Vendor Register Write (Rate-Dependent) (Host-to-Device Vendor Request):
+
+            bmRequestType: 0x40 (H2D, Vendor, Device)
+
+            bRequest: 0x41 (65, VENDOR_REQ_REGISTER_WRITE)
+
+            wValue (Rate-Dependent):
+            | Sample Rate | wValue |
+            | :---------- | :------- |
+            | 44100 Hz | 0x1000 |
+            | 48000 Hz | 0x1002 |
+            | 88200 Hz | 0x1008 |
+            | 96000 Hz | 0x100a |
+
+            wIndex: 0x0101 (257)
+
+            wLength: 0
+
+        Vendor Register Write 4 (Host-to-Device Vendor Request):
+
+            bmRequestType: 0x40 (H2D, Vendor, Device)
+
+            bRequest: 0x41 (65, VENDOR_REQ_REGISTER_WRITE)
+
+            wValue: 0x110b
+
+            wIndex: 0x0101 (257)
+
+            wLength: 0
+
+        Enable Streaming (Host-to-Device Vendor Request):
+
+            bmRequestType: 0x40 (H2D, Vendor, Device)
+
+            bRequest: 0x49 (73, VENDOR_REQ_MODE_CONTROL)
+
+            wValue: 0x0030
+
+            wIndex: 0x0000
+
+            wLength: 0
+
+3. Playback (OUT) Stream (Endpoint 0x02)
+
+    URB Structure (Confirmed by Sniffing Data, Constant Across All Latency Settings):
 
         number_of_packets: 40
 
-        iso_frame_desc[i].length: 72 bytes for each packet.
+        transfer_buffer_length: 2880 bytes (This is the total data length for the URB).
 
-        iso_frame_desc[i].offset: j * 72 (where j is packet index).
+    Packet Structure (Dynamic, "Packet Fixing" Output):
 
-        transfer_buffer_length: 40 * 72 = 2880 bytes.
+        Each of the 40 packets has a nominal size of 72 bytes. However, the actual length of each packet (urb->iso_frame_desc[i].length) is dynamically determined by the "Packet Fixing" synchronization engine.
 
-    Audio Data Format (pcmTo24LSB equivalent):
+        The number of frames for each packet (frames_for_this_packet) is read from the feedback_accumulator_pattern (see Section 5.4).
+
+        packet_size_bytes = frames_for_this_packet * 12 (where 12 bytes/frame = 4 channels * 3 bytes/sample).
+
+        urb->iso_frame_desc[i].offset is the cumulative sum of previous packet lengths.
+
+    Audio Data Format (from pcmTo24LSB_US144_00 logic, Confirmed by Sniffing Data):
 
         Input: 32-bit signed interleaved PCM (from ALSA).
 
         Output: 24-bit Little Endian PCM, 4 channels.
 
-        Channel Mapping: Stereo input (L, R) is duplicated to 4 channels (L, R, L, R).
+        Channel Mapping (Software Patchbay): The driver implements a software patchbay. The mapping of 2-channel PC input (Left, Right) to the 4 device output channels (1, 2, 3, 4) is determined by the user's settings in the TASCAM control panel.
 
-            dest[0-2] = src_L (24-bit LSB)
+            Default Behavior (No explicit routing set):
 
-            dest[3-5] = src_R (24-bit LSB)
+                Output Channel 1 = Input Channel 1 (Left)
 
-            dest[6-8] = src_L (24-bit LSB)
+                Output Channel 2 = Input Channel 2 (Right)
 
-            dest[9-11] = src_R (24-bit LSB)
+                Output Channel 3 = Digital Silence (Zeros)
 
-        Action: Implement a convert_and_copy_audio function that performs this conversion and copy.
+                Output Channel 4 = Digital Silence (Zeros)
 
-    URB Completion Handler (playback_urb_complete):
+            Example (Channels 3 & 4 routed to 1 & 2 via control panel):
 
-        After checking URB status, determine N_frames (frames to send in this URB) using the tascam_get_frames_to_send logic (see below).
+                Output Channel 1 = Input Channel 1 (Left)
 
-        Zero out the entire URB transfer_buffer to handle padding.
+                Output Channel 2 = Input Channel 2 (Right)
 
-        Copy N_frames of audio data from the ALSA ring buffer into the URB's transfer_buffer using convert_and_copy_audio. Handle buffer wrap-around.
+                Output Channel 3 = Input Channel 1 (Left)
 
-        Update tascam->playback_frames_sent_nominal by N_frames.
+                Output Channel 4 = Input Channel 2 (Right)
 
-        Resubmit the URB.
+            Example (Channels 1 & 2 routed to 3 & 4 via control panel):
 
-3. Feedback (IN) Stream (Endpoint 0x81):
+                Output Channel 1 = Digital Silence (Zeros)
 
-    URB Structure (for "Normal Latency"):
+                Output Channel 2 = Digital Silence (Zeros)
 
-        number_of_packets: 2
+                Output Channel 3 = Input Channel 1 (Left)
+
+                Output Channel 4 = Input Channel 2 (Right)
+
+        Action: The Linux driver's audio conversion function must be flexible enough to implement these different channel mappings based on an internal state variable. This state would be controlled by ALSA mixer controls (requiring further reverse engineering of the control panel's USB messages). For a basic driver, the "Default Behavior" (zero-padding) is the recommended starting point.
+
+4. Feedback (IN) Stream (Endpoint 0x81)
+
+    Feedback Packet Format: 3 bytes. The first byte contains the feedback value (e.g., 0x30 for 48 frames/ms). The remaining two bytes (0x3030) are present but not used for calculation.
+
+    URB Structure (Latency-Dependent, Confirmed by Sniffing Data):
 
         iso_frame_desc[i].length: 3 bytes for each packet.
 
-        iso_frame_desc[i].offset: j * 3 (where j is packet index).
+        transfer_buffer_length: (Number of packets) * 3 bytes.
 
-        transfer_buffer_length: 2 * 3 = 6 bytes.
+        number_of_packets varies by latency setting:
 
-    Feedback Packet Format: 3 bytes. The first byte contains the feedback value (e.g., 0x30 for 48 frames/ms).
+Latency Setting	Feedback URB number_of_packets	Feedback URB transfer_buffer_length	Feedback Interval (Approx.)
+Lowest	5	15 bytes	~5 ms
+Low	1	3 bytes	~1 ms
+Normal	2	6 bytes	~2 ms
+High	5	15 bytes	~5 ms
+Highest	5	15 bytes	~5 ms
+Generated code
 
-    URB Completion Handler (feedback_urb_complete):
+      
+*   **Note:** The `bInterval` for EP 0x81 is `0x04` (8 microframes = 1ms). The varying feedback intervals are achieved by changing the `number_of_packets` in the URB, not by changing the endpoint's `bInterval`. For example, 5 packets at 1ms interval per packet results in a 5ms total feedback URB completion time.
 
-        After checking URB status, iterate through each received packet.
+5. The "Packet Fixing" Synchronization Engine (PGFramePatternObserver Logic)
 
-        For each packet with actual_length == 3 and status == 0:
+This is the core clock recovery mechanism, implemented as a sophisticated digital Phase-Locked Loop (PLL).
 
-            Extract feedback_value = feedback_data[0].
+5.1. State Variables (to be implemented in tascam_card struct):
 
-            Update the Feedback Accumulator (PGFramePatternObserver equivalent):
+    feedback_accumulator_pattern[128]: An array of unsigned int. This is the primary circular buffer holding the frames-per-microframe values.
 
-                Calculate pattern_idx = feedback_value - 46.
+    feedback_pattern_out_idx: Read-index for feedback_accumulator_pattern (0-127).
 
-                If pattern_idx is valid (0-4), select the corresponding feedback_patterns_lookup table.
+    feedback_pattern_in_idx: Write-index for feedback_accumulator_pattern (0-127).
 
-                Copy the 8 entries from the selected pattern table into tascam->feedback_accumulator_pattern starting at tascam->feedback_accumulator_idx * 8.
+    feedback_synced: Boolean flag, set to true when the feedback loop is stable.
 
-                Advance tascam->feedback_accumulator_idx by 1 (wrapping around at 16, as 128 entries / 8 entries/pattern = 16 slots).
+    playback_frames_consumed: A long long counter for total frames consumed by the device. This represents the hardware pointer.
 
-                Set tascam->feedback_synced = true.
+5.2. Initialization:
 
-            If feedback_value is invalid or packet has error, set tascam->feedback_synced = false.
+    The feedback_accumulator_pattern is initialized by filling all 128 entries with the nominal frames per microframe, which is 6 for 48kHz (48000 frames/sec / 8000 microframes/sec = 6).
 
-        Update tascam->playback_frames_consumed_by_device:
+    feedback_pattern_out_idx and feedback_pattern_in_idx are initialized to 0.
 
-            If tascam->feedback_synced is true, sum the 16 entries (2 packets * 8 microframes/packet) from the feedback_accumulator_pattern that correspond to this interval. Add this sum to tascam->playback_frames_consumed_by_device.
+    feedback_synced is initialized to false.
 
-            If not synced, add a nominal 96 frames (2 packets * 48 frames/ms) to avoid stalling.
+5.3. Pattern Tables (Generated by fpoInitPattern for all supported rates):
 
-        Resubmit the URB.
+These tables are pre-calculated lookup tables. When a feedback value is received, the corresponding table is used to update the feedback_accumulator_pattern. Each table has 8 entries, corresponding to 8 USB microframes (1ms).
+Sample Rate	Feedback Value (from EP 0x81)	Pattern Table (8 entries, sum in parentheses)
+44.1 kHz	(Needs specific sniffing/RE)	(Needs specific sniffing/RE)
+48 kHz	46 (0x2E)	{5, 6, 6, 6, 5, 6, 6, 6} (sum 46)
+	47 (0x2F)	{5, 6, 6, 6, 6, 6, 6, 6} (sum 47)
+	48 (0x30)	{6, 6, 6, 6, 6, 6, 6, 6} (sum 48)
+	49 (0x31)	{7, 6, 6, 6, 6, 6, 6, 6} (sum 49)
+	50 (0x32)	{7, 6, 6, 6, 7, 6, 6, 6} (sum 50)
+88.2 kHz	(Needs specific sniffing/RE)	(Needs specific sniffing/RE)
+96 kHz	(Needs specific sniffing/RE)	(Needs specific sniffing/RE)
+Generated code
 
-4. Clock Drift Correction ("Packet Fixing") Logic:
+      
+*   **Note:** The pattern tables provided are specifically for 48kHz. To support other sample rates (44.1kHz, 88.2kHz, 96kHz), the corresponding `fpoInitPattern` calls from the macOS driver's `PGFramePatternObserver::init` would need to be analyzed to derive their specific pattern tables. The `mExpectedFramesPerMicroframe` (`a1 + 24`) and `mExpectedFeedbackValue` (`a1 + 36`) would change based on the sample rate.
 
-    Feedback Accumulator (tascam_card::feedback_accumulator_pattern):
+    
 
-        An array of 128 unsigned int values.
+IGNORE_WHEN_COPYING_START
+Use code with caution.
+IGNORE_WHEN_COPYING_END
 
-        Initialized to 6 (nominal frames per microframe for 48kHz) in tascam_probe.
+5.4. Feedback Processing (feedback_urb_complete Logic):
 
-        Updated by feedback_urb_complete by copying 8 entries from a selected pattern table.
+    Triggered by completion of a Feedback IN URB.
 
-    Pattern Tables (for 48kHz): These are the 8-entry arrays of frames per microframe.
+    For each received 3-byte packet in the URB:
 
-        feedback_value = 46 (0x2E): {5, 6, 6, 6, 5, 6, 6, 6} (sum 46)
+        Extract feedback_value = feedback_data[0].
 
-        feedback_value = 47 (0x2F): {5, 6, 6, 6, 6, 6, 6, 6} (sum 47)
+        Validate feedback_value is in the range [46, 50] (for 48kHz). This range will be rate-dependent.
 
-        feedback_value = 48 (0x30): {6, 6, 6, 6, 6, 6, 6, 6} (sum 48) - Nominal
+        If valid:
 
-        feedback_value = 49 (0x31): {7, 6, 6, 6, 6, 6, 6, 6} (sum 49)
+            Calculate pattern_index = feedback_value - (Base Feedback Value for Rate).
 
-        feedback_value = 50 (0x32): {7, 6, 6, 6, 7, 6, 6, 6} (sum 50)
+            Select current_pattern = feedback_patterns_lookup[pattern_index].
 
-    tascam_get_frames_to_send (adaptation of rtsGetMinAvailableFrames):
+            Update Accumulator: Copy the 8 entries from current_pattern into feedback_accumulator_pattern starting at feedback_pattern_in_idx.
 
-        Input: tascam_card pointer, nominal_frames_per_urb (240 for 48kHz).
+            Advance write-index: feedback_pattern_in_idx = (feedback_pattern_in_idx + 8) % 128.
 
-        Logic: Calculates frames_difference = tascam->playback_frames_consumed_by_device - tascam->playback_frames_sent_nominal.
+            Set feedback_synced = true.
 
-        If tascam->feedback_synced is true, it adjusts nominal_frames_per_urb by +1 if frames_difference > 1 or -1 if frames_difference < -1. Clamps the result to nominal_frames_per_urb +/- 2.
+        If invalid/error: Set feedback_synced = false.
 
-        Output: Returns the calculated N_frames for the next playback URB.
+    Update playback_frames_consumed:
 
-    tascam_pcm_pointer:
+        Calculate frames_this_interval by summing the frames_for_this_packet values from the 8 entries just written into the accumulator, repeated for the number of packets in the feedback URB.
 
-        Returns tascam->playback_frames_consumed_by_device % runtime->buffer_size. This reflects the device's actual position.
+        For example, for "Normal Latency" (2 packets), this means summing 16 entries from the feedback_accumulator_pattern (8 entries for the first packet's microframes, and 8 entries for the second packet's microframes).
+
+        playback_frames_consumed += frames_this_interval.
+
+    Resubmit the feedback URB.
+
+    Call snd_pcm_period_elapsed(tascam->playback_substream) to signal ALSA that a period (or multiple periods) has been consumed by the hardware. This should be based on playback_frames_consumed crossing period boundaries.
+
+5.5. Playback URB Preparation (playback_urb_complete Logic):
+
+    Triggered by completion of a Playback OUT URB.
+
+    Determine frames_for_this_packet (for each of the 40 packets):
+
+        Read frames_for_this_packet = feedback_accumulator_pattern[feedback_pattern_out_idx].
+
+        Advance read-index: feedback_pattern_out_idx = (feedback_pattern_out_idx + 1) % 128.
+
+        Calculate packet_size_bytes = frames_for_this_packet * PLAYBACK_BYTES_PER_FRAME.
+
+        Set urb->iso_frame_desc[i].length = packet_size_bytes.
+
+        Set urb->iso_frame_desc[i].offset as the cumulative sum of previous packet lengths.
+
+    Copy frames_for_this_packet (from ALSA buffer) into the current packet's buffer, using the appropriate convert_and_copy_audio logic (zero-padding or duplication based on routing state).
+
+    Resubmit the playback URB.
+
+6. ALSA Pointer Callback (tascam_pcm_pointer)
+
+    Returns tascam->playback_frames_consumed % runtime->buffer_size. This provides ALSA with the device's actual playback position, corrected for clock drift.
