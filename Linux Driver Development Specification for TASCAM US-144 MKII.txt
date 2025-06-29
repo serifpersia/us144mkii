@@ -423,3 +423,46 @@ IGNORE_WHEN_COPYING_END
 6. ALSA Pointer Callback (tascam_pcm_pointer)
 
     Returns tascam->playback_frames_consumed % runtime->buffer_size. This provides ALSA with the device's actual playback position, corrected for clock drift.
+    
+    
+TASCAM US-144MKII ALSA Driver Logic Table
+
+Table 1: 44.1kHz Latency Settings
+
+Latency Profile	ASIO Buffer (Reported)	Hardware Feedback (Observed)
+
+Lowest	49 	smp (1.1ms)		2 ms (1 packet/URB)
+Low		64 	smp (1.5ms)		2 ms (1 packet/URB)
+Normal	128 smp (2.9ms)		2 ms (2 packets/URB)
+High	256 smp (5.8ms)		5 ms (5 packets/URB)
+Highest	512 smp (11.6ms)	5 ms (5 packets/URB)
+
+Table 2: 48kHz Latency Settings
+
+Latency Profile	ASIO Buffer (Reported)	Hardware Feedback (Observed)
+
+Lowest	48 	smp (1.0ms)		1 ms (1 packet/URB)
+Low		64 	smp (1.3ms)		2 ms (1 packet/URB)
+Normal	128 smp (2.7ms)		2 ms (2 packets/URB)
+High	256 smp (5.3ms)		5 ms (5 packets/URB)
+Highest	512 smp (10.7ms)	5 ms (5 packets/URB)
+
+Table 3: 88.2kHz Latency Settings (Placeholder)
+
+Latency Profile	ASIO Buffer (Reported)	Hardware Feedback (Observed)
+
+Lowest	98 	 smp (1.1ms)	1 ms (1 packet/URB)
+Low		128  smp (1.5ms)	2 ms (1 packet/URB)
+Normal	256  smp (2.9ms)	2 ms (2 packets/URB)
+High	512  smp (5.8ms)	5 ms (5 packets/URB)
+Highest	1024 smp (11.6ms)	5 ms (5 packets/URB)
+
+Table 4: 96kHz Latency Settings
+
+Latency Profile	ASIO Buffer (Reported)	Hardware Feedback (Observed)
+
+Lowest	96  smp  (1.0ms)	1 ms (1 packet/URB)
+Low		128  smp (1.3ms)	2 ms (1 packet/URB)
+Normal	256  smp (2.7ms)	2 ms (2 packets/URB)
+High	512  smp (5.3ms)	5 ms (5 packets/URB)
+Highest	1024 smp (10.7ms)	5 ms (5 packets/URB)
