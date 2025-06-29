@@ -104,20 +104,25 @@ struct tascam_card {
 	atomic_t playback_active;
 	int current_rate;
 
+	/* --- Feedback Synchronization State --- */
 	unsigned int feedback_accumulator_pattern[FEEDBACK_ACCUMULATOR_SIZE];
 	unsigned int feedback_pattern_out_idx;
 	unsigned int feedback_pattern_in_idx;
+	bool feedback_synced;
 
+	/* --- Playback Position Tracking --- */
 	snd_pcm_uframes_t driver_playback_pos;
 	u64 playback_frames_consumed;
 	u64 last_period_pos;
 
+	/* --- Rate-Specific Data --- */
 	const unsigned int (*feedback_patterns)[8];
 	unsigned int feedback_base_value;
 	unsigned int feedback_max_value;
 	unsigned int feedback_urb_skip_count;
 };
 
+/* Pre-calculated patterns for frames-per-microframe based on feedback value. */
 static const unsigned int latency_profile_packets[] = { 5, 1, 2, 5, 5 };
 static const unsigned int patterns_48khz[5][8] = {
 	{5, 6, 6, 6, 5, 6, 6, 6}, {5, 6, 6, 6, 6, 6, 6, 6},
@@ -464,12 +469,17 @@ static int tascam_pcm_prepare(struct snd_pcm_substream *substream)
 	size_t nominal_bytes_per_packet;
 	size_t total_bytes_in_urb;
 
+	/* Reset all playback and sync state variables. */
 	tascam->driver_playback_pos = 0;
 	tascam->playback_frames_consumed = 0;
 	tascam->last_period_pos = 0;
 	tascam->feedback_pattern_in_idx = 0;
 	tascam->feedback_pattern_out_idx = 0;
+	tascam->feedback_synced = false;
 	tascam->feedback_urb_skip_count = NUM_FEEDBACK_URBS * 2;
+
+	/* DEBUG: Log the initial state on prepare. */
+	dev_info(tascam->card->dev, "Prepare: Sync state reset, starting in unsynced mode.\n");
 
 	nominal_frames_per_packet = runtime->rate / 8000;
 	for (i = 0; i < FEEDBACK_ACCUMULATOR_SIZE; i++)
@@ -592,12 +602,23 @@ static void playback_urb_complete(struct urb *urb)
 
 	spin_lock_irqsave(&tascam->lock, flags);
 
+	/* DEBUG: Log which sizing logic is being used. */
+	if (tascam->feedback_synced)
+		dev_info_ratelimited(tascam->card->dev, "Playback: Using DYNAMIC packet sizes (synced).\n");
+	else
+		dev_info_ratelimited(tascam->card->dev, "Playback: Using NOMINAL packet sizes (not synced).\n");
+
 	for (i = 0; i < PLAYBACK_URB_ISO_PACKETS; i++) {
 		unsigned int frames_for_packet;
 		size_t bytes_for_packet;
 
-		frames_for_packet = tascam->feedback_accumulator_pattern[tascam->feedback_pattern_out_idx];
-		tascam->feedback_pattern_out_idx = (tascam->feedback_pattern_out_idx + 1) % FEEDBACK_ACCUMULATOR_SIZE;
+		if (tascam->feedback_synced) {
+			frames_for_packet = tascam->feedback_accumulator_pattern[tascam->feedback_pattern_out_idx];
+			tascam->feedback_pattern_out_idx = (tascam->feedback_pattern_out_idx + 1) % FEEDBACK_ACCUMULATOR_SIZE;
+		} else {
+			frames_for_packet = runtime->rate / 8000;
+		}
+
 		bytes_for_packet = frames_for_packet * DEVICE_BYTES_PER_FRAME;
 
 		if ((urb_total_bytes + bytes_for_packet) > tascam->playback_urb_alloc_size) {
@@ -628,6 +649,9 @@ static void playback_urb_complete(struct urb *urb)
 
 	urb->transfer_buffer_length = urb_total_bytes;
 
+	/* DEBUG: Log the size of the URB we just prepared. */
+	dev_info_ratelimited(tascam->card->dev, "Prepared playback URB, total bytes: %zu\n", urb_total_bytes);
+
 	if (atomic_read(&tascam->playback_active)) {
 		urb->dev = tascam->dev;
 		ret = usb_submit_urb(urb, GFP_ATOMIC);
@@ -645,6 +669,8 @@ static void feedback_urb_complete(struct urb *urb)
 	int ret, i, p;
 	u64 current_period;
 	u64 total_frames_in_urb = 0;
+	bool was_synced;
+	bool sync_lost_this_urb = false;
 
 	if (urb->status == -ENOENT || urb->status == -ECONNRESET || urb->status == -ESHUTDOWN)
 		return;
@@ -659,10 +685,17 @@ static void feedback_urb_complete(struct urb *urb)
 
 	if (urb->status != 0) {
 		dev_warn_ratelimited(tascam->card->dev, "Feedback URB failed with status %d\n", urb->status);
+		spin_lock_irqsave(&tascam->lock, flags);
+		if (tascam->feedback_synced)
+			dev_info(tascam->card->dev, "Sync Lost (URB error)!\n");
+		tascam->feedback_synced = false;
+		spin_unlock_irqrestore(&tascam->lock, flags);
 		goto resubmit;
 	}
 
 	spin_lock_irqsave(&tascam->lock, flags);
+
+	was_synced = tascam->feedback_synced;
 
 	if (tascam->feedback_urb_skip_count > 0) {
 		tascam->feedback_urb_skip_count--;
@@ -674,16 +707,20 @@ static void feedback_urb_complete(struct urb *urb)
 		const unsigned int *pattern;
 		int pattern_index;
 
-		if (urb->iso_frame_desc[p].status != 0 || urb->iso_frame_desc[p].actual_length < 1)
+		if (urb->iso_frame_desc[p].status != 0 || urb->iso_frame_desc[p].actual_length < 1) {
+			sync_lost_this_urb = true;
 			continue;
+		}
 
 		feedback_value = *((u8 *)urb->transfer_buffer + urb->iso_frame_desc[p].offset);
+		dev_info_ratelimited(tascam->card->dev, "Feedback received, value: %u\n", feedback_value);
 
 		if (feedback_value >= tascam->feedback_base_value &&
 		    feedback_value <= tascam->feedback_max_value) {
 			pattern_index = feedback_value - tascam->feedback_base_value;
 			pattern = tascam->feedback_patterns[pattern_index];
 		} else {
+			sync_lost_this_urb = true;
 			pattern = NULL;
 		}
 
@@ -698,6 +735,17 @@ static void feedback_urb_complete(struct urb *urb)
 			u64 nominal_frames_per_ms = runtime->rate / 1000;
 			total_frames_in_urb += nominal_frames_per_ms;
 		}
+	}
+
+	/* Update and log the sync state transition. */
+	if (sync_lost_this_urb) {
+		if (was_synced)
+			dev_info(tascam->card->dev, "Sync Lost (bad packet)!\n");
+		tascam->feedback_synced = false;
+	} else {
+		if (!was_synced)
+			dev_info(tascam->card->dev, "Sync Acquired!\n");
+		tascam->feedback_synced = true;
 	}
 
 	if (total_frames_in_urb > 0)
