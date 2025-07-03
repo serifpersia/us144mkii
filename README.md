@@ -46,14 +46,43 @@ You need the necessary tools to compile kernel modules and the headers for your 
     ```
 
 ### Step 2: Blacklist the Stock `snd-usb-us122l` Driver
-The standard kernel includes a driver that will claim the US-144MKII. This driver will conflict with our custom module. You must prevent it from loading.
+The standard kernel includes a driver that will conflict with our custom module. You must prevent it from loading.
 
-1.  Create a blacklist configuration file using the following command. This tells the system *not* to load the `snd-usb-us122l` module at boot.
+1.  **Create a blacklist file.** This tells the system *not* to load the `snd-usb-us122l` module.
     ```bash
     echo "blacklist snd_usb_us122l" | sudo tee /etc/modprobe.d/blacklist-us144mkii.conf
     ```
-2.  **Reboot your computer** for this change to take full effect.
-3.  After rebooting, verify the stock driver is not loaded by running `lsmod | grep snd_usb_us122l`. This command should produce no output.
+
+2.  **Rebuild your initramfs.** This is a critical step that ensures the blacklist is applied at the very start of the boot process, before the stock driver has a chance to load. Run the command corresponding to your distribution:
+    *   **Debian / Ubuntu / Pop!_OS / Mint:**
+        ```bash
+        sudo update-initramfs -u
+        ```
+    *   **Fedora / RHEL / CentOS Stream:**
+        ```bash
+        sudo dracut --force
+        ```
+    *   **Arch Linux / Manjaro:**
+        ```bash
+        sudo mkinitcpio -P
+        ```
+    *   **openSUSE:**
+        ```bash
+        sudo mkinitrd
+        ```
+
+3.  **Reboot your computer.**
+
+4.  After rebooting, verify the stock driver is not loaded by running `lsmod | grep snd_usb_us122l`. This command should produce no output.
+
+> **Note on a More Aggressive Method:** If the method above does not work, some systems (like Arch) may load the conflicting module before the blacklist is processed. A more forceful method is to use a `udev` rule to de-authorize the device for the kernel entirely, preventing any driver from binding to it automatically.
+>
+> Create the file `/etc/udev/rules.d/99-tascam-blacklist.rules` and add the following line. This targets the Tascam US-122L/144MKII series product ID (`8007`).
+> ```
+> ATTR{idVendor}=="0644", ATTR{idProduct}=="8007", ATTR{authorized}="0"
+> ```
+> After saving, run `sudo udevadm control --reload` and reboot. Note that with this rule in place, you will likely need to load the `us144mkii` driver manually with `sudo insmod us144mkii.ko` each time. The `modprobe` method is preferred for automatic loading.
+
 
 ### Step 3: Compile and Load the Driver
 This process will build the module from source and load it for your current session. This is the best way to test it.
