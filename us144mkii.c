@@ -21,9 +21,20 @@ MODULE_LICENSE("GPL");
 
 #define DRIVER_NAME "snd-usb-us144mkii"
 
+/*
+ * TODO:
+ * - Implement audio input capture.
+ * - Implement MIDI IN/OUT.
+ * - Expose hardware features via the ALSA Control API (mixers):
+ *   - Digital output format selection.
+ */
+
+
+/* --- Module Parameters --- */
 static int index[SNDRV_CARDS] = SNDRV_DEFAULT_IDX;
 static char *id[SNDRV_CARDS] = SNDRV_DEFAULT_STR;
 static bool enable[SNDRV_CARDS] = {1, [1 ... (SNDRV_CARDS - 1)] = 0};
+static int dev_idx;
 
 module_param_array(index, int, NULL, 0444);
 MODULE_PARM_DESC(index, "Index value for the US-144MKII soundcard.");
@@ -33,44 +44,44 @@ module_param_array(enable, bool, NULL, 0444);
 MODULE_PARM_DESC(enable, "Enable this US-144MKII soundcard.");
 
 /* --- USB Device Identification --- */
-#define USB_VID_TASCAM			0x0644
+#define USB_VID_TASCAM				0x0644
 #define USB_PID_TASCAM_US144MKII	0x8020
 
 /* --- USB Endpoints (Alternate Setting 1) --- */
 #define EP_PLAYBACK_FEEDBACK	0x81
-#define EP_AUDIO_OUT		0x02
-#define EP_MIDI_IN		0x83
-#define EP_MIDI_OUT		0x04
-#define EP_CAPTURE_DATA		0x86
+#define EP_AUDIO_OUT			0x02
+#define EP_MIDI_IN				0x83
+#define EP_MIDI_OUT				0x04
+#define EP_AUDIO_IN				0x86
 
 /* --- USB Control Message Protocol --- */
 #define RT_H2D_CLASS_EP		(USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_ENDPOINT)
 #define RT_H2D_VENDOR_DEV	(USB_DIR_OUT | USB_TYPE_VENDOR | USB_RECIP_DEVICE)
 #define RT_D2H_VENDOR_DEV	(USB_DIR_IN | USB_TYPE_VENDOR | USB_RECIP_DEVICE)
-#define UAC_SET_CUR		0x01
-#define UAC_SAMPLING_FREQ_CONTROL 0x0100
+#define UAC_SET_CUR					0x01
+#define UAC_SAMPLING_FREQ_CONTROL 	0x0100
 #define VENDOR_REQ_REGISTER_WRITE	0x41
 #define VENDOR_REQ_MODE_CONTROL		0x49
-#define MODE_VAL_HANDSHAKE_READ	0x0000
-#define MODE_VAL_CONFIG		0x0010
-#define MODE_VAL_STREAM_START	0x0030
-#define REG_ADDR_UNKNOWN_0D	0x0d04
-#define REG_ADDR_UNKNOWN_0E	0x0e00
-#define REG_ADDR_UNKNOWN_0F	0x0f00
-#define REG_ADDR_RATE_44100	0x1000
-#define REG_ADDR_RATE_48000	0x1002
-#define REG_ADDR_RATE_88200	0x1008
-#define REG_ADDR_RATE_96000	0x100a
-#define REG_ADDR_UNKNOWN_11	0x110b
-#define REG_VAL_ENABLE		0x0101
+#define MODE_VAL_HANDSHAKE_READ		0x0000
+#define MODE_VAL_CONFIG				0x0010
+#define MODE_VAL_STREAM_START		0x0030
+#define REG_ADDR_UNKNOWN_0D			0x0d04
+#define REG_ADDR_UNKNOWN_0E			0x0e00
+#define REG_ADDR_UNKNOWN_0F			0x0f00
+#define REG_ADDR_RATE_44100			0x1000
+#define REG_ADDR_RATE_48000			0x1002
+#define REG_ADDR_RATE_88200			0x1008
+#define REG_ADDR_RATE_96000			0x100a
+#define REG_ADDR_UNKNOWN_11			0x110b
+#define REG_VAL_ENABLE				0x0101
 
 /* --- URB Configuration --- */
-#define NUM_PLAYBACK_URBS	8
-#define NUM_FEEDBACK_URBS	4
-#define MAX_FEEDBACK_PACKETS	5
-#define MAX_PLAYBACK_URB_ISO_PACKETS 40
-#define FEEDBACK_PACKET_SIZE	3
-#define USB_CTRL_TIMEOUT_MS	1000
+#define NUM_PLAYBACK_URBS				8
+#define NUM_FEEDBACK_URBS				4
+#define MAX_FEEDBACK_PACKETS			5
+#define MAX_PLAYBACK_URB_ISO_PACKETS 	40
+#define FEEDBACK_PACKET_SIZE			3
+#define USB_CTRL_TIMEOUT_MS				1000
 
 /* --- Audio Format Configuration --- */
 #define BYTES_PER_SAMPLE	3
@@ -83,6 +94,16 @@ MODULE_PARM_DESC(enable, "Enable this US-144MKII soundcard.");
 struct tascam_card;
 static struct usb_driver tascam_alsa_driver;
 
+/* --- Forward Declarations --- */
+static void playback_urb_complete(struct urb *urb);
+static void feedback_urb_complete(struct urb *urb);
+static int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate);
+static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *id);
+static void tascam_disconnect(struct usb_interface *intf);
+static int tascam_suspend(struct usb_interface *intf, pm_message_t message);
+static int tascam_resume(struct usb_interface *intf);
+
+/* --- Rate-to-Packet Fixing Data --- */
 static const unsigned int patterns_48khz[5][8] = {
 	{5, 6, 6, 6, 5, 6, 6, 6}, {5, 6, 6, 6, 6, 6, 6, 6},
 	{6, 6, 6, 6, 6, 6, 6, 6}, {7, 6, 6, 6, 6, 6, 6, 6},
@@ -104,6 +125,7 @@ static const unsigned int patterns_44khz[5][8] = {
 	{6, 6, 6, 5, 6, 6, 6, 5}
 };
 
+/* --- Main Driver Data Structure --- */
 struct tascam_card {
 	struct usb_device *dev;
 	struct usb_interface *iface0;
@@ -140,9 +162,6 @@ struct tascam_card {
 
 static const unsigned int playback_iso_packet_counts_tiers[] = { 8, 24, 40 };
 static const unsigned int hardware_feedback_packet_counts[] = { 1, 2, 5 };
-
-static void playback_urb_complete(struct urb *urb);
-static void feedback_urb_complete(struct urb *urb);
 
 static const struct snd_pcm_hardware tascam_pcm_hw = {
 	.info = (SNDRV_PCM_INFO_MMAP | SNDRV_PCM_INFO_INTERLEAVED |
@@ -312,7 +331,7 @@ static int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int r
 
 	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV, MODE_VAL_CONFIG, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
 	if (err < 0) goto fail;
-	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR, RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL, EP_CAPTURE_DATA, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
+	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR, RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL, EP_AUDIO_IN, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
 	if (err < 0) goto fail;
 	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR, RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL, EP_AUDIO_OUT, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
 	if (err < 0) goto fail;
@@ -687,13 +706,87 @@ static void tascam_card_private_free(struct snd_card *card)
 	}
 }
 
+/**
+ * tascam_suspend - Called when the device is being suspended.
+ * @intf: The USB interface.
+ * @message: Power management message.
+ *
+ * Stops all active audio streams to prepare for system sleep.
+ *
+ * Returns: 0 on success.
+ */
+static int tascam_suspend(struct usb_interface *intf, pm_message_t message)
+{
+	struct tascam_card *tascam = usb_get_intfdata(intf);
+
+	if (!tascam || !tascam->pcm)
+		return 0;
+
+	snd_pcm_suspend_all(tascam->pcm);
+
+	return 0;
+}
+
+/**
+ * tascam_resume - Called when the device is being resumed.
+ * @intf: The USB interface.
+ *
+ * Re-initializes the device hardware after system resume, restoring its
+ * alternate settings and sample rate configuration. This is necessary because
+ * the device may lose its state during suspend.
+ *
+ * Returns: 0 on success, or a negative error code on failure.
+ */
+static int tascam_resume(struct usb_interface *intf)
+{
+	struct tascam_card *tascam = usb_get_intfdata(intf);
+	struct usb_device *dev;
+	int err;
+
+	if (!tascam)
+		return 0;
+
+	dev = tascam->dev;
+	dev_info(&intf->dev, "Resuming and re-initializing device...\n");
+
+	/* Re-establish alternate settings for both interfaces */
+	err = usb_set_interface(dev, 0, 1);
+	if (err < 0) {
+		dev_err(&intf->dev, "Resume: Set Alt Setting on Intf 0 failed: %d\n", err);
+		return err;
+	}
+	err = usb_set_interface(dev, 1, 1);
+	if (err < 0) {
+		dev_err(&intf->dev, "Resume: Set Alt Setting on Intf 1 failed: %d\n", err);
+		return err;
+	}
+
+	/*
+	 * Re-configure the device for the last used sample rate.
+	 * If no stream was ever started, current_rate will be 0, and we skip this.
+	 * The ALSA core will handle resuming the PCM streams, which will
+	 * trigger our .prepare and .trigger ops as needed.
+	 */
+	if (tascam->current_rate > 0) {
+		dev_info(&intf->dev, "Restoring sample rate to %d Hz\n", tascam->current_rate);
+		err = us144mkii_configure_device_for_rate(tascam, tascam->current_rate);
+		if (err < 0) {
+			dev_err(&intf->dev, "Resume: Failed to restore sample rate configuration\n");
+			/* Invalidate the rate so the next hw_params will re-configure fully. */
+			tascam->current_rate = 0;
+			return err;
+		}
+	}
+
+	return 0;
+}
+
 static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *usb_id)
 {
 	struct usb_device *dev = interface_to_usbdev(intf);
 	struct tascam_card *tascam;
 	struct snd_card *card;
 	int err;
-	static int dev_idx;
 	u8 *handshake_buf;
 
 	if (intf->cur_altsetting->desc.bInterfaceNumber != 0)
@@ -820,6 +913,8 @@ static struct usb_driver tascam_alsa_driver = {
 	.probe =	tascam_probe,
 	.disconnect =	tascam_disconnect,
 	.id_table =	tascam_id_table,
+	.suspend =	tascam_suspend,
+	.resume =	tascam_resume,
 };
 
 module_usb_driver(tascam_alsa_driver);
