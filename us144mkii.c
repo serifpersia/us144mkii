@@ -1,18 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0
-// (c) 2025 serifpersia <ramiserifpersia@gmail.com>
+// Copyright (c) 2025 serifpersia <ramiserifpersia@gmail.com>
 /*
  * ALSA Driver for TASCAM US-144MKII Audio Interface
  */
-
-// TODO: Verify on resume/shutdown that device works as expected
-// TODO: Implement audio capture, MIDI IN/OUT 
-// TODO: 4 Channel routing & ALSA mixers and GUI tool that will use these mixers to control device's audio in/out routing, latency profile, sample rate & digital out format. 
 
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/usb.h>
 #include <linux/slab.h>
-#include <linux/string.h>
 #include <linux/delay.h>
 
 #include <sound/core.h>
@@ -20,13 +15,12 @@
 #include <sound/pcm_params.h>
 #include <sound/initval.h>
 
-MODULE_AUTHOR("serifpersia");
+MODULE_AUTHOR("serifpersia <ramiserifpersia@gmail.com>");
 MODULE_DESCRIPTION("ALSA Driver for TASCAM US-144MKII");
 MODULE_LICENSE("GPL");
 
-#define DRIVER_NAME "us144mkii"
+#define DRIVER_NAME "snd-usb-us144mkii"
 
-/* Module Parameters */
 static int index[SNDRV_CARDS] = SNDRV_DEFAULT_IDX;
 static char *id[SNDRV_CARDS] = SNDRV_DEFAULT_STR;
 static bool enable[SNDRV_CARDS] = {1, [1 ... (SNDRV_CARDS - 1)] = 0};
@@ -38,48 +32,78 @@ MODULE_PARM_DESC(id, "ID string for the US-144MKII soundcard.");
 module_param_array(enable, bool, NULL, 0444);
 MODULE_PARM_DESC(enable, "Enable this US-144MKII soundcard.");
 
-/* Constants and Structs */
-#define TASCAM_VID 0x0644
-#define TASCAM_PID 0x8020
+/* --- USB Device Identification --- */
+#define USB_VID_TASCAM			0x0644
+#define USB_PID_TASCAM_US144MKII	0x8020
 
-/* USB Endpoints */
-#define EP_AUDIO_OUT         0x02 // Isochronous OUT for playback audio
-#define EP_PLAYBACK_FEEDBACK 0x81 // Isochronous IN for clock feedback
-#define EP_CAPTURE_DATA      0x86 // Bulk IN for capture audio
-#define EP_MIDI_OUT          0x04 // Bulk OUT for MIDI
-#define EP_MIDI_IN           0x83 // Bulk IN for MIDI
+/* --- USB Endpoints (Alternate Setting 1) --- */
+#define EP_PLAYBACK_FEEDBACK	0x81
+#define EP_AUDIO_OUT		0x02
+#define EP_MIDI_IN		0x83
+#define EP_MIDI_OUT		0x04
+#define EP_CAPTURE_DATA		0x86
 
-/* USB Control Message Request Types */
-#define RT_H2D_CLASS_EP   0x22 // Host-to-Device, Class, Endpoint
-#define RT_H2D_VENDOR_DEV 0x40 // Host-to-Device, Vendor, Device
-#define RT_D2H_VENDOR_DEV 0xc0 // Device-to-Host, Vendor, Device
-
-/* USB Control Message Requests */
-#define UAC_SET_CUR 0x01
+/* --- USB Control Message Protocol --- */
+#define RT_H2D_CLASS_EP		(USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_ENDPOINT)
+#define RT_H2D_VENDOR_DEV	(USB_DIR_OUT | USB_TYPE_VENDOR | USB_RECIP_DEVICE)
+#define RT_D2H_VENDOR_DEV	(USB_DIR_IN | USB_TYPE_VENDOR | USB_RECIP_DEVICE)
+#define UAC_SET_CUR		0x01
 #define UAC_SAMPLING_FREQ_CONTROL 0x0100
-#define VENDOR_REQ_REGISTER_WRITE 65 // bRequest 0x41
-#define VENDOR_REQ_MODE_CONTROL   73 // bRequest 0x49
+#define VENDOR_REQ_REGISTER_WRITE	0x41
+#define VENDOR_REQ_MODE_CONTROL		0x49
+#define MODE_VAL_HANDSHAKE_READ	0x0000
+#define MODE_VAL_CONFIG		0x0010
+#define MODE_VAL_STREAM_START	0x0030
+#define REG_ADDR_UNKNOWN_0D	0x0d04
+#define REG_ADDR_UNKNOWN_0E	0x0e00
+#define REG_ADDR_UNKNOWN_0F	0x0f00
+#define REG_ADDR_RATE_44100	0x1000
+#define REG_ADDR_RATE_48000	0x1002
+#define REG_ADDR_RATE_88200	0x1008
+#define REG_ADDR_RATE_96000	0x100a
+#define REG_ADDR_UNKNOWN_11	0x110b
+#define REG_VAL_ENABLE		0x0101
 
-/* URB Configuration */
-#define NUM_PLAYBACK_URBS 8
-#define NUM_FEEDBACK_URBS 4
-#define MAX_FEEDBACK_PACKETS 5
+/* --- URB Configuration --- */
+#define NUM_PLAYBACK_URBS	8
+#define NUM_FEEDBACK_URBS	4
+#define MAX_FEEDBACK_PACKETS	5
 #define MAX_PLAYBACK_URB_ISO_PACKETS 40
-#define FEEDBACK_PACKET_SIZE 3
-#define USB_CTRL_TIMEOUT_MS 1000
+#define FEEDBACK_PACKET_SIZE	3
+#define USB_CTRL_TIMEOUT_MS	1000
 
-/* Audio Format Configuration */
-#define BYTES_PER_SAMPLE 3       // 24-bit
-#define ALSA_CHANNELS 2          // Stereo from user-space
-#define DEVICE_CHANNELS 4        // Device expects 4 channels of data
-#define ALSA_BYTES_PER_FRAME (ALSA_CHANNELS * BYTES_PER_SAMPLE)
-#define DEVICE_BYTES_PER_FRAME (DEVICE_CHANNELS * BYTES_PER_SAMPLE)
-
+/* --- Audio Format Configuration --- */
+#define BYTES_PER_SAMPLE	3
+#define ALSA_CHANNELS		2
+#define DEVICE_CHANNELS		4
+#define ALSA_BYTES_PER_FRAME	(ALSA_CHANNELS * BYTES_PER_SAMPLE)
+#define DEVICE_BYTES_PER_FRAME	(DEVICE_CHANNELS * BYTES_PER_SAMPLE)
 #define FEEDBACK_ACCUMULATOR_SIZE 128
 
+struct tascam_card;
 static struct usb_driver tascam_alsa_driver;
 
-/* Main driver data structure */
+static const unsigned int patterns_48khz[5][8] = {
+	{5, 6, 6, 6, 5, 6, 6, 6}, {5, 6, 6, 6, 6, 6, 6, 6},
+	{6, 6, 6, 6, 6, 6, 6, 6}, {7, 6, 6, 6, 6, 6, 6, 6},
+	{7, 6, 6, 6, 7, 6, 6, 6}
+};
+static const unsigned int patterns_96khz[5][8] = {
+	{11, 12, 12, 12, 11, 12, 12, 12}, {11, 12, 12, 12, 12, 12, 12, 12},
+	{12, 12, 12, 12, 12, 12, 12, 12}, {13, 12, 12, 12, 12, 12, 12, 12},
+	{13, 12, 12, 12, 13, 12, 12, 12}
+};
+static const unsigned int patterns_88khz[5][8] = {
+	{10, 11, 11, 11, 10, 11, 11, 11}, {10, 11, 11, 11, 11, 11, 11, 11},
+	{11, 11, 11, 11, 11, 11, 11, 11}, {12, 11, 11, 11, 11, 11, 11, 11},
+	{12, 11, 11, 11, 12, 11, 11, 11}
+};
+static const unsigned int patterns_44khz[5][8] = {
+	{5, 5, 5, 6, 5, 5, 5, 6}, {5, 5, 6, 5, 5, 6, 5, 6},
+	{5, 6, 5, 6, 5, 6, 5, 6}, {6, 5, 6, 6, 5, 6, 5, 6},
+	{6, 6, 6, 5, 6, 6, 6, 5}
+};
+
 struct tascam_card {
 	struct usb_device *dev;
 	struct usb_interface *iface0;
@@ -90,7 +114,7 @@ struct tascam_card {
 	struct snd_pcm_substream *playback_substream;
 	struct urb *playback_urbs[NUM_PLAYBACK_URBS];
 	size_t playback_urb_alloc_size;
-	unsigned int playback_urb_iso_packets; // Dynamic packet count
+	unsigned int playback_urb_iso_packets;
 
 	struct urb *feedback_urbs[NUM_FEEDBACK_URBS];
 	size_t feedback_urb_alloc_size;
@@ -99,140 +123,49 @@ struct tascam_card {
 	atomic_t playback_active;
 	int current_rate;
 
-	/* Feedback Synchronization State */
 	unsigned int feedback_accumulator_pattern[FEEDBACK_ACCUMULATOR_SIZE];
 	unsigned int feedback_pattern_out_idx;
 	unsigned int feedback_pattern_in_idx;
 	bool feedback_synced;
 	unsigned int feedback_urb_skip_count;
 
-	/* Playback Position Tracking */
-	snd_pcm_uframes_t driver_playback_pos;
 	u64 playback_frames_consumed;
+	snd_pcm_uframes_t driver_playback_pos;
 	u64 last_period_pos;
 
-	/* Rate-Specific Data */
 	const unsigned int (*feedback_patterns)[8];
 	unsigned int feedback_base_value;
 	unsigned int feedback_max_value;
 };
 
-/*
- * Latency Profile Cheatsheet
- *
- * The driver selects a hardware profile dynamically based on the period size
- * requested by the application. The device has 3 true hardware modes,
- * determined by the number of packets in the feedback URB.
- */
-static const unsigned int hardware_feedback_packet_counts[] = {
-	1, // Tier 0: For Low latency
-	2, // Tier 1: For Normal latency
-	5, // Tier 2: For High latency
-};
+static const unsigned int playback_iso_packet_counts_tiers[] = { 8, 24, 40 };
+static const unsigned int hardware_feedback_packet_counts[] = { 1, 2, 5 };
 
-// Maps ALSA period size tiers to desired PLAYBACK_URB_ISO_PACKETS
-static const unsigned int playback_iso_packet_counts_tiers[] = {
-	8,  // Tier 0: For Low latency (e.g., 64-frame buffers)
-	24, // Tier 1: For Normal latency (e.g., 128/256-frame buffers)
-	40  // Tier 2: For High latency (e.g., 512/1024-frame buffers)
-};
-
-/*
- * Pre-calculated patterns for frames-per-microframe based on feedback value.
- * These are the core of the "Packet Fixing" engine. Each array represents
- * the number of audio frames to send in each of the 8 microframes of a USB frame.
- * The sum of each pattern equals the feedback value.
- * E.g., for 48kHz, nominal is 48000/1000 = 48 frames/ms.
- * The pattern for feedback value 48 is {6,6,6,6,6,6,6,6}, since 6*8=48.
- */
-static const unsigned int patterns_48khz[5][8] = {
-	{5, 6, 6, 6, 5, 6, 6, 6}, // 46
-	{5, 6, 6, 6, 6, 6, 6, 6}, // 47
-	{6, 6, 6, 6, 6, 6, 6, 6}, // 48 (Nominal)
-	{7, 6, 6, 6, 6, 6, 6, 6}, // 49
-	{7, 6, 6, 6, 7, 6, 6, 6}  // 50
-};
-static const unsigned int patterns_96khz[5][8] = {
-	{11, 12, 12, 12, 11, 12, 12, 12}, // 94
-	{11, 12, 12, 12, 12, 12, 12, 12}, // 95
-	{12, 12, 12, 12, 12, 12, 12, 12}, // 96 (Nominal)
-	{13, 12, 12, 12, 12, 12, 12, 12}, // 97
-	{13, 12, 12, 12, 13, 12, 12, 12}  // 98
-};
-static const unsigned int patterns_88khz[5][8] = {
-	{10, 11, 11, 11, 10, 11, 11, 11}, // 86
-	{10, 11, 11, 11, 11, 11, 11, 11}, // 87
-	{11, 11, 11, 11, 11, 11, 11, 11}, // 88 (Nominal)
-	{12, 11, 11, 11, 11, 11, 11, 11}, // 89
-	{12, 11, 11, 11, 12, 11, 11, 11}  // 90
-};
-static const unsigned int patterns_44khz[5][8] = {
-	{5, 5, 5, 6, 5, 5, 5, 6}, // 42
-	{5, 5, 6, 5, 5, 6, 5, 6}, // 43
-	{5, 6, 5, 6, 5, 6, 5, 6}, // 44 (Nominal is 44.1)
-	{6, 5, 6, 6, 5, 6, 5, 6}, // 45
-	{6, 6, 6, 5, 6, 6, 6, 5}  // 46
-};
-
-/* Forward Declarations */
-static void tascam_free_urbs(struct tascam_card *tascam);
-static int tascam_alloc_urbs(struct tascam_card *tascam);
-static int tascam_pcm_open(struct snd_pcm_substream *substream);
-static int tascam_pcm_close(struct snd_pcm_substream *substream);
-static int tascam_pcm_hw_params(struct snd_pcm_substream *substream, struct snd_pcm_hw_params *params);
-static int tascam_pcm_hw_free(struct snd_pcm_substream *substream);
-static int tascam_pcm_prepare(struct snd_pcm_substream *substream);
-static int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd);
-static snd_pcm_uframes_t tascam_pcm_pointer(struct snd_pcm_substream *substream);
 static void playback_urb_complete(struct urb *urb);
 static void feedback_urb_complete(struct urb *urb);
-static int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate);
-static int tascam_create_pcm(struct tascam_card *tascam);
-static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *id);
-static void tascam_disconnect(struct usb_interface *intf);
 
-/* PCM Hardware Definition */
 static const struct snd_pcm_hardware tascam_pcm_hw = {
-	.info = (SNDRV_PCM_INFO_MMAP |
-		 SNDRV_PCM_INFO_INTERLEAVED |
-		 SNDRV_PCM_INFO_BLOCK_TRANSFER |
-		 SNDRV_PCM_INFO_MMAP_VALID |
-		 SNDRV_PCM_INFO_PAUSE |
-		 SNDRV_PCM_INFO_RESUME),
+	.info = (SNDRV_PCM_INFO_MMAP | SNDRV_PCM_INFO_INTERLEAVED |
+		 SNDRV_PCM_INFO_BLOCK_TRANSFER | SNDRV_PCM_INFO_MMAP_VALID |
+		 SNDRV_PCM_INFO_PAUSE | SNDRV_PCM_INFO_RESUME),
 	.formats = SNDRV_PCM_FMTBIT_S24_3LE,
 	.rates = (SNDRV_PCM_RATE_44100 | SNDRV_PCM_RATE_48000 |
 		  SNDRV_PCM_RATE_88200 | SNDRV_PCM_RATE_96000),
-	.rate_min = 44100,
-	.rate_max = 96000,
-	.channels_min = 2,
-	.channels_max = 2,
+	.rate_min = 44100, .rate_max = 96000,
+	.channels_min = 2, .channels_max = 2,
 	.buffer_bytes_max = 1024 * 1024,
 	.period_bytes_min = 48 * ALSA_BYTES_PER_FRAME,
 	.period_bytes_max = 1024 * ALSA_BYTES_PER_FRAME,
-	.periods_min = 2,
-	.periods_max = 1024,
+	.periods_min = 2, .periods_max = 1024,
 };
 
-/* PCM Operations */
-static struct snd_pcm_ops tascam_playback_ops = {
-	.open =		tascam_pcm_open,
-	.close =	tascam_pcm_close,
-	.ioctl =	snd_pcm_lib_ioctl,
-	.hw_params =	tascam_pcm_hw_params,
-	.hw_free =	tascam_pcm_hw_free,
-	.prepare =	tascam_pcm_prepare,
-	.trigger =	tascam_pcm_trigger,
-	.pointer =	tascam_pcm_pointer,
-};
-
-// Stub for capture, as this driver only implements playback.
-static int tascam_capture_open_stub(struct snd_pcm_substream *substream) { return -ENODEV; }
-static int tascam_capture_close_stub(struct snd_pcm_substream *substream) { return 0; }
-static struct snd_pcm_ops tascam_capture_ops = {
-	.open =		tascam_capture_open_stub,
-	.close =	tascam_capture_close_stub,
-};
-
+/**
+ * tascam_free_urbs - Free all allocated URBs and their buffers.
+ * @tascam: The card instance.
+ *
+ * This function is the counterpart to tascam_alloc_urbs. It is called
+ * when the PCM device is closed to release all USB resources.
+ */
 static void tascam_free_urbs(struct tascam_card *tascam)
 {
 	int i;
@@ -240,10 +173,9 @@ static void tascam_free_urbs(struct tascam_card *tascam)
 	for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
 		if (tascam->playback_urbs[i]) {
 			usb_kill_urb(tascam->playback_urbs[i]);
-			if (tascam->playback_urbs[i]->transfer_buffer)
-				usb_free_coherent(tascam->dev, tascam->playback_urb_alloc_size,
-						  tascam->playback_urbs[i]->transfer_buffer,
-						  tascam->playback_urbs[i]->transfer_dma);
+			usb_free_coherent(tascam->dev, tascam->playback_urb_alloc_size,
+					  tascam->playback_urbs[i]->transfer_buffer,
+					  tascam->playback_urbs[i]->transfer_dma);
 			usb_free_urb(tascam->playback_urbs[i]);
 			tascam->playback_urbs[i] = NULL;
 		}
@@ -252,36 +184,32 @@ static void tascam_free_urbs(struct tascam_card *tascam)
 	for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
 		if (tascam->feedback_urbs[i]) {
 			usb_kill_urb(tascam->feedback_urbs[i]);
-			if (tascam->feedback_urbs[i]->transfer_buffer)
-				usb_free_coherent(tascam->dev, tascam->feedback_urb_alloc_size,
-						  tascam->feedback_urbs[i]->transfer_buffer,
-						  tascam->feedback_urbs[i]->transfer_dma);
+			usb_free_coherent(tascam->dev, tascam->feedback_urb_alloc_size,
+					  tascam->feedback_urbs[i]->transfer_buffer,
+					  tascam->feedback_urbs[i]->transfer_dma);
 			usb_free_urb(tascam->feedback_urbs[i]);
 			tascam->feedback_urbs[i] = NULL;
 		}
 	}
 }
 
+/**
+ * tascam_alloc_urbs - Allocate URBs and their buffers.
+ * @tascam: The card instance.
+ *
+ * Allocates all necessary URBs for playback and feedback. This is called
+ * when the PCM device is opened.
+ * Returns: 0 on success, or a negative error code on failure.
+ */
 static int tascam_alloc_urbs(struct tascam_card *tascam)
 {
 	int i;
-	size_t max_frames_per_packet, max_packet_size;
+	size_t max_packet_size;
 
-	// Calculate max possible packet size to allocate enough buffer space.
-	// Max frames per packet at 96kHz is 12. Add a margin for safety.
-	max_frames_per_packet = (96000 / 8000) + 2;
-	max_packet_size = max_frames_per_packet * DEVICE_BYTES_PER_FRAME;
-
-	// Allocate playback URB buffer for the absolute maximum possible packets.
+	max_packet_size = ((96000 / 8000) + 2) * DEVICE_BYTES_PER_FRAME;
 	tascam->playback_urb_alloc_size = max_packet_size * MAX_PLAYBACK_URB_ISO_PACKETS;
 
-	if (tascam->playback_urb_alloc_size == 0) {
-		dev_err(tascam->card->dev, "Calculated playback_urb_alloc_size is zero.\n");
-		return -EINVAL;
-	}
-
 	for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
-		// URB is allocated with max possible packets; actual # is set in hw_params.
 		struct urb *urb = usb_alloc_urb(MAX_PLAYBACK_URB_ISO_PACKETS, GFP_KERNEL);
 		if (!urb)
 			goto error;
@@ -349,9 +277,65 @@ static int tascam_pcm_open(struct snd_pcm_substream *substream)
 static int tascam_pcm_close(struct snd_pcm_substream *substream)
 {
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
-
 	tascam_free_urbs(tascam);
 	return 0;
+}
+
+static int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate)
+{
+	struct usb_device *dev = tascam->dev;
+	u8 *rate_payload_buf;
+	u16 rate_vendor_wValue;
+	int err = 0;
+
+	static const u8 payload_44100[] = {0x44, 0xac, 0x00};
+	static const u8 payload_48000[] = {0x80, 0xbb, 0x00};
+	static const u8 payload_88200[] = {0x88, 0x58, 0x01};
+	static const u8 payload_96000[] = {0x00, 0x77, 0x01};
+	const u8 *current_payload_src;
+
+	switch (rate) {
+	case 44100: current_payload_src = payload_44100; rate_vendor_wValue = REG_ADDR_RATE_44100; break;
+	case 48000: current_payload_src = payload_48000; rate_vendor_wValue = REG_ADDR_RATE_48000; break;
+	case 88200: current_payload_src = payload_88200; rate_vendor_wValue = REG_ADDR_RATE_88200; break;
+	case 96000: current_payload_src = payload_96000; rate_vendor_wValue = REG_ADDR_RATE_96000; break;
+	default:
+		dev_err(&dev->dev, "Unsupported sample rate %d for configuration\n", rate);
+		return -EINVAL;
+	}
+
+	rate_payload_buf = kmemdup(current_payload_src, 3, GFP_KERNEL);
+	if (!rate_payload_buf)
+		return -ENOMEM;
+
+	dev_info(&dev->dev, "Configuring device for %d Hz\n", rate);
+
+	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV, MODE_VAL_CONFIG, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
+	if (err < 0) goto fail;
+	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR, RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL, EP_CAPTURE_DATA, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
+	if (err < 0) goto fail;
+	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR, RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL, EP_AUDIO_OUT, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
+	if (err < 0) goto fail;
+	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), VENDOR_REQ_REGISTER_WRITE, RT_H2D_VENDOR_DEV, REG_ADDR_UNKNOWN_0D, REG_VAL_ENABLE, NULL, 0, USB_CTRL_TIMEOUT_MS);
+	if (err < 0) goto fail;
+	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), VENDOR_REQ_REGISTER_WRITE, RT_H2D_VENDOR_DEV, REG_ADDR_UNKNOWN_0E, REG_VAL_ENABLE, NULL, 0, USB_CTRL_TIMEOUT_MS);
+	if (err < 0) goto fail;
+	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), VENDOR_REQ_REGISTER_WRITE, RT_H2D_VENDOR_DEV, REG_ADDR_UNKNOWN_0F, REG_VAL_ENABLE, NULL, 0, USB_CTRL_TIMEOUT_MS);
+	if (err < 0) goto fail;
+	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), VENDOR_REQ_REGISTER_WRITE, RT_H2D_VENDOR_DEV, rate_vendor_wValue, REG_VAL_ENABLE, NULL, 0, USB_CTRL_TIMEOUT_MS);
+	if (err < 0) goto fail;
+	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), VENDOR_REQ_REGISTER_WRITE, RT_H2D_VENDOR_DEV, REG_ADDR_UNKNOWN_11, REG_VAL_ENABLE, NULL, 0, USB_CTRL_TIMEOUT_MS);
+	if (err < 0) goto fail;
+	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV, MODE_VAL_STREAM_START, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
+	if (err < 0) goto fail;
+
+	kfree(rate_payload_buf);
+	return 0;
+
+fail:
+	dev_err(&dev->dev, "Device configuration failed at rate %d with error %d\n", rate, err);
+	kfree(rate_payload_buf);
+	return err;
 }
 
 static int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
@@ -363,104 +347,66 @@ static int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
 	unsigned int period_frames = params_period_size(params);
 	unsigned int low_asio_frames, normal_asio_frames;
 	int tier_idx;
-	unsigned int feedback_urb_packets;
-	unsigned int playback_iso_packets;
-
-	// Set ASIO-reported frame counts based on sample rate.
-	switch (rate) {
-	case 44100:
-		low_asio_frames = 64;
-		normal_asio_frames = 128;
-		break;
-	case 48000:
-		low_asio_frames = 64;
-		normal_asio_frames = 128;
-		break;
-	case 88200:
-		low_asio_frames = 128;
-		normal_asio_frames = 256;
-		break;
-	case 96000:
-		low_asio_frames = 128;
-		normal_asio_frames = 256;
-		break;
-	default:
-		dev_err(tascam->card->dev, "Unsupported sample rate: %u\n", rate);
-		return -EINVAL;
-	}
-
-	// Determine latency tier based on requested period size.
-	if (period_frames <= low_asio_frames) {
-		tier_idx = 0; // Low
-	} else if (period_frames <= normal_asio_frames) {
-		tier_idx = 1; // Normal
-	} else {
-		tier_idx = 2; // High
-	}
-
-	dev_info(tascam->card->dev,
-		 "User requested period of %u frames @ %u Hz, mapping to playback URB tier %d\n",
-		 period_frames, rate, tier_idx);
-
-	feedback_urb_packets = hardware_feedback_packet_counts[tier_idx];
-	playback_iso_packets = playback_iso_packet_counts_tiers[tier_idx];
-	tascam->playback_urb_iso_packets = playback_iso_packets;
-
-	// Configure the feedback URBs for the selected latency profile.
-	for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
-		struct urb *f_urb = tascam->feedback_urbs[i];
-		int j;
-
-		f_urb->number_of_packets = feedback_urb_packets;
-		f_urb->transfer_buffer_length = feedback_urb_packets * FEEDBACK_PACKET_SIZE;
-		for (j = 0; j < feedback_urb_packets; j++) {
-			f_urb->iso_frame_desc[j].offset = j * FEEDBACK_PACKET_SIZE;
-			f_urb->iso_frame_desc[j].length = FEEDBACK_PACKET_SIZE;
-		}
-	}
-
-	// Configure playback URBs with the dynamically chosen packet count.
-	for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
-		struct urb *urb = tascam->playback_urbs[i];
-		urb->number_of_packets = tascam->playback_urb_iso_packets;
-	}
 
 	err = snd_pcm_lib_malloc_pages(substream, params_buffer_bytes(params));
 	if (err < 0)
 		return err;
 
-	// Load the correct feedback patterns and range for the selected sample rate.
+	switch (rate) {
+	case 44100: case 48000:
+		low_asio_frames = 64; normal_asio_frames = 128; break;
+	case 88200: case 96000:
+		low_asio_frames = 128; normal_asio_frames = 256; break;
+	default: return -EINVAL;
+	}
+
+	if (period_frames <= low_asio_frames)
+		tier_idx = 0;
+	else if (period_frames <= normal_asio_frames)
+		tier_idx = 1;
+	else
+		tier_idx = 2;
+
+	dev_info(tascam->card->dev,
+		 "User requested period of %u frames @ %u Hz, mapping to latency tier %d\n",
+		 period_frames, rate, tier_idx);
+
+	tascam->playback_urb_iso_packets = playback_iso_packet_counts_tiers[tier_idx];
+
+	for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
+		struct urb *f_urb = tascam->feedback_urbs[i];
+		unsigned int packets = hardware_feedback_packet_counts[tier_idx];
+		int j;
+		f_urb->number_of_packets = packets;
+		f_urb->transfer_buffer_length = packets * FEEDBACK_PACKET_SIZE;
+		for (j = 0; j < packets; j++) {
+			f_urb->iso_frame_desc[j].offset = j * FEEDBACK_PACKET_SIZE;
+			f_urb->iso_frame_desc[j].length = FEEDBACK_PACKET_SIZE;
+		}
+	}
+
+	for (i = 0; i < NUM_PLAYBACK_URBS; i++)
+		tascam->playback_urbs[i]->number_of_packets = tascam->playback_urb_iso_packets;
+
 	switch (rate) {
 	case 44100:
 		tascam->feedback_patterns = patterns_44khz;
-		tascam->feedback_base_value = 42;
-		tascam->feedback_max_value = 46;
-		break;
+		tascam->feedback_base_value = 42; tascam->feedback_max_value = 46; break;
 	case 48000:
 		tascam->feedback_patterns = patterns_48khz;
-		tascam->feedback_base_value = 46;
-		tascam->feedback_max_value = 50;
-		break;
+		tascam->feedback_base_value = 46; tascam->feedback_max_value = 50; break;
 	case 88200:
 		tascam->feedback_patterns = patterns_88khz;
-		tascam->feedback_base_value = 86;
-		tascam->feedback_max_value = 90;
-		break;
+		tascam->feedback_base_value = 86; tascam->feedback_max_value = 90; break;
 	case 96000:
 		tascam->feedback_patterns = patterns_96khz;
-		tascam->feedback_base_value = 94;
-		tascam->feedback_max_value = 98;
-		break;
-	default:
-		dev_err(tascam->card->dev, "Unsupported sample rate for feedback patterns: %u\n", rate);
-		return -EINVAL;
+		tascam->feedback_base_value = 94; tascam->feedback_max_value = 98; break;
 	}
 
-	// If the sample rate has changed, reconfigure the device.
 	if (tascam->current_rate != rate) {
 		err = us144mkii_configure_device_for_rate(tascam, rate);
 		if (err < 0) {
-			tascam->current_rate = 0; // Invalidate rate on failure
+			tascam->current_rate = 0;
 			return err;
 		}
 		tascam->current_rate = rate;
@@ -479,41 +425,27 @@ static int tascam_pcm_prepare(struct snd_pcm_substream *substream)
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
 	struct snd_pcm_runtime *runtime = substream->runtime;
 	int i, u;
-	size_t nominal_frames_per_packet;
-	size_t nominal_bytes_per_packet;
-	size_t total_bytes_in_urb;
+	size_t nominal_frames_per_packet, nominal_bytes_per_packet, total_bytes_in_urb;
 
-	/* Reset all playback and sync state variables. */
 	tascam->driver_playback_pos = 0;
 	tascam->playback_frames_consumed = 0;
 	tascam->last_period_pos = 0;
 	tascam->feedback_pattern_in_idx = 0;
 	tascam->feedback_pattern_out_idx = 0;
 	tascam->feedback_synced = false;
-	// Discard the first few feedback URBs to allow the hardware clock to stabilize.
 	tascam->feedback_urb_skip_count = NUM_FEEDBACK_URBS * 2;
 
-	dev_info(tascam->card->dev, "Prepare: Sync state reset, starting in unsynced mode.\n");
+	dev_dbg(tascam->card->dev, "Prepare: Sync state reset, starting in unsynced mode.\n");
 
-	// Initialize the feedback accumulator with the nominal number of frames.
 	nominal_frames_per_packet = runtime->rate / 8000;
 	for (i = 0; i < FEEDBACK_ACCUMULATOR_SIZE; i++)
 		tascam->feedback_accumulator_pattern[i] = nominal_frames_per_packet;
 
-	// Initialize playback URBs with nominal packet sizes.
 	nominal_bytes_per_packet = nominal_frames_per_packet * DEVICE_BYTES_PER_FRAME;
 	total_bytes_in_urb = nominal_bytes_per_packet * tascam->playback_urb_iso_packets;
 
-	if (total_bytes_in_urb > tascam->playback_urb_alloc_size) {
-		dev_err(tascam->card->dev, "Prepare: Nominal URB size %zu > allocated %zu\n",
-			total_bytes_in_urb, tascam->playback_urb_alloc_size);
-		return -EINVAL;
-	}
-
 	for (u = 0; u < NUM_PLAYBACK_URBS; u++) {
 		struct urb *urb = tascam->playback_urbs[u];
-
-		urb->number_of_packets = tascam->playback_urb_iso_packets;
 		memset(urb->transfer_buffer, 0, tascam->playback_urb_alloc_size);
 		urb->transfer_buffer_length = total_bytes_in_urb;
 		for (i = 0; i < tascam->playback_urb_iso_packets; i++) {
@@ -528,58 +460,46 @@ static int tascam_pcm_prepare(struct snd_pcm_substream *substream)
 static int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 {
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
-	int err = 0;
-	int i;
+	int err = 0, i;
 	bool start = false;
 
 	switch (cmd) {
-	case SNDRV_PCM_TRIGGER_START:
-	case SNDRV_PCM_TRIGGER_RESUME:
+	case SNDRV_PCM_TRIGGER_START: case SNDRV_PCM_TRIGGER_RESUME:
 		if (atomic_xchg(&tascam->playback_active, 1) == 0)
 			start = true;
 		break;
-	case SNDRV_PCM_TRIGGER_STOP:
-	case SNDRV_PCM_TRIGGER_SUSPEND:
+	case SNDRV_PCM_TRIGGER_STOP: case SNDRV_PCM_TRIGGER_SUSPEND:
 	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
 		atomic_set(&tascam->playback_active, 0);
 		break;
-	default:
-		return -EINVAL;
+	default: return -EINVAL;
 	}
 
 	if (start) {
-		// Submit all feedback and playback URBs to start the stream.
 		for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
 			err = usb_submit_urb(tascam->feedback_urbs[i], GFP_ATOMIC);
-			if (err < 0) {
-				dev_err(tascam->card->dev, "Failed to submit feedback URB %d: %d\n", i, err);
-				atomic_set(&tascam->playback_active, 0);
-				return err;
-			}
+			if (err < 0) goto rollback;
 		}
 		for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
 			err = usb_submit_urb(tascam->playback_urbs[i], GFP_ATOMIC);
-			if (err < 0) {
-				int j;
-
-				dev_err(tascam->card->dev, "Failed to submit playback URB %d: %d\n", i, err);
-				atomic_set(&tascam->playback_active, 0);
-				// Unlink any URBs that were successfully submitted.
-				for (j = 0; j < NUM_FEEDBACK_URBS; j++)
-					usb_unlink_urb(tascam->feedback_urbs[j]);
-				for (j = 0; j < i; j++)
-					usb_unlink_urb(tascam->playback_urbs[j]);
-				return err;
-			}
+			if (err < 0) goto rollback;
 		}
 	} else {
-		// Unlink all URBs to stop the stream.
 		for (i = 0; i < NUM_PLAYBACK_URBS; i++)
 			usb_unlink_urb(tascam->playback_urbs[i]);
 		for (i = 0; i < NUM_FEEDBACK_URBS; i++)
 			usb_unlink_urb(tascam->feedback_urbs[i]);
 	}
 	return 0;
+
+rollback:
+	dev_err(tascam->card->dev, "Failed to submit URBs to start stream: %d\n", err);
+	atomic_set(&tascam->playback_active, 0);
+	for (i = 0; i < NUM_PLAYBACK_URBS; i++)
+		usb_unlink_urb(tascam->playback_urbs[i]);
+	for (i = 0; i < NUM_FEEDBACK_URBS; i++)
+		usb_unlink_urb(tascam->feedback_urbs[i]);
+	return err;
 }
 
 static snd_pcm_uframes_t tascam_pcm_pointer(struct snd_pcm_substream *substream)
@@ -587,298 +507,156 @@ static snd_pcm_uframes_t tascam_pcm_pointer(struct snd_pcm_substream *substream)
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
 	struct snd_pcm_runtime *runtime = substream->runtime;
 	u64 pos;
+	unsigned long flags;
 
 	if (!atomic_read(&tascam->playback_active))
 		return 0;
 
+	spin_lock_irqsave(&tascam->lock, flags);
 	pos = tascam->playback_frames_consumed;
+	spin_unlock_irqrestore(&tascam->lock, flags);
 
-	// Return the hardware position within the circular buffer.
 	return runtime ? pos % runtime->buffer_size : 0;
 }
 
-// This is the playback half of the "Packet Fixing" engine.
+static struct snd_pcm_ops tascam_playback_ops = {
+	.open = tascam_pcm_open, .close = tascam_pcm_close,
+	.ioctl = snd_pcm_lib_ioctl, .hw_params = tascam_pcm_hw_params,
+	.hw_free = tascam_pcm_hw_free, .prepare = tascam_pcm_prepare,
+	.trigger = tascam_pcm_trigger, .pointer = tascam_pcm_pointer,
+};
+
+static int tascam_capture_open_stub(struct snd_pcm_substream *s) { return -ENODEV; }
+static int tascam_capture_close_stub(struct snd_pcm_substream *s) { return 0; }
+static struct snd_pcm_ops tascam_capture_ops = {
+	.open = tascam_capture_open_stub, .close = tascam_capture_close_stub,
+};
+
 static void playback_urb_complete(struct urb *urb)
 {
 	struct tascam_card *tascam = urb->context;
 	struct snd_pcm_substream *substream;
 	struct snd_pcm_runtime *runtime;
 	unsigned long flags;
-	int ret, i, f;
-	char *urb_buf_ptr;
+	char *urb_buf_ptr = urb->transfer_buffer;
 	size_t urb_total_bytes = 0;
+	int ret, i, f;
 
-	if (urb->status == -ENOENT || urb->status == -ECONNRESET || urb->status == -ESHUTDOWN)
-		return;
-
-	if (!tascam || !atomic_read(&tascam->playback_active))
-		return;
-
+	if (urb->status) return;
+	if (!tascam || !atomic_read(&tascam->playback_active)) return;
 	substream = tascam->playback_substream;
-	if (!substream || !substream->runtime)
-		return;
+	if (!substream || !substream->runtime) return;
 	runtime = substream->runtime;
-	urb_buf_ptr = urb->transfer_buffer;
 
 	spin_lock_irqsave(&tascam->lock, flags);
-
-	// Prepare the next playback URB.
 	for (i = 0; i < tascam->playback_urb_iso_packets; i++) {
 		unsigned int frames_for_packet;
 		size_t bytes_for_packet;
 
-		// If synced, use the dynamic frame count from the accumulator.
-		// If not, use the nominal frame count.
 		if (tascam->feedback_synced) {
 			frames_for_packet = tascam->feedback_accumulator_pattern[tascam->feedback_pattern_out_idx];
 			tascam->feedback_pattern_out_idx = (tascam->feedback_pattern_out_idx + 1) % FEEDBACK_ACCUMULATOR_SIZE;
 		} else {
 			frames_for_packet = runtime->rate / 8000;
 		}
-
 		bytes_for_packet = frames_for_packet * DEVICE_BYTES_PER_FRAME;
 
-		if ((urb_total_bytes + bytes_for_packet) > tascam->playback_urb_alloc_size) {
-			dev_warn_ratelimited(tascam->card->dev, "Playback URB overflow, truncating packet.\n");
-			urb->iso_frame_desc[i].length = 0;
-			urb->iso_frame_desc[i].offset = urb_total_bytes;
-			continue;
-		}
-
-		// Copy audio data from ALSA buffer to the URB.
 		for (f = 0; f < frames_for_packet; f++) {
-			size_t alsa_pos_bytes = frames_to_bytes(runtime, tascam->driver_playback_pos);
-			char *alsa_frame_ptr = runtime->dma_area + alsa_pos_bytes;
-
-			// Copy 2 channels from ALSA, then zero-pad to 4 channels for the device.
+			char *alsa_frame_ptr = runtime->dma_area + frames_to_bytes(runtime, tascam->driver_playback_pos);
 			memcpy(urb_buf_ptr, alsa_frame_ptr, ALSA_BYTES_PER_FRAME);
 			memset(urb_buf_ptr + ALSA_BYTES_PER_FRAME, 0, DEVICE_BYTES_PER_FRAME - ALSA_BYTES_PER_FRAME);
-
 			urb_buf_ptr += DEVICE_BYTES_PER_FRAME;
 			tascam->driver_playback_pos++;
 			if (tascam->driver_playback_pos >= runtime->buffer_size)
 				tascam->driver_playback_pos = 0;
 		}
-
 		urb->iso_frame_desc[i].offset = urb_total_bytes;
 		urb->iso_frame_desc[i].length = bytes_for_packet;
 		urb_total_bytes += bytes_for_packet;
 	}
-
 	spin_unlock_irqrestore(&tascam->lock, flags);
 
 	urb->transfer_buffer_length = urb_total_bytes;
-
-	if (atomic_read(&tascam->playback_active)) {
-		urb->dev = tascam->dev;
-		ret = usb_submit_urb(urb, GFP_ATOMIC);
-		if (ret < 0)
-			dev_err_ratelimited(tascam->card->dev, "Failed to resubmit playback URB: %d\n", ret);
-	}
+	urb->dev = tascam->dev;
+	ret = usb_submit_urb(urb, GFP_ATOMIC);
+	if (ret < 0)
+		dev_err_ratelimited(tascam->card->dev, "Failed to resubmit playback URB: %d\n", ret);
 }
 
-// This is the feedback half of the "Packet Fixing" engine.
 static void feedback_urb_complete(struct urb *urb)
 {
 	struct tascam_card *tascam = urb->context;
 	struct snd_pcm_substream *substream;
 	struct snd_pcm_runtime *runtime;
 	unsigned long flags;
-	int ret, i, p;
-	u64 current_period;
-	u64 total_frames_in_urb = 0;
-	bool was_synced;
-	bool sync_lost_this_urb = false;
+	u64 current_period, total_frames_in_urb = 0;
+	bool was_synced, sync_lost_this_urb = false;
+	int ret, p;
 
-	if (urb->status == -ENOENT || urb->status == -ECONNRESET || urb->status == -ESHUTDOWN)
-		return;
-
-	if (!tascam || !atomic_read(&tascam->playback_active))
-		return;
-
+	if (urb->status) return;
+	if (!tascam || !atomic_read(&tascam->playback_active)) return;
 	substream = tascam->playback_substream;
-	if (!substream || !substream->runtime)
-		return;
+	if (!substream || !substream->runtime) return;
 	runtime = substream->runtime;
 
+	spin_lock_irqsave(&tascam->lock, flags);
 	if (urb->status != 0) {
 		dev_warn_ratelimited(tascam->card->dev, "Feedback URB failed with status %d\n", urb->status);
-		spin_lock_irqsave(&tascam->lock, flags);
-		if (tascam->feedback_synced)
-			dev_info(tascam->card->dev, "Sync Lost (URB error)!\n");
-		tascam->feedback_synced = false;
-		spin_unlock_irqrestore(&tascam->lock, flags);
-		goto resubmit;
+		sync_lost_this_urb = true;
+		goto update_sync_state;
 	}
-
-	spin_lock_irqsave(&tascam->lock, flags);
-
-	was_synced = tascam->feedback_synced;
-
-	// Skip initial URBs to let the clock stabilize.
 	if (tascam->feedback_urb_skip_count > 0) {
 		tascam->feedback_urb_skip_count--;
 		goto unlock_and_resubmit;
 	}
-
-	// Process each feedback packet in the URB.
 	for (p = 0; p < urb->number_of_packets; p++) {
 		u8 feedback_value;
 		const unsigned int *pattern;
-		int pattern_index;
-
 		if (urb->iso_frame_desc[p].status != 0 || urb->iso_frame_desc[p].actual_length < 1) {
 			sync_lost_this_urb = true;
 			continue;
 		}
-
-		// The feedback value is the first byte of the 3-byte packet.
 		feedback_value = *((u8 *)urb->transfer_buffer + urb->iso_frame_desc[p].offset);
-
-		// Validate the feedback value and look up the corresponding pattern.
 		if (feedback_value >= tascam->feedback_base_value &&
 		    feedback_value <= tascam->feedback_max_value) {
-			pattern_index = feedback_value - tascam->feedback_base_value;
-			pattern = tascam->feedback_patterns[pattern_index];
-		} else {
-			sync_lost_this_urb = true;
-			pattern = NULL;
-		}
-
-		// If a valid pattern was found, write it to the accumulator.
-		if (pattern) {
+			pattern = tascam->feedback_patterns[feedback_value - tascam->feedback_base_value];
+			int i;
 			for (i = 0; i < 8; i++) {
 				unsigned int in_idx = (tascam->feedback_pattern_in_idx + i) % FEEDBACK_ACCUMULATOR_SIZE;
-
 				tascam->feedback_accumulator_pattern[in_idx] = pattern[i];
 				total_frames_in_urb += pattern[i];
 			}
 			tascam->feedback_pattern_in_idx = (tascam->feedback_pattern_in_idx + 8) % FEEDBACK_ACCUMULATOR_SIZE;
 		} else {
-			// If pattern is invalid, assume nominal rate for this interval.
-			u64 nominal_frames_per_ms = runtime->rate / 1000;
-
-			total_frames_in_urb += nominal_frames_per_ms;
+			sync_lost_this_urb = true;
+			total_frames_in_urb += runtime->rate / 1000;
 		}
 	}
-
-	// Update and log the sync state transition.
+update_sync_state:
+	was_synced = tascam->feedback_synced;
 	if (sync_lost_this_urb) {
-		if (was_synced)
-			dev_info(tascam->card->dev, "Sync Lost (bad packet)!\n");
+		if (was_synced) dev_dbg(tascam->card->dev, "Sync Lost!\n");
 		tascam->feedback_synced = false;
 	} else {
-		if (!was_synced)
-			dev_info(tascam->card->dev, "Sync Acquired!\n");
+		if (!was_synced) dev_dbg(tascam->card->dev, "Sync Acquired!\n");
 		tascam->feedback_synced = true;
 	}
-
-	// Update the total number of frames consumed by the hardware.
 	if (total_frames_in_urb > 0)
 		tascam->playback_frames_consumed += total_frames_in_urb;
-
-	// Check if a period has elapsed and notify ALSA.
 	current_period = div_u64(tascam->playback_frames_consumed, runtime->period_size);
 	if (current_period > tascam->last_period_pos) {
 		tascam->last_period_pos = current_period;
 		spin_unlock_irqrestore(&tascam->lock, flags);
-
 		snd_pcm_period_elapsed(substream);
-
 		goto resubmit;
 	}
-
 unlock_and_resubmit:
 	spin_unlock_irqrestore(&tascam->lock, flags);
-
 resubmit:
-	if (atomic_read(&tascam->playback_active)) {
-		urb->dev = tascam->dev;
-		ret = usb_submit_urb(urb, GFP_ATOMIC);
-		if (ret < 0)
-			dev_err_ratelimited(tascam->card->dev, "Failed to resubmit feedback URB: %d\n", ret);
-	}
-}
-
-// This function sends the precise sequence of control messages required to
-// initialize the device and set a new sample rate.
-static int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate)
-{
-	struct usb_device *dev = tascam->dev;
-	u8 *rate_payload_buf;
-	u16 rate_vendor_wValue;
-	int err = 0;
-
-	// Payloads for UAC_SET_CUR request, specific to each sample rate.
-	static const u8 payload_44100[] = {0x44, 0xac, 0x00};
-	static const u8 payload_48000[] = {0x80, 0xbb, 0x00};
-	static const u8 payload_88200[] = {0x88, 0x58, 0x01};
-	static const u8 payload_96000[] = {0x00, 0x77, 0x01};
-	const u8 *current_payload_src;
-
-	rate_payload_buf = kmalloc(3, GFP_KERNEL);
-	if (!rate_payload_buf)
-		return -ENOMEM;
-
-	switch (rate) {
-	case 44100: current_payload_src = payload_44100; rate_vendor_wValue = 0x1000; break;
-	case 48000: current_payload_src = payload_48000; rate_vendor_wValue = 0x1002; break;
-	case 88200: current_payload_src = payload_88200; rate_vendor_wValue = 0x1008; break;
-	case 96000: current_payload_src = payload_96000; rate_vendor_wValue = 0x100a; break;
-	default:
-		dev_err(&dev->dev, "Unsupported sample rate %d for configuration\n", rate);
-		kfree(rate_payload_buf);
-		return -EINVAL;
-	}
-
-	memcpy(rate_payload_buf, current_payload_src, 3);
-
-	dev_info(&dev->dev, "Configuring device for %d Hz\n", rate);
-
-	// 1. Set Initial Mode
-	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV, 0x0010, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
-	if (err < 0)
-		goto cleanup_buf;
-
-	// 2. Set Sample Rate on Capture and Playback Endpoints
-	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR, RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL, EP_CAPTURE_DATA, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
-	if (err < 0)
-		goto cleanup_buf;
-	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR, RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL, EP_AUDIO_OUT, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
-	if (err < 0)
-		goto cleanup_buf;
-
-	// 3. Vendor-specific register writes
-	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), VENDOR_REQ_REGISTER_WRITE, RT_H2D_VENDOR_DEV, 0x0d04, 0x0101, NULL, 0, USB_CTRL_TIMEOUT_MS);
-	if (err < 0)
-		goto cleanup_buf;
-	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), VENDOR_REQ_REGISTER_WRITE, RT_H2D_VENDOR_DEV, 0x0e00, 0x0101, NULL, 0, USB_CTRL_TIMEOUT_MS);
-	if (err < 0)
-		goto cleanup_buf;
-	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), VENDOR_REQ_REGISTER_WRITE, RT_H2D_VENDOR_DEV, 0x0f00, 0x0101, NULL, 0, USB_CTRL_TIMEOUT_MS);
-	if (err < 0)
-		goto cleanup_buf;
-
-	// 4. Rate-dependent register write
-	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), VENDOR_REQ_REGISTER_WRITE, RT_H2D_VENDOR_DEV, rate_vendor_wValue, 0x0101, NULL, 0, USB_CTRL_TIMEOUT_MS);
-	if (err < 0)
-		goto cleanup_buf;
-
-	// 5. Final register write
-	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), VENDOR_REQ_REGISTER_WRITE, RT_H2D_VENDOR_DEV, 0x110b, 0x0101, NULL, 0, USB_CTRL_TIMEOUT_MS);
-	if (err < 0)
-		goto cleanup_buf;
-
-	// 6. Enable Streaming
-	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV, 0x0030, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
-	if (err < 0)
-		goto cleanup_buf;
-
-cleanup_buf:
-	if (err < 0)
-		dev_err(&dev->dev, "Device configuration failed at rate %d with error %d\n", rate, err);
-	kfree(rate_payload_buf);
-	return err;
+	urb->dev = tascam->dev;
+	ret = usb_submit_urb(urb, GFP_ATOMIC);
+	if (ret < 0)
+		dev_err_ratelimited(tascam->card->dev, "Failed to resubmit feedback URB: %d\n", ret);
 }
 
 static int tascam_create_pcm(struct tascam_card *tascam)
@@ -886,20 +664,13 @@ static int tascam_create_pcm(struct tascam_card *tascam)
 	struct snd_pcm *pcm;
 	int err;
 
-	// Create one PCM device with 1 playback and 1 (stubbed) capture stream.
 	err = snd_pcm_new(tascam->card, "US144MKII PCM", 0, 1, 1, &pcm);
-	if (err < 0) {
-		dev_err(tascam->card->dev, "Failed to create snd_pcm: %d\n", err);
-		return err;
-	}
+	if (err < 0) return err;
 	tascam->pcm = pcm;
-
-	snd_pcm_set_ops(pcm, SNDRV_PCM_STREAM_PLAYBACK, &tascam_playback_ops);
-	snd_pcm_set_ops(pcm, SNDRV_PCM_STREAM_CAPTURE, &tascam_capture_ops);
-
 	pcm->private_data = tascam;
 	strscpy(pcm->name, "US-144MKII Audio", sizeof(pcm->name));
-
+	snd_pcm_set_ops(pcm, SNDRV_PCM_STREAM_PLAYBACK, &tascam_playback_ops);
+	snd_pcm_set_ops(pcm, SNDRV_PCM_STREAM_CAPTURE, &tascam_capture_ops);
 	snd_pcm_lib_preallocate_pages_for_all(pcm, SNDRV_DMA_TYPE_CONTINUOUS,
 					      tascam->dev->dev.parent,
 					      64 * 1024,
@@ -910,7 +681,6 @@ static int tascam_create_pcm(struct tascam_card *tascam)
 static void tascam_card_private_free(struct snd_card *card)
 {
 	struct tascam_card *tascam = card->private_data;
-
 	if (tascam && tascam->dev) {
 		usb_put_dev(tascam->dev);
 		tascam->dev = NULL;
@@ -922,20 +692,24 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	struct usb_device *dev = interface_to_usbdev(intf);
 	struct tascam_card *tascam;
 	struct snd_card *card;
-	int err, dev_idx;
+	int err;
+	static int dev_idx;
 	u8 *handshake_buf;
 
-	// This driver binds to interface 0.
-	dev_idx = intf->cur_altsetting->desc.bInterfaceNumber;
-	if (dev_idx != 0)
+	if (intf->cur_altsetting->desc.bInterfaceNumber != 0)
 		return -ENODEV;
+
+	if (dev_idx >= SNDRV_CARDS)
+		return -ENODEV;
+	if (!enable[dev_idx]) {
+		dev_idx++;
+		return -ENOENT;
+	}
 
 	err = snd_card_new(&intf->dev, index[dev_idx], id[dev_idx], THIS_MODULE,
 			   sizeof(struct tascam_card), &card);
-	if (err < 0) {
-		dev_err(&intf->dev, "Failed to create snd_card: %d\n", err);
+	if (err < 0)
 		return err;
-	}
 
 	tascam = card->private_data;
 	tascam->card = card;
@@ -944,19 +718,14 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	card->private_free = tascam_card_private_free;
 	usb_set_intfdata(intf, tascam);
 	spin_lock_init(&tascam->lock);
-	atomic_set(&tascam->playback_active, 0);
-	tascam->current_rate = 0;
-	tascam->playback_urb_iso_packets = 0;
 
 	strscpy(card->driver, DRIVER_NAME, sizeof(card->driver));
 	strscpy(card->shortname, "TASCAM US-144MKII", sizeof(card->shortname));
-	snprintf(card->longname, sizeof(card->longname), "%s (VID:%04X PID:%04X) at %s",
-		 "TASCAM US-144MKII",
+	snprintf(card->longname, sizeof(card->longname), "TASCAM US-144MKII (VID:%04x, PID:%04x) at %s",
 		 le16_to_cpu(dev->descriptor.idVendor),
 		 le16_to_cpu(dev->descriptor.idProduct),
 		 dev->bus->bus_name);
 
-	// The device has two interfaces; we need to claim both.
 	tascam->iface1 = usb_ifnum_to_if(dev, 1);
 	if (!tascam->iface1) {
 		dev_err(&intf->dev, "Interface 1 not found.\n");
@@ -970,7 +739,6 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 		goto free_card_obj;
 	}
 
-	// Set both interfaces to alternate setting 1 to enable all endpoints.
 	err = usb_set_interface(dev, 0, 1);
 	if (err < 0) {
 		dev_err(&intf->dev, "Set Alt Setting on Intf 0 failed: %d\n", err);
@@ -982,36 +750,30 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 		goto release_iface1_and_free_card;
 	}
 
-	// Perform the initial handshake read.
 	handshake_buf = kmalloc(1, GFP_KERNEL);
 	if (!handshake_buf) {
 		err = -ENOMEM;
 		goto release_iface1_and_free_card;
 	}
 	err = usb_control_msg(dev, usb_rcvctrlpipe(dev, 0), VENDOR_REQ_MODE_CONTROL,
-			      RT_D2H_VENDOR_DEV, 0x0000, 0x0000,
+			      RT_D2H_VENDOR_DEV, MODE_VAL_HANDSHAKE_READ, 0x0000,
 			      handshake_buf, 1, USB_CTRL_TIMEOUT_MS);
-	if (err < 0) {
-		dev_warn(&intf->dev, "Handshake read failed: %d (continuing)\n", err);
-	} else if (err == 1 && handshake_buf[0] == 0x12) {
-		dev_info(&intf->dev, "Handshake successful (response 0x12).\n");
-	} else {
-		dev_warn(&intf->dev, "Handshake: expected 0x12, got 0x%02x (len %d) (continuing)\n", handshake_buf[0], err);
-	}
+	if (err == 1 && handshake_buf[0] == 0x12)
+		dev_info(&intf->dev, "Handshake successful.\n");
+	else
+		dev_warn(&intf->dev, "Handshake failed (err %d, val 0x%02x), continuing anyway.\n", err, err > 0 ? handshake_buf[0] : 0);
 	kfree(handshake_buf);
-	handshake_buf = NULL;
 
 	err = tascam_create_pcm(tascam);
 	if (err < 0)
 		goto release_iface1_and_free_card;
 
 	err = snd_card_register(card);
-	if (err < 0) {
-		dev_err(&intf->dev, "Failed to register snd_card: %d\n", err);
+	if (err < 0)
 		goto release_iface1_and_free_card;
-	}
 
-	dev_info(&intf->dev, "%s: TASCAM US-144MKII ALSA driver initialized.\n", card->longname);
+	dev_info(&intf->dev, "TASCAM US-144MKII driver initialized.\n");
+	dev_idx++;
 	return 0;
 
 release_iface1_and_free_card:
@@ -1032,27 +794,23 @@ static void tascam_disconnect(struct usb_interface *intf)
 	if (!tascam)
 		return;
 
-	// Only disconnect if this is the primary interface (iface0).
 	if (intf != tascam->iface0)
 		return;
 
 	dev_info(&intf->dev, "TASCAM US-144MKII disconnecting...\n");
-
 	snd_card_disconnect(tascam->card);
 
-	// Release the secondary interface.
 	if (tascam->iface1) {
 		usb_set_intfdata(tascam->iface1, NULL);
 		usb_driver_release_interface(&tascam_alsa_driver, tascam->iface1);
 		tascam->iface1 = NULL;
 	}
 
-	// The card and its private data will be freed when all PCMs are closed.
 	snd_card_free_when_closed(tascam->card);
 }
 
 static const struct usb_device_id tascam_id_table[] = {
-	{ USB_DEVICE(TASCAM_VID, TASCAM_PID) },
+	{ USB_DEVICE(USB_VID_TASCAM, USB_PID_TASCAM_US144MKII) },
 	{ }
 };
 MODULE_DEVICE_TABLE(usb, tascam_id_table);
