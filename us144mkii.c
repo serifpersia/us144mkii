@@ -415,7 +415,7 @@ static int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
 	else if (period_frames <= profile_thresholds[3])
 		tascam->profile_idx = 3;
 	else /* Anything larger falls into the highest latency profile */
-		//tascam->profile_idx = 4;
+		tascam->profile_idx = 4;
 
 	dev_info(tascam->card->dev,
 		 "User requested period of %u frames @ %u Hz, mapping to hardware profile %d\n",
