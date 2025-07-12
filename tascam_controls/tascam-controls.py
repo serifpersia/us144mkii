@@ -160,8 +160,8 @@ class TascamControlPanel(QWidget):
         left_panel.addStretch()
 
         middle_panel.setSpacing(15)
-        latency_container, self.latency_combo = self.create_control_widget("Audio Performance", ["Low", "Normal", "High"])
-        mock_container1, _ = self.create_control_widget("Sample Clock Source", ["Internal", "Auto"])
+        latency_container, self.latency_combo = self.create_control_widget("Audio Performance", ["low latency", "normal latency", "high latency"])
+        mock_container1, _ = self.create_control_widget("Sample Clock Source", ["internal", "auto"])
         mock_container2, _ = self.create_control_widget("Digital Output Format", ["S/PDIF"])
         routing_container, self.routing_combo = self.create_control_widget("LINE OUTPUTS", ["Stereo to All", "Swapped", "Digital In to All"])
 
