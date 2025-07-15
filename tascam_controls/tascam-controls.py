@@ -194,6 +194,14 @@ class TascamControlPanel(QWidget):
         middle_panel = QVBoxLayout()
         middle_panel.setSpacing(0)
 
+        # --- Latency Setting Re-added ---
+        latency_header = QLabel("AUDIO PERFORMANCE")
+        latency_header.setObjectName("SectionHeader")
+        latency_container, self.latency_combo = self.create_control_widget("Latency Profile", ["low latency", "normal latency", "high latency"])
+        middle_panel.addWidget(latency_header)
+        middle_panel.addWidget(latency_container)
+        # --- End Latency Setting Re-added ---
+
         inputs_header = QLabel("INPUTS")
         inputs_header.setObjectName("SectionHeader")
         capture_12_container, self.capture_12_combo = self.create_control_widget("ch1 and ch2", ["Analog In", "Digital In"])
@@ -230,6 +238,10 @@ class TascamControlPanel(QWidget):
         top_level_layout.addLayout(left_panel, 3)
         top_level_layout.addLayout(middle_panel, 3)
         top_level_layout.addLayout(right_panel, 3)
+
+        # --- Latency Signal Connection Re-added ---
+        self.latency_combo.currentIndexChanged.connect(lambda i: self.set_value("Latency Profile", i))
+        # --- End Latency Signal Connection Re-added ---
 
         self.line_out_combo.currentIndexChanged.connect(lambda i: self.set_value("Line Out Source", i))
         self.digital_out_combo.currentIndexChanged.connect(lambda i: self.set_value("Digital Out Source", i))
@@ -273,8 +285,11 @@ class TascamControlPanel(QWidget):
         rate_val = AmixerController.get_control_value(self.card_id, "Sample Rate")
         self.info_labels['sample_rate'].setText(f"{rate_val / 1000:.1f} kHz" if rate_val > 0 else "N/A (inactive)")
 
+        # --- Latency Setting Load Re-added ---
+        self.update_combo(self.latency_combo, "Latency Profile")
+        # --- End Latency Setting Load Re-added ---
+
         self.update_combo(self.line_out_combo, "Line Out Source")
-        self.update_combo(self.digital_out_combo, "Digital Out Source")
         self.update_combo(self.digital_out_combo, "Digital Out Source")
         self.update_combo(self.capture_12_combo, "Capture 1-2 Source")
         self.update_combo(self.capture_34_combo, "Capture 3-4 Source")
