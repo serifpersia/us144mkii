@@ -727,6 +727,8 @@ static void playback_urb_complete(struct urb *urb)
 	unsigned long flags;
 	char *src_buf, *dst_buf;
 	size_t total_bytes_for_urb = 0;
+	snd_pcm_uframes_t offset_frames;
+	snd_pcm_uframes_t frames_to_copy;
 	int ret, i;
 
 	if (urb->status)
@@ -740,7 +742,7 @@ static void playback_urb_complete(struct urb *urb)
 
 	spin_lock_irqsave(&tascam->lock, flags);
 
-	/* Phase 1: Populate the isochronous frame descriptors and calculate total size. */
+	/* Phase 1: Populate the isochronous frame descriptors from the accumulator. */
 	for (i = 0; i < urb->number_of_packets; i++) {
 		unsigned int frames_for_packet;
 		size_t bytes_for_packet;
@@ -759,13 +761,19 @@ static void playback_urb_complete(struct urb *urb)
 	}
 	urb->transfer_buffer_length = total_bytes_for_urb;
 
-	/* Phase 2: Copy and format audio data from ALSA buffer to URB buffer. */
-	src_buf = runtime->dma_area;
-	dst_buf = urb->transfer_buffer;
+	/* Phase 2: Atomically update the driver's position. */
+	offset_frames = tascam->driver_playback_pos;
+	frames_to_copy = bytes_to_frames(runtime, total_bytes_for_urb);
+	tascam->driver_playback_pos = (offset_frames + frames_to_copy) % runtime->buffer_size;
+
+	/* --- End of Critical Section --- */
+	spin_unlock_irqrestore(&tascam->lock, flags);
+
+	/* Phase 3: Perform the data copy OUTSIDE the lock. */
 	if (total_bytes_for_urb > 0) {
-		snd_pcm_uframes_t offset_frames = tascam->driver_playback_pos;
-		snd_pcm_uframes_t frames_to_copy = bytes_to_frames(runtime, total_bytes_for_urb);
 		int f;
+		src_buf = runtime->dma_area;
+		dst_buf = urb->transfer_buffer;
 
 		for (f = 0; f < frames_to_copy; ++f) {
 			snd_pcm_uframes_t current_frame_pos = (offset_frames + f) % runtime->buffer_size;
@@ -774,29 +782,20 @@ static void playback_urb_complete(struct urb *urb)
 
 			switch (tascam->playback_routing) {
 			case 0: /* Stereo to All */
-				*(u32 *)dst_frame = *(u32 *)src_frame;
-				*(u32 *)(dst_frame + 3) = *(u32 *)(src_frame + 3);
-				*(u32 *)(dst_frame + 6) = *(u32 *)src_frame;
-				*(u32 *)(dst_frame + 9) = *(u32 *)(src_frame + 3);
+				memcpy(dst_frame, src_frame, 6);      /* Copy L/R to Out 1/2 */
+				memcpy(dst_frame + 6, src_frame, 6);  /* Copy L/R to Out 3/4 */
 				break;
 			case 1: /* Swapped */
-				*(u32 *)dst_frame = *(u32 *)(src_frame + 6);
-				*(u32 *)(dst_frame + 3) = *(u32 *)(src_frame + 9);
-				*(u32 *)(dst_frame + 6) = *(u32 *)src_frame;
-				*(u32 *)(dst_frame + 9) = *(u32 *)(src_frame + 3);
+				memcpy(dst_frame, src_frame + 6, 6);  /* Copy 3/4 to Out 1/2 */
+				memcpy(dst_frame + 6, src_frame, 6);  /* Copy 1/2 to Out 3/4 */
 				break;
 			case 2: /* Digital In to All */
-				*(u32 *)dst_frame = *(u32 *)(src_frame + 6);
-				*(u32 *)(dst_frame + 3) = *(u32 *)(src_frame + 9);
-				*(u32 *)(dst_frame + 6) = *(u32 *)(src_frame + 6);
-				*(u32 *)(dst_frame + 9) = *(u32 *)(src_frame + 9);
+				memcpy(dst_frame, src_frame + 6, 6);  /* Copy 3/4 to Out 1/2 */
+				memcpy(dst_frame + 6, src_frame + 6, 6); /* Copy 3/4 to Out 3/4 */
 				break;
 			}
 		}
 	}
-	tascam->driver_playback_pos = (tascam->driver_playback_pos + bytes_to_frames(runtime, total_bytes_for_urb)) % runtime->buffer_size;
-
-	spin_unlock_irqrestore(&tascam->lock, flags);
 
 	urb->dev = tascam->dev;
 	ret = usb_submit_urb(urb, GFP_ATOMIC);
