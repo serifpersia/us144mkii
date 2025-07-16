@@ -109,6 +109,7 @@ struct tascam_card {
 	unsigned int feedback_pattern_out_idx;
 	unsigned int feedback_pattern_in_idx;
 	bool feedback_synced;
+	unsigned int feedback_consecutive_errors;
 	unsigned int feedback_urb_skip_count;
 
 	u64 playback_frames_consumed;
@@ -589,7 +590,8 @@ static int tascam_pcm_prepare(struct snd_pcm_substream *substream)
 	tascam->feedback_pattern_in_idx = 0;
 	tascam->feedback_pattern_out_idx = 0;
 	tascam->feedback_synced = false;
-	tascam->feedback_urb_skip_count = NUM_FEEDBACK_URBS * 2;
+	tascam->feedback_consecutive_errors = 0;
+	tascam->feedback_urb_skip_count = NUM_FEEDBACK_URBS;
 
 	/* Initialize feedback accumulator with nominal values */
 	nominal_frames_per_packet = runtime->rate / 8000;
@@ -811,6 +813,7 @@ static void feedback_urb_complete(struct urb *urb)
 	unsigned long flags;
 	u64 current_period, total_frames_in_urb = 0;
 	int ret, p;
+	unsigned int old_in_idx, new_in_idx;
 
 	if (urb->status)
 		return;
@@ -823,20 +826,16 @@ static void feedback_urb_complete(struct urb *urb)
 
 	spin_lock_irqsave(&tascam->lock, flags);
 
-	/* Let a few URBs pass to allow the hardware to stabilize. */
+	/* Hybrid Sync: Initial blind period for hardware to settle. */
 	if (tascam->feedback_urb_skip_count > 0) {
 		tascam->feedback_urb_skip_count--;
 		goto unlock_and_resubmit;
 	}
 
-	/* After the initial skip, we consider the stream synced. */
-	if (!tascam->feedback_synced) {
-		dev_dbg(tascam->card->dev, "Sync Acquired!\n");
-		tascam->feedback_synced = true;
-	}
+	old_in_idx = tascam->feedback_pattern_in_idx;
 
 	for (p = 0; p < urb->number_of_packets; p++) {
-		u8 feedback_value = 0; /* Initialize to a known invalid value */
+		u8 feedback_value = 0;
 		const unsigned int *pattern;
 		bool packet_ok = (urb->iso_frame_desc[p].status == 0 &&
 				  urb->iso_frame_desc[p].actual_length >= 1);
@@ -846,8 +845,8 @@ static void feedback_urb_complete(struct urb *urb)
 
 		if (packet_ok && feedback_value >= tascam->feedback_base_value &&
 		    feedback_value <= tascam->feedback_max_value) {
-			/* Valid Feedback: Use the pattern from the table. */
 			pattern = tascam->feedback_patterns[feedback_value - tascam->feedback_base_value];
+			tascam->feedback_consecutive_errors = 0;
 			int i;
 			for (i = 0; i < 8; i++) {
 				unsigned int in_idx = (tascam->feedback_pattern_in_idx + i) % FEEDBACK_ACCUMULATOR_SIZE;
@@ -855,26 +854,43 @@ static void feedback_urb_complete(struct urb *urb)
 				total_frames_in_urb += pattern[i];
 			}
 		} else {
-			/* Invalid Feedback: Use the nominal pattern as a fallback. */
 			unsigned int nominal_frames = runtime->rate / 8000;
 			int i;
-			if (packet_ok) /* Only log if the packet itself was ok but the value was not */
-				dev_warn_ratelimited(tascam->card->dev, "Invalid feedback value %u, using nominal rate.\n", feedback_value);
-
+			if (tascam->feedback_synced) {
+				tascam->feedback_consecutive_errors++;
+				if (tascam->feedback_consecutive_errors > 10) {
+					dev_warn_ratelimited(tascam->card->dev, "Feedback sync lost! (value: %u, errors: %u)\n",
+							 feedback_value, tascam->feedback_consecutive_errors);
+					tascam->feedback_synced = false;
+				}
+			}
 			for (i = 0; i < 8; i++) {
 				unsigned int in_idx = (tascam->feedback_pattern_in_idx + i) % FEEDBACK_ACCUMULATOR_SIZE;
 				tascam->feedback_accumulator_pattern[in_idx] = nominal_frames;
 				total_frames_in_urb += nominal_frames;
 			}
 		}
-		/* Always advance the accumulator index */
 		tascam->feedback_pattern_in_idx = (tascam->feedback_pattern_in_idx + 8) % FEEDBACK_ACCUMULATOR_SIZE;
+	}
+
+	new_in_idx = tascam->feedback_pattern_in_idx;
+
+	/* Hybrid Sync: Pointer Lap check for sync acquisition. */
+	if (!tascam->feedback_synced) {
+		unsigned int out_idx = tascam->feedback_pattern_out_idx;
+		bool is_ahead = (new_in_idx - out_idx) % FEEDBACK_ACCUMULATOR_SIZE < (FEEDBACK_ACCUMULATOR_SIZE / 2);
+		bool was_behind = (old_in_idx - out_idx) % FEEDBACK_ACCUMULATOR_SIZE >= (FEEDBACK_ACCUMULATOR_SIZE / 2);
+
+		if (is_ahead && was_behind) {
+			dev_dbg(tascam->card->dev, "Sync Acquired! (in: %u, out: %u)\n", new_in_idx, out_idx);
+			tascam->feedback_synced = true;
+			tascam->feedback_consecutive_errors = 0;
+		}
 	}
 
 	if (total_frames_in_urb > 0)
 		tascam->playback_frames_consumed += total_frames_in_urb;
 
-	/* Check if a period has elapsed and notify ALSA */
 	current_period = div_u64(tascam->playback_frames_consumed, runtime->period_size);
 	if (current_period > tascam->last_period_pos) {
 		tascam->last_period_pos = current_period;
@@ -891,6 +907,8 @@ resubmit:
 	if (ret < 0)
 		dev_err_ratelimited(tascam->card->dev, "Failed to resubmit feedback URB: %d\n", ret);
 }
+
+
 
 static int tascam_create_pcm(struct tascam_card *tascam)
 {
