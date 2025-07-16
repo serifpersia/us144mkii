@@ -556,15 +556,13 @@ static int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
 		return -EINVAL;
 	}
 
-	/* Re-configure hardware only if the sample rate has changed */
-	if (tascam->current_rate != rate) {
-		err = us144mkii_configure_device_for_rate(tascam, rate);
-		if (err < 0) {
-			tascam->current_rate = 0;
-			return err;
-		}
-		tascam->current_rate = rate;
+	/* Always re-configure hardware to ensure it's in a clean state */
+	err = us144mkii_configure_device_for_rate(tascam, rate);
+	if (err < 0) {
+		tascam->current_rate = 0;
+		return err;
 	}
+	tascam->current_rate = rate;
 
 	return 0;
 }
