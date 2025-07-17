@@ -82,9 +82,9 @@ static int dev_idx;
 #define FEEDBACK_ACCUMULATOR_SIZE 	128
 
 /* --- Capture Decoding Defines --- */
-#define DECODED_CHANNELS_PER_FRAME	24
+#define DECODED_CHANNELS_PER_FRAME	4
 #define DECODED_SAMPLE_SIZE			4  /* 32-bit */
-#define FRAMES_PER_DECODE_BLOCK		4
+#define FRAMES_PER_DECODE_BLOCK		8
 #define RAW_BYTES_PER_DECODE_BLOCK	512
 
 /* --- Main Driver Data Structure --- */
@@ -1065,30 +1065,36 @@ unlock_and_continue:
 
 static void decode_tascam_capture_block(const u8 *src_block, s32 *dst_block)
 {
-	int frame, bit_idx, ch_idx;
+	int frame, bit;
 
 	memset(dst_block, 0, FRAMES_PER_DECODE_BLOCK * DECODED_CHANNELS_PER_FRAME * DECODED_SAMPLE_SIZE);
 
 	for (frame = 0; frame < FRAMES_PER_DECODE_BLOCK; ++frame) {
-		const __le16 *p_src_frame = (const __le16 *)(src_block + (frame * (RAW_BYTES_PER_DECODE_BLOCK / FRAMES_PER_DECODE_BLOCK)));
-		s32 *p_dst_frame = dst_block + (frame * DECODED_CHANNELS_PER_FRAME);
+		const u8 *p_src_frame_base = src_block + frame * 64;
+		s32 *p_dst_frame = dst_block + frame * 4;
 
-		const __le16 *src_half_even_ch = p_src_frame;
-		const __le16 *src_half_odd_ch  = p_src_frame + 32;
+		const u8 *p1 = p_src_frame_base;
+		const u8 *p2 = p_src_frame_base + 32;
 
-		for (bit_idx = 0; bit_idx < 24; ++bit_idx) {
-			u16 word_even = le16_to_cpu(src_half_even_ch[bit_idx]);
-			u16 word_odd  = le16_to_cpu(src_half_odd_ch[bit_idx]);
+		s32 ch0 = 0, ch1 = 0, ch2 = 0, ch3 = 0;
 
-			for (ch_idx = 0; ch_idx < 12; ++ch_idx) {
-				p_dst_frame[ch_idx * 2]     = (p_dst_frame[ch_idx * 2]     << 1) | ((word_even >> ch_idx) & 1);
-				p_dst_frame[ch_idx * 2 + 1] = (p_dst_frame[ch_idx * 2 + 1] << 1) | ((word_odd  >> ch_idx) & 1);
-			}
+		for (bit = 0; bit < 24; ++bit) {
+			u8 byte1 = p1[bit];
+			ch0 = (ch0 << 1) | (byte1 & 1);
+			ch2 = (ch2 << 1) | ((byte1 >> 1) & 1);
 		}
-	}
 
-	for (frame = 0; frame < FRAMES_PER_DECODE_BLOCK * DECODED_CHANNELS_PER_FRAME; ++frame)
-		dst_block[frame] <<= 8;
+		for (bit = 0; bit < 24; ++bit) {
+			u8 byte2 = p2[bit];
+			ch1 = (ch1 << 1) | (byte2 & 1);
+			ch3 = (ch3 << 1) | ((byte2 >> 1) & 1);
+		}
+
+		p_dst_frame[0] = ch0 << 8;
+		p_dst_frame[1] = ch1 << 8;
+		p_dst_frame[2] = ch2 << 8;
+		p_dst_frame[3] = ch3 << 8;
+	}
 }
 
 static void process_capture_data(struct tascam_card *tascam)
