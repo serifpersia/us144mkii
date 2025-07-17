@@ -4,25 +4,19 @@
  * ALSA Driver for TASCAM US-144MKII Audio Interface
  */
 
-#include <linux/kernel.h>
-#include <linux/module.h>
 #include <linux/usb.h>
-#include <linux/slab.h>
-#include <linux/delay.h>
-#include <linux/printk.h>
-
+#include <linux/workqueue.h>
 #include <sound/core.h>
 #include <sound/pcm.h>
-#include <sound/pcm_params.h>
 #include <sound/initval.h>
 #include <sound/control.h>
 
 MODULE_AUTHOR("serifpersia <ramiserifpersia@gmail.com>");
 MODULE_DESCRIPTION("ALSA Driver for TASCAM US-144MKII");
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("GPL v2");
 
 #define DRIVER_NAME "us144mkii"
-#define DRIVER_VERSION "1.4"
+#define DRIVER_VERSION "1.5"
 
 /* --- Module Parameters --- */
 static int index[SNDRV_CARDS] = SNDRV_DEFAULT_IDX;
@@ -54,6 +48,7 @@ static int dev_idx;
 #define MODE_VAL_HANDSHAKE_READ		0x0000
 #define MODE_VAL_CONFIG				0x0010
 #define MODE_VAL_STREAM_START		0x0030
+#define HANDSHAKE_SUCCESS_VAL		0x12
 #define REG_ADDR_UNKNOWN_0D			0x0d04
 #define REG_ADDR_UNKNOWN_0E			0x0e00
 #define REG_ADDR_UNKNOWN_0F			0x0f00
@@ -72,7 +67,7 @@ static int dev_idx;
 #define FEEDBACK_PACKET_SIZE		3
 #define NUM_CAPTURE_URBS			8
 #define CAPTURE_URB_SIZE			512
-#define CAPTURE_RING_BUFFER_SIZE	(CAPTURE_URB_SIZE * NUM_CAPTURE_URBS * 2)
+#define CAPTURE_RING_BUFFER_SIZE	(CAPTURE_URB_SIZE * NUM_CAPTURE_URBS * 4)
 #define USB_CTRL_TIMEOUT_MS			1000
 
 /* --- Audio Format Configuration --- */
@@ -117,6 +112,9 @@ struct tascam_card {
 	u8 *capture_ring_buffer;
 	size_t capture_ring_buffer_read_ptr;
 	volatile size_t capture_ring_buffer_write_ptr;
+	u8 *capture_decode_raw_block;
+	s32 *capture_decode_dst_block;
+	struct work_struct capture_work; // For deferred processing
 
 	/* Shared state & Routing Matrix */
 	spinlock_t lock;
@@ -146,7 +144,7 @@ static struct usb_driver tascam_alsa_driver;
 static void playback_urb_complete(struct urb *urb);
 static void feedback_urb_complete(struct urb *urb);
 static void capture_urb_complete(struct urb *urb);
-static void process_capture_data(struct tascam_card *tascam);
+static void tascam_capture_work_handler(struct work_struct *work);
 static int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate);
 static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *id);
 static void tascam_disconnect(struct usb_interface *intf);
@@ -188,8 +186,10 @@ static int tascam_latency_put(struct snd_kcontrol *kcontrol, struct snd_ctl_elem
 {
 	struct tascam_card *tascam = snd_kcontrol_chip(kcontrol);
 	unsigned int new_profile = ucontrol->value.enumerated.item[0];
+
 	if (new_profile >= 3)
 		return -EINVAL;
+
 	if (tascam->latency_profile != new_profile) {
 		tascam->latency_profile = new_profile;
 		return 1;
@@ -213,26 +213,46 @@ static int tascam_playback_source_info(struct snd_kcontrol *kcontrol, struct snd
 	return 0;
 }
 
-static int tascam_line_out_get(struct snd_kcontrol *k, struct snd_ctl_elem_value *u)
-{ u->value.enumerated.item[0] = ((struct tascam_card *)snd_kcontrol_chip(k))->line_out_source; return 0; }
+static int tascam_line_out_get(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
+{
+	struct tascam_card *tascam = snd_kcontrol_chip(kcontrol);
+	ucontrol->value.enumerated.item[0] = tascam->line_out_source;
+	return 0;
+}
 
-static int tascam_line_out_put(struct snd_kcontrol *k, struct snd_ctl_elem_value *u)
-{ struct tascam_card *t = snd_kcontrol_chip(k); if (u->value.enumerated.item[0] > 1) return -EINVAL;
-  if (t->line_out_source == u->value.enumerated.item[0]) return 0;
-  t->line_out_source = u->value.enumerated.item[0]; return 1; }
+static int tascam_line_out_put(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
+{
+	struct tascam_card *tascam = snd_kcontrol_chip(kcontrol);
+	if (ucontrol->value.enumerated.item[0] > 1)
+		return -EINVAL;
+	if (tascam->line_out_source == ucontrol->value.enumerated.item[0])
+		return 0;
+	tascam->line_out_source = ucontrol->value.enumerated.item[0];
+	return 1;
+}
 
 static const struct snd_kcontrol_new tascam_line_out_control = {
 	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = "Line Out Source",
 	.info = tascam_playback_source_info, .get = tascam_line_out_get, .put = tascam_line_out_put,
 };
 
-static int tascam_digital_out_get(struct snd_kcontrol *k, struct snd_ctl_elem_value *u)
-{ u->value.enumerated.item[0] = ((struct tascam_card *)snd_kcontrol_chip(k))->digital_out_source; return 0; }
+static int tascam_digital_out_get(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
+{
+	struct tascam_card *tascam = snd_kcontrol_chip(kcontrol);
+	ucontrol->value.enumerated.item[0] = tascam->digital_out_source;
+	return 0;
+}
 
-static int tascam_digital_out_put(struct snd_kcontrol *k, struct snd_ctl_elem_value *u)
-{ struct tascam_card *t = snd_kcontrol_chip(k); if (u->value.enumerated.item[0] > 1) return -EINVAL;
-  if (t->digital_out_source == u->value.enumerated.item[0]) return 0;
-  t->digital_out_source = u->value.enumerated.item[0]; return 1; }
+static int tascam_digital_out_put(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
+{
+	struct tascam_card *tascam = snd_kcontrol_chip(kcontrol);
+	if (ucontrol->value.enumerated.item[0] > 1)
+		return -EINVAL;
+	if (tascam->digital_out_source == ucontrol->value.enumerated.item[0])
+		return 0;
+	tascam->digital_out_source = ucontrol->value.enumerated.item[0];
+	return 1;
+}
 
 static const struct snd_kcontrol_new tascam_digital_out_control = {
 	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = "Digital Out Source",
@@ -250,26 +270,46 @@ static int tascam_capture_source_info(struct snd_kcontrol *kcontrol, struct snd_
 	return 0;
 }
 
-static int tascam_capture_12_get(struct snd_kcontrol *k, struct snd_ctl_elem_value *u)
-{ u->value.enumerated.item[0] = ((struct tascam_card *)snd_kcontrol_chip(k))->capture_12_source; return 0; }
+static int tascam_capture_12_get(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
+{
+	struct tascam_card *tascam = snd_kcontrol_chip(kcontrol);
+	ucontrol->value.enumerated.item[0] = tascam->capture_12_source;
+	return 0;
+}
 
-static int tascam_capture_12_put(struct snd_kcontrol *k, struct snd_ctl_elem_value *u)
-{ struct tascam_card *t = snd_kcontrol_chip(k); if (u->value.enumerated.item[0] > 1) return -EINVAL;
-  if (t->capture_12_source == u->value.enumerated.item[0]) return 0;
-  t->capture_12_source = u->value.enumerated.item[0]; return 1; }
+static int tascam_capture_12_put(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
+{
+	struct tascam_card *tascam = snd_kcontrol_chip(kcontrol);
+	if (ucontrol->value.enumerated.item[0] > 1)
+		return -EINVAL;
+	if (tascam->capture_12_source == ucontrol->value.enumerated.item[0])
+		return 0;
+	tascam->capture_12_source = ucontrol->value.enumerated.item[0];
+	return 1;
+}
 
 static const struct snd_kcontrol_new tascam_capture_12_control = {
 	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = "Capture 1-2 Source",
 	.info = tascam_capture_source_info, .get = tascam_capture_12_get, .put = tascam_capture_12_put,
 };
 
-static int tascam_capture_34_get(struct snd_kcontrol *k, struct snd_ctl_elem_value *u)
-{ u->value.enumerated.item[0] = ((struct tascam_card *)snd_kcontrol_chip(k))->capture_34_source; return 0; }
+static int tascam_capture_34_get(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
+{
+	struct tascam_card *tascam = snd_kcontrol_chip(kcontrol);
+	ucontrol->value.enumerated.item[0] = tascam->capture_34_source;
+	return 0;
+}
 
-static int tascam_capture_34_put(struct snd_kcontrol *k, struct snd_ctl_elem_value *u)
-{ struct tascam_card *t = snd_kcontrol_chip(k); if (u->value.enumerated.item[0] > 1) return -EINVAL;
-  if (t->capture_34_source == u->value.enumerated.item[0]) return 0;
-  t->capture_34_source = u->value.enumerated.item[0]; return 1; }
+static int tascam_capture_34_put(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
+{
+	struct tascam_card *tascam = snd_kcontrol_chip(kcontrol);
+	if (ucontrol->value.enumerated.item[0] > 1)
+		return -EINVAL;
+	if (tascam->capture_34_source == ucontrol->value.enumerated.item[0])
+		return 0;
+	tascam->capture_34_source = ucontrol->value.enumerated.item[0];
+	return 1;
+}
 
 static const struct snd_kcontrol_new tascam_capture_34_control = {
 	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = "Capture 3-4 Source",
@@ -360,6 +400,13 @@ static const struct snd_pcm_hardware tascam_pcm_hw = {
 	.periods_min = 2, .periods_max = 1024,
 };
 
+/**
+ * tascam_free_urbs - Free all allocated URBs and associated buffers.
+ * @tascam: the tascam_card instance.
+ *
+ * This function kills, unlinks, and frees all playback, feedback, and capture
+ * URBs, along with their transfer buffers and the capture ring/decode buffers.
+ */
 static void tascam_free_urbs(struct tascam_card *tascam)
 {
 	int i;
@@ -396,10 +443,24 @@ static void tascam_free_urbs(struct tascam_card *tascam)
 			tascam->capture_urbs[i] = NULL;
 		}
 	}
+
+	kfree(tascam->capture_decode_dst_block);
+	tascam->capture_decode_dst_block = NULL;
+	kfree(tascam->capture_decode_raw_block);
+	tascam->capture_decode_raw_block = NULL;
 	kfree(tascam->capture_ring_buffer);
 	tascam->capture_ring_buffer = NULL;
 }
 
+/**
+ * tascam_alloc_urbs - Allocate all URBs and associated buffers.
+ * @tascam: the tascam_card instance.
+ *
+ * This function allocates and initializes all URBs for playback, feedback,
+ * and capture, as well as the necessary buffers for capture data processing.
+ *
+ * Return: 0 on success, or a negative error code on failure.
+ */
 static int tascam_alloc_urbs(struct tascam_card *tascam)
 {
 	int i;
@@ -473,6 +534,14 @@ static int tascam_alloc_urbs(struct tascam_card *tascam)
 	if (!tascam->capture_ring_buffer)
 		goto error;
 
+	tascam->capture_decode_raw_block = kmalloc(RAW_BYTES_PER_DECODE_BLOCK, GFP_KERNEL);
+	if (!tascam->capture_decode_raw_block)
+		goto error;
+
+	tascam->capture_decode_dst_block = kmalloc(FRAMES_PER_DECODE_BLOCK * DECODED_CHANNELS_PER_FRAME * DECODED_SAMPLE_SIZE, GFP_KERNEL);
+	if (!tascam->capture_decode_dst_block)
+		goto error;
+
 	return 0;
 
 error:
@@ -533,6 +602,16 @@ static int tascam_capture_close(struct snd_pcm_substream *substream)
 	return 0;
 }
 
+/**
+ * us144mkii_configure_device_for_rate - Send USB control messages to set sample rate.
+ * @tascam: the tascam_card instance.
+ * @rate: the target sample rate (e.g., 44100, 96000).
+ *
+ * This function sends a sequence of vendor-specific and UAC control messages
+ * to configure the device hardware for the specified sample rate.
+ *
+ * Return: 0 on success, or a negative error code on failure.
+ */
 static int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate)
 {
 	struct usb_device *dev = tascam->dev;
@@ -664,9 +743,9 @@ static int tascam_playback_prepare(struct snd_pcm_substream *substream)
 		tascam->feedback_accumulator_pattern[i] = nominal_frames_per_packet;
 
 	switch (tascam->latency_profile) {
-	case 0: feedback_packets = 1; break;
-	case 1: feedback_packets = 2; break;
-	case 2: feedback_packets = 5; break;
+	case 0: feedback_packets = 1; break; /* Low */
+	case 1: feedback_packets = 2; break; /* Normal */
+	case 2: feedback_packets = 5; break; /* High */
 	default: feedback_packets = 2;
 	}
 
@@ -788,6 +867,7 @@ start_rollback:
 			usb_unlink_urb(tascam->capture_urbs[i]);
 			atomic_dec(&tascam->active_urbs);
 		}
+		cancel_work_sync(&tascam->capture_work);
 	}
 
 	return err;
@@ -849,6 +929,15 @@ static struct snd_pcm_ops tascam_capture_ops = {
 	.pointer = tascam_capture_pointer,
 };
 
+/**
+ * playback_urb_complete - Completion handler for playback isochronous URBs.
+ * @urb: the completed URB.
+ *
+ * This function runs in interrupt context. It calculates the number of bytes
+ * to send in the next set of packets based on the feedback-driven clock,
+ * copies the audio data from the ALSA ring buffer (applying routing), and
+ * resubmits the URB.
+ */
 static void playback_urb_complete(struct urb *urb)
 {
 	struct tascam_card *tascam = urb->context;
@@ -862,13 +951,13 @@ static void playback_urb_complete(struct urb *urb)
 	int ret, i;
 
 	if (urb->status) {
-		atomic_dec(&tascam->active_urbs);
+		if (urb->status != -ENOENT && urb->status != -ECONNRESET && urb->status != -ESHUTDOWN)
+			dev_err_ratelimited(tascam->card->dev, "Playback URB failed: %d\n", urb->status);
 		return;
 	}
-	if (!tascam || !atomic_read(&tascam->playback_active)) {
-		atomic_dec(&tascam->active_urbs);
+	if (!tascam || !atomic_read(&tascam->playback_active))
 		return;
-	}
+
 	substream = tascam->playback_substream;
 	if (!substream || !substream->runtime)
 		return;
@@ -933,6 +1022,17 @@ static void playback_urb_complete(struct urb *urb)
 		dev_err_ratelimited(tascam->card->dev, "Failed to resubmit playback URB: %d\n", ret);
 }
 
+/**
+ * feedback_urb_complete - Completion handler for feedback isochronous URBs.
+ * @urb: the completed URB.
+ *
+ * This is the master clock for the driver. It runs in interrupt context.
+ * It reads the feedback value from the device, which indicates how many
+ * samples the device has consumed. This information is used to adjust the
+ * playback rate and to advance the capture stream pointer, keeping both
+ * streams in sync. It then calls snd_pcm_period_elapsed if necessary and
+ * resubmits itself.
+ */
 static void feedback_urb_complete(struct urb *urb)
 {
 	struct tascam_card *tascam = urb->context;
@@ -946,13 +1046,12 @@ static void feedback_urb_complete(struct urb *urb)
 	bool capture_period_elapsed = false;
 
 	if (urb->status) {
-		atomic_dec(&tascam->active_urbs);
+		if (urb->status != -ENOENT && urb->status != -ECONNRESET && urb->status != -ESHUTDOWN)
+			dev_err_ratelimited(tascam->card->dev, "Feedback URB failed: %d\n", urb->status);
 		return;
 	}
-	if (!tascam || !atomic_read(&tascam->playback_active)) {
-		atomic_dec(&tascam->active_urbs);
+	if (!tascam || !atomic_read(&tascam->playback_active))
 		return;
-	}
 
 	playback_ss = tascam->playback_substream;
 	if (!playback_ss || !playback_ss->runtime)
@@ -1054,15 +1153,21 @@ unlock_and_continue:
 	if (capture_period_elapsed)
 		snd_pcm_period_elapsed(capture_ss);
 
-	if (atomic_read(&tascam->capture_active))
-		process_capture_data(tascam);
-
 	urb->dev = tascam->dev;
 	ret = usb_submit_urb(urb, GFP_ATOMIC);
 	if (ret < 0)
 		dev_err_ratelimited(tascam->card->dev, "Failed to resubmit feedback URB: %d\n", ret);
 }
 
+/**
+ * decode_tascam_capture_block - Decodes a raw 512-byte block from the device.
+ * @src_block: Pointer to the 512-byte raw source block.
+ * @dst_block: Pointer to the destination buffer for decoded audio frames.
+ *
+ * The device sends audio data in a complex, multiplexed format. This function
+ * demultiplexes the bits from the raw block into 8 frames of 4-channel,
+ * 24-bit audio (stored in 32-bit containers).
+ */
 static void decode_tascam_capture_block(const u8 *src_block, s32 *dst_block)
 {
 	int frame, bit;
@@ -1073,48 +1178,54 @@ static void decode_tascam_capture_block(const u8 *src_block, s32 *dst_block)
 		const u8 *p_src_frame_base = src_block + frame * 64;
 		s32 *p_dst_frame = dst_block + frame * 4;
 
-		const u8 *p1 = p_src_frame_base;
-		const u8 *p2 = p_src_frame_base + 32;
-
-		s32 ch0 = 0, ch1 = 0, ch2 = 0, ch3 = 0;
+		s32 ch[4] = {0};
 
 		for (bit = 0; bit < 24; ++bit) {
-			u8 byte1 = p1[bit];
-			ch0 = (ch0 << 1) | (byte1 & 1);
-			ch2 = (ch2 << 1) | ((byte1 >> 1) & 1);
+			u8 byte1 = p_src_frame_base[bit];
+			u8 byte2 = p_src_frame_base[bit + 32];
+
+			ch[0] = (ch[0] << 1) | (byte1 & 1);
+			ch[2] = (ch[2] << 1) | ((byte1 >> 1) & 1);
+
+			ch[1] = (ch[1] << 1) | (byte2 & 1);
+			ch[3] = (ch[3] << 1) | ((byte2 >> 1) & 1);
 		}
 
-		for (bit = 0; bit < 24; ++bit) {
-			u8 byte2 = p2[bit];
-			ch1 = (ch1 << 1) | (byte2 & 1);
-			ch3 = (ch3 << 1) | ((byte2 >> 1) & 1);
-		}
-
-		p_dst_frame[0] = ch0 << 8;
-		p_dst_frame[1] = ch1 << 8;
-		p_dst_frame[2] = ch2 << 8;
-		p_dst_frame[3] = ch3 << 8;
+		/* The result is a 24-bit sample. Shift left by 8 to align it to
+		 * the most significant bits of a 32-bit integer (S32_LE format).
+		 */
+		p_dst_frame[0] = ch[0] << 8;
+		p_dst_frame[1] = ch[1] << 8;
+		p_dst_frame[2] = ch[2] << 8;
+		p_dst_frame[3] = ch[3] << 8;
 	}
 }
 
-static void process_capture_data(struct tascam_card *tascam)
+/**
+ * tascam_capture_work_handler - Deferred work handler for processing capture data.
+ * @work: the work_struct instance.
+ *
+ * This function runs in a kernel thread context, not an IRQ context. It reads
+ * raw data from the capture ring buffer, decodes it, applies routing, and
+ * copies the final audio data into the ALSA capture ring buffer. This offloads
+ * the CPU-intensive decoding from the time-sensitive URB completion handlers.
+ */
+static void tascam_capture_work_handler(struct work_struct *work)
 {
+	struct tascam_card *tascam = container_of(work, struct tascam_card, capture_work);
 	struct snd_pcm_substream *substream = tascam->capture_substream;
 	struct snd_pcm_runtime *runtime;
-	u8 *raw_block;
-	s32 *decoded_block;
 	unsigned long flags;
 
 	if (!substream || !substream->runtime)
 		return;
 	runtime = substream->runtime;
 
-	raw_block = kmalloc(RAW_BYTES_PER_DECODE_BLOCK, GFP_ATOMIC);
-	if (!raw_block)
-		return;
-	decoded_block = kmalloc(FRAMES_PER_DECODE_BLOCK * DECODED_CHANNELS_PER_FRAME * DECODED_SAMPLE_SIZE, GFP_ATOMIC);
-	if (!decoded_block) {
-		kfree(raw_block);
+	u8 *raw_block = tascam->capture_decode_raw_block;
+	s32 *decoded_block = tascam->capture_decode_dst_block;
+
+	if (!raw_block || !decoded_block) {
+		dev_err(tascam->card->dev, "Capture decode buffers not allocated!\n");
 		return;
 	}
 
@@ -1151,20 +1262,27 @@ static void process_capture_data(struct tascam_card *tascam)
 				s32 *src_analog = decoded_frame;
 				s32 *src_digital = decoded_frame + 2;
 
+				/* The decoded samples are in S32_LE format. The ALSA format is
+				 * S24_3LE. We copy the 3 least significant bytes by starting
+				 * the memcpy from the second byte of the 32-bit integer.
+				 */
 				if (tascam->capture_12_source == 0) {
-					memcpy(dst_frame, ((char *)src_analog) + 1, 3);
-					memcpy(dst_frame + 3, ((char *)src_analog + 4) + 1, 3);
+					memcpy(dst_frame, ((char *)src_analog) + 1, 3);     // Ch1 from Analog 1
+					memcpy(dst_frame + 3, ((char *)(src_analog + 1)) + 1, 3); // Ch2 from Analog 2
 				} else {
-					memcpy(dst_frame, ((char *)src_digital) + 1, 3);
-					memcpy(dst_frame + 3, ((char *)src_digital + 4) + 1, 3);
+					memcpy(dst_frame, ((char *)src_digital) + 1, 3);     // Ch1 from Digital 1
+					memcpy(dst_frame + 3, ((char *)(src_digital + 1)) + 1, 3); // Ch2 from Digital 2
 				}
 
+				/* Since the device has only two analog inputs, channels 3-4 can be
+				 * sourced from a copy of the analog inputs or the digital input.
+				 */
 				if (tascam->capture_34_source == 0) {
-					memcpy(dst_frame + 6, ((char *)src_analog) + 1, 3);
-					memcpy(dst_frame + 9, ((char *)src_analog + 4) + 1, 3);
+					memcpy(dst_frame + 6, ((char *)src_analog) + 1, 3);     // Ch3 from Analog 1
+					memcpy(dst_frame + 9, ((char *)(src_analog + 1)) + 1, 3); // Ch4 from Analog 2
 				} else {
-					memcpy(dst_frame + 6, ((char *)src_digital) + 1, 3);
-					memcpy(dst_frame + 9, ((char *)src_digital + 4) + 1, 3);
+					memcpy(dst_frame + 6, ((char *)src_digital) + 1, 3);     // Ch3 from Digital 1
+					memcpy(dst_frame + 9, ((char *)(src_digital + 1)) + 1, 3); // Ch4 from Digital 2
 				}
 
 				tascam->driver_capture_pos++;
@@ -1174,11 +1292,16 @@ static void process_capture_data(struct tascam_card *tascam)
 		}
 		spin_unlock_irqrestore(&tascam->lock, flags);
 	}
-
-	kfree(decoded_block);
-	kfree(raw_block);
 }
 
+/**
+ * capture_urb_complete - Completion handler for capture bulk URBs.
+ * @urb: the completed URB.
+ *
+ * This function runs in interrupt context. It copies the received raw data
+ * into an intermediate ring buffer and then schedules the workqueue to process
+ * it. It then resubmits the URB to receive more data.
+ */
 static void capture_urb_complete(struct urb *urb)
 {
 	struct tascam_card *tascam = urb->context;
@@ -1186,15 +1309,12 @@ static void capture_urb_complete(struct urb *urb)
 	unsigned long flags;
 
 	if (urb->status) {
-		if (tascam)
-			atomic_dec(&tascam->active_urbs);
+		if (urb->status != -ENOENT && urb->status != -ECONNRESET && urb->status != -ESHUTDOWN)
+			dev_err_ratelimited(tascam->card->dev, "Capture URB failed: %d\n", urb->status);
 		return;
 	}
-	if (!tascam || !atomic_read(&tascam->capture_active)) {
-		if (tascam)
-			atomic_dec(&tascam->active_urbs);
+	if (!tascam || !atomic_read(&tascam->capture_active))
 		return;
-	}
 
 	if (urb->actual_length > 0) {
 		size_t i;
@@ -1208,11 +1328,15 @@ static void capture_urb_complete(struct urb *urb)
 		}
 		tascam->capture_ring_buffer_write_ptr = write_ptr;
 		spin_unlock_irqrestore(&tascam->lock, flags);
+
+		schedule_work(&tascam->capture_work);
 	}
 
 	ret = usb_submit_urb(urb, GFP_ATOMIC);
-
+	if (ret < 0)
+		dev_err_ratelimited(tascam->card->dev, "Failed to resubmit capture URB: %d\n", ret);
 }
+
 static int tascam_create_pcm(struct tascam_card *tascam)
 {
 	struct snd_pcm *pcm;
@@ -1265,6 +1389,7 @@ static int tascam_suspend(struct usb_interface *intf, pm_message_t message)
 		return 0;
 
 	snd_pcm_suspend_all(tascam->pcm);
+	cancel_work_sync(&tascam->capture_work);
 
 	return 0;
 }
@@ -1305,6 +1430,18 @@ static int tascam_resume(struct usb_interface *intf)
 	return 0;
 }
 
+/**
+ * tascam_probe - Entry point for when the USB device is detected.
+ * @intf: the USB interface that was matched.
+ * @usb_id: the matching USB device ID.
+ *
+ * This function is called by the USB core when a device matching the driver's
+ * ID table is connected. It allocates the sound card, initializes the driver
+ * data structure, claims interfaces, sets up the device, creates the PCM
+ * and control interfaces, and registers the sound card with ALSA.
+ *
+ * Return: 0 on success, or a negative error code on failure.
+ */
 static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *usb_id)
 {
 	struct usb_device *dev = interface_to_usbdev(intf);
@@ -1336,6 +1473,7 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	usb_set_intfdata(intf, tascam);
 	spin_lock_init(&tascam->lock);
 	atomic_set(&tascam->active_urbs, 0);
+	INIT_WORK(&tascam->capture_work, tascam_capture_work_handler);
 	tascam->latency_profile = 1;
 	tascam->line_out_source = 0;
 	tascam->digital_out_source = 1;
@@ -1382,7 +1520,7 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	err = usb_control_msg(dev, usb_rcvctrlpipe(dev, 0), VENDOR_REQ_MODE_CONTROL,
 			      RT_D2H_VENDOR_DEV, MODE_VAL_HANDSHAKE_READ, 0x0000,
 			      handshake_buf, 1, USB_CTRL_TIMEOUT_MS);
-	if (err == 1 && handshake_buf[0] == 0x12)
+	if (err == 1 && handshake_buf[0] == HANDSHAKE_SUCCESS_VAL)
 		dev_info(&intf->dev, "Handshake successful.\n");
 	else
 		dev_warn(&intf->dev, "Handshake failed (err %d, val 0x%02x), continuing anyway.\n", err, err > 0 ? handshake_buf[0] : 0);
@@ -1414,6 +1552,14 @@ free_card_obj:
 	return err;
 }
 
+/**
+ * tascam_disconnect - Entry point for when the USB device is disconnected.
+ * @intf: the USB interface being disconnected.
+ *
+ * This function is called by the USB core when the device is removed. It
+ * cancels any pending work, disconnects the sound card from ALSA, releases
+ * claimed interfaces, and schedules the card structure to be freed.
+ */
 static void tascam_disconnect(struct usb_interface *intf)
 {
 	struct tascam_card *tascam = usb_get_intfdata(intf);
@@ -1428,6 +1574,8 @@ static void tascam_disconnect(struct usb_interface *intf)
 
 	dev_info(&intf->dev, "TASCAM US-144MKII disconnecting...\n");
 	snd_card_disconnect(tascam->card);
+
+	cancel_work_sync(&tascam->capture_work);
 
 	if (tascam->iface1) {
 		usb_set_intfdata(tascam->iface1, NULL);
