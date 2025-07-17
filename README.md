@@ -13,7 +13,7 @@ This driver is under active development. While playback is functional, several k
     *   Supported sample rates: 44.1, 48, 88.2, and 96 kHz.
 
 ### 📝 To-Do & Known Limitations
-*   **Audio Capture (Recording):** Not yet implemented.
+*   **Audio Capture (Recording):** Not yet fully implemented. EDIT: Capture works with Jack with latency of 64 period 4(higher less bad audio)
 *   **MIDI IN/OUT:** Not yet implemented.
 
 ## Installation and Usage
