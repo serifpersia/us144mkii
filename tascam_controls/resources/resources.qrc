@@ -1,0 +1,9 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+<qresource prefix="/">
+    <file>bg.png</file>
+    <file>logo.png</file>
+    <file>device.png</file>
+    <file>tascam-control-panel.png</file>
+</qresource>
+</RCC>
