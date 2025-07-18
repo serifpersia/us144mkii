@@ -7,13 +7,10 @@ An unofficial ALSA kernel module for the TASCAM US-144MKII USB audio interface.
 This driver is under active development. While playback is functional, several key features are not yet implemented.
 
 ### ✅ Implemented Features
-*   **Vendor-Specific Device Initialization:** Correctly sets up the device for audio streaming.
 *   **Audio Playback:**
-    *   2-channel, 24-bit (S24_3LE) format.
-    *   Supported sample rates: 44.1, 48, 88.2, and 96 kHz.
+*   **Audio Capture (Recording):** 
 
 ### 📝 To-Do & Known Limitations
-*   **Audio Capture (Recording):** Not yet fully implemented. EDIT: Capture works with Jack with latency of 64 period 4(higher less bad audio)
 *   **MIDI IN/OUT:** Not yet implemented.
 
 ## Installation and Usage
