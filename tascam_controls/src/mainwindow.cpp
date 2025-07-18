@@ -147,24 +147,20 @@ void MainWindow::initUi() {
         middlePanel->addWidget(widget);
     };
 
-    auto latencyPair = createControlWidget("Latency Profile", {"low latency", "normal latency", "high latency"});
-    m_latencyCombo = latencyPair.second;
-    addSection("AUDIO PERFORMANCE", latencyPair.first);
-
-    auto capture12Pair = createControlWidget("ch1 and ch2", {"Analog In", "Digital In"});
+    auto capture12Pair = createControlWidget("ch1 and ch2", {"analog inputs", "digital inputs"});
     m_capture12Combo = capture12Pair.second;
-    auto capture34Pair = createControlWidget("ch3 and ch4", {"Analog In", "Digital In"});
+    auto capture34Pair = createControlWidget("ch3 and ch4", {"analog inputs", "digital inputs"});
     m_capture34Combo = capture34Pair.second;
     addSection("INPUTS", capture12Pair.first);
     middlePanel->addWidget(capture34Pair.first);
 
-    auto lineOutPair = createControlWidget("ch1 and ch2", {"Playback 1-2", "Playback 3-4"});
+    auto lineOutPair = createControlWidget("ch1 and ch2", {"ch1 and ch2", "ch3 and ch4"});
     m_lineOutCombo = lineOutPair.second;
-    addSection("LINE", lineOutPair.first);
+    addSection("LINE OUTPUTS", lineOutPair.first);
 
-    auto digitalOutPair = createControlWidget("ch3 and ch4", {"Playback 1-2", "Playback 3-4"});
+    auto digitalOutPair = createControlWidget("ch3 and ch4", {"ch1 and ch2", "ch3 and ch4"});
     m_digitalOutCombo = digitalOutPair.second;
-    addSection("DIGITAL", digitalOutPair.first);
+    addSection("DIGITAL OUTPUTS", digitalOutPair.first);
 
     middlePanel->addStretch();
 
@@ -183,11 +179,10 @@ void MainWindow::initUi() {
     topLevelLayout->addLayout(middlePanel, 3);
     topLevelLayout->addLayout(rightPanel, 3);
 
-    connect(m_latencyCombo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Latency Profile", index); });
-    connect(m_lineOutCombo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Line Out Source", index); });
-    connect(m_digitalOutCombo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Digital Out Source", index); });
-    connect(m_capture12Combo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Capture 1-2 Source", index); });
-    connect(m_capture34Combo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Capture 3-4 Source", index); });
+    connect(m_lineOutCombo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Line OUTPUTS Source", index); });
+    connect(m_digitalOutCombo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Digital OUTPUTS Source", index); });
+    connect(m_capture12Combo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("ch1 and ch2 Source", index); });
+    connect(m_capture34Combo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("ch3 and ch4 Source", index); });
 }
 
 void MainWindow::loadDynamicSettings() {
@@ -200,11 +195,10 @@ void MainWindow::loadDynamicSettings() {
     long rate_val = m_alsa.getControlValue("Sample Rate");
     m_infoLabels["sample_rate"]->setText(rate_val > 0 ? QString("%1 kHz").arg(rate_val / 1000.0, 0, 'f', 1) : "N/A (inactive)");
 
-    updateCombo(m_latencyCombo, "Latency Profile");
-    updateCombo(m_lineOutCombo, "Line Out Source");
-    updateCombo(m_digitalOutCombo, "Digital Out Source");
-    updateCombo(m_capture12Combo, "Capture 1-2 Source");
-    updateCombo(m_capture34Combo, "Capture 3-4 Source");
+    updateCombo(m_lineOutCombo, "Line OUTPUTS Source");
+    updateCombo(m_digitalOutCombo, "Digital OUTPUTS Source");
+    updateCombo(m_capture12Combo, "ch1 and ch2 Source");
+    updateCombo(m_capture34Combo, "ch3 and ch4 Source");
 }
 
 void MainWindow::updateCombo(QComboBox* combo, const std::string& controlName) {

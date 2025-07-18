@@ -78,7 +78,7 @@ static int dev_idx;
 
 /* --- Capture Decoding Defines --- */
 #define DECODED_CHANNELS_PER_FRAME	4
-#define DECODED_SAMPLE_SIZE			4  /* 32-bit */
+#define DECODED_SAMPLE_SIZE			4
 #define FRAMES_PER_DECODE_BLOCK		8
 #define RAW_BYTES_PER_DECODE_BLOCK	512
 
@@ -100,6 +100,7 @@ struct tascam_card {
 	u64 playback_frames_consumed;
 	snd_pcm_uframes_t driver_playback_pos;
 	u64 last_period_pos;
+	u8 *playback_routing_buffer;
 
 	/* Capture stream */
 	struct snd_pcm_substream *capture_substream;
@@ -114,13 +115,13 @@ struct tascam_card {
 	volatile size_t capture_ring_buffer_write_ptr;
 	u8 *capture_decode_raw_block;
 	s32 *capture_decode_dst_block;
-	struct work_struct capture_work; // For deferred processing
+	s32 *capture_routing_buffer;
+	struct work_struct capture_work;
 
 	/* Shared state & Routing Matrix */
 	spinlock_t lock;
 	atomic_t active_urbs;
 	int current_rate;
-	unsigned int latency_profile;
 	unsigned int line_out_source;     /* 0: Playback 1-2, 1: Playback 3-4 */
 	unsigned int digital_out_source;  /* 0: Playback 1-2, 1: Playback 3-4 */
 	unsigned int capture_12_source;   /* 0: Analog In, 1: Digital In */
@@ -160,47 +161,8 @@ static ssize_t driver_version_show(struct device *dev,
 static DEVICE_ATTR_RO(driver_version);
 
 /* --- ALSA Control Definitions --- */
-static const char * const latency_profile_texts[] = {"Low", "Normal", "High"};
 static const char * const playback_source_texts[] = {"Playback 1-2", "Playback 3-4"};
 static const char * const capture_source_texts[] = {"Analog In", "Digital In"};
-
-static int tascam_latency_info(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_info *uinfo)
-{
-	uinfo->type = SNDRV_CTL_ELEM_TYPE_ENUMERATED;
-	uinfo->count = 1;
-	uinfo->value.enumerated.items = 3;
-	if (uinfo->value.enumerated.item >= 3)
-		uinfo->value.enumerated.item = 2;
-	strcpy(uinfo->value.enumerated.name, latency_profile_texts[uinfo->value.enumerated.item]);
-	return 0;
-}
-
-static int tascam_latency_get(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
-{
-	struct tascam_card *tascam = snd_kcontrol_chip(kcontrol);
-	ucontrol->value.enumerated.item[0] = tascam->latency_profile;
-	return 0;
-}
-
-static int tascam_latency_put(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
-{
-	struct tascam_card *tascam = snd_kcontrol_chip(kcontrol);
-	unsigned int new_profile = ucontrol->value.enumerated.item[0];
-
-	if (new_profile >= 3)
-		return -EINVAL;
-
-	if (tascam->latency_profile != new_profile) {
-		tascam->latency_profile = new_profile;
-		return 1;
-	}
-	return 0;
-}
-
-static const struct snd_kcontrol_new tascam_latency_control = {
-	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = "Latency Profile",
-	.info = tascam_latency_info, .get = tascam_latency_get, .put = tascam_latency_put,
-};
 
 static int tascam_playback_source_info(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_info *uinfo)
 {
@@ -232,7 +194,7 @@ static int tascam_line_out_put(struct snd_kcontrol *kcontrol, struct snd_ctl_ele
 }
 
 static const struct snd_kcontrol_new tascam_line_out_control = {
-	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = "Line Out Source",
+	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = "Line OUTPUTS Source",
 	.info = tascam_playback_source_info, .get = tascam_line_out_get, .put = tascam_line_out_put,
 };
 
@@ -255,7 +217,7 @@ static int tascam_digital_out_put(struct snd_kcontrol *kcontrol, struct snd_ctl_
 }
 
 static const struct snd_kcontrol_new tascam_digital_out_control = {
-	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = "Digital Out Source",
+	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = "Digital OUTPUTS Source",
 	.info = tascam_playback_source_info, .get = tascam_digital_out_get, .put = tascam_digital_out_put,
 };
 
@@ -289,7 +251,7 @@ static int tascam_capture_12_put(struct snd_kcontrol *kcontrol, struct snd_ctl_e
 }
 
 static const struct snd_kcontrol_new tascam_capture_12_control = {
-	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = "Capture 1-2 Source",
+	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = "ch1 and ch2 Source",
 	.info = tascam_capture_source_info, .get = tascam_capture_12_get, .put = tascam_capture_12_put,
 };
 
@@ -312,7 +274,7 @@ static int tascam_capture_34_put(struct snd_kcontrol *kcontrol, struct snd_ctl_e
 }
 
 static const struct snd_kcontrol_new tascam_capture_34_control = {
-	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = "Capture 3-4 Source",
+	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = "ch3 and ch4 Source",
 	.info = tascam_capture_source_info, .get = tascam_capture_34_get, .put = tascam_capture_34_put,
 };
 
@@ -361,6 +323,75 @@ static const struct snd_kcontrol_new tascam_samplerate_control = {
 	.get = tascam_samplerate_get,
 	.access = SNDRV_CTL_ELEM_ACCESS_READ,
 };
+
+/**
+ * process_playback_routing_us144mkii
+ * @tascam: The driver instance.
+ * @src_buffer: Buffer containing 4 channels of S24_3LE audio from ALSA.
+ * @dst_buffer: Buffer to be filled with 4 channels of S24_3LE audio for the USB device.
+ * @frames: Number of frames to process.
+ */
+static void process_playback_routing_us144mkii(struct tascam_card *tascam, const u8 *src_buffer, u8 *dst_buffer, size_t frames)
+{
+	size_t f;
+	const u8 *src_12, *src_34;
+	u8 *dst_line, *dst_digital;
+
+	for (f = 0; f < frames; ++f) {
+		src_12 = src_buffer + f * BYTES_PER_FRAME;
+		src_34 = src_12 + (2 * BYTES_PER_SAMPLE);
+		dst_line = dst_buffer + f * BYTES_PER_FRAME;
+		dst_digital = dst_line + (2 * BYTES_PER_SAMPLE);
+
+		// LINE OUTPUTS (ch1/2 on device)
+		if (tascam->line_out_source == 0) // "ch1 and ch2"
+			memcpy(dst_line, src_12, 2 * BYTES_PER_SAMPLE);
+		else // "ch3 and ch4"
+			memcpy(dst_line, src_34, 2 * BYTES_PER_SAMPLE);
+
+		// DIGITAL OUTPUTS (ch3/4 on device)
+		if (tascam->digital_out_source == 0) // "ch1 and ch2"
+			memcpy(dst_digital, src_12, 2 * BYTES_PER_SAMPLE);
+		else // "ch3 and ch4"
+			memcpy(dst_digital, src_34, 2 * BYTES_PER_SAMPLE);
+	}
+}
+
+/**
+ * process_capture_routing_us144mkii
+ * @tascam: The driver instance.
+ * @decoded_block: Buffer containing 4 channels of S32LE decoded audio from device.
+ * @routed_block: Buffer to be filled with 4 channels of S32LE audio for ALSA.
+ */
+static void process_capture_routing_us144mkii(struct tascam_card *tascam, const s32 *decoded_block, s32 *routed_block)
+{
+	int f;
+	const s32 *src_frame;
+	s32 *dst_frame;
+
+	for (f = 0; f < FRAMES_PER_DECODE_BLOCK; f++) {
+		src_frame = decoded_block + (f * DECODED_CHANNELS_PER_FRAME);
+		dst_frame = routed_block + (f * DECODED_CHANNELS_PER_FRAME);
+
+		// ch1 and ch2 Source
+		if (tascam->capture_12_source == 0) { // analog inputs
+			dst_frame[0] = src_frame[0]; // Analog L
+			dst_frame[1] = src_frame[1]; // Analog R
+		} else { // digital inputs
+			dst_frame[0] = src_frame[2]; // Digital L
+			dst_frame[1] = src_frame[3]; // Digital R
+		}
+
+		// ch3 and ch4 Source
+		if (tascam->capture_34_source == 0) { // analog inputs
+			dst_frame[2] = src_frame[0]; // Analog L (Duplicate)
+			dst_frame[3] = src_frame[1]; // Analog R (Duplicate)
+		} else { // digital inputs
+			dst_frame[2] = src_frame[2]; // Digital L
+			dst_frame[3] = src_frame[3]; // Digital R
+		}
+	}
+}
 
 /* --- Rate-to-Packet Fixing Data (Verified) --- */
 static const unsigned int patterns_48khz[5][8] = {
@@ -444,12 +475,11 @@ static void tascam_free_urbs(struct tascam_card *tascam)
 		}
 	}
 
+	kfree(tascam->playback_routing_buffer);
+	tascam->playback_routing_buffer = NULL;
+	kfree(tascam->capture_routing_buffer);
+	tascam->capture_routing_buffer = NULL;
 	kfree(tascam->capture_decode_dst_block);
-	tascam->capture_decode_dst_block = NULL;
-	kfree(tascam->capture_decode_raw_block);
-	tascam->capture_decode_raw_block = NULL;
-	kfree(tascam->capture_ring_buffer);
-	tascam->capture_ring_buffer = NULL;
 }
 
 /**
@@ -540,6 +570,14 @@ static int tascam_alloc_urbs(struct tascam_card *tascam)
 
 	tascam->capture_decode_dst_block = kmalloc(FRAMES_PER_DECODE_BLOCK * DECODED_CHANNELS_PER_FRAME * DECODED_SAMPLE_SIZE, GFP_KERNEL);
 	if (!tascam->capture_decode_dst_block)
+		goto error;
+
+	tascam->playback_routing_buffer = kmalloc(tascam->playback_urb_alloc_size, GFP_KERNEL);
+	if (!tascam->playback_routing_buffer)
+		goto error;
+
+	tascam->capture_routing_buffer = kmalloc(FRAMES_PER_DECODE_BLOCK * DECODED_CHANNELS_PER_FRAME * DECODED_SAMPLE_SIZE, GFP_KERNEL);
+	if (!tascam->capture_routing_buffer)
 		goto error;
 
 	return 0;
@@ -742,12 +780,7 @@ static int tascam_playback_prepare(struct snd_pcm_substream *substream)
 	for (i = 0; i < FEEDBACK_ACCUMULATOR_SIZE; i++)
 		tascam->feedback_accumulator_pattern[i] = nominal_frames_per_packet;
 
-	switch (tascam->latency_profile) {
-	case 0: feedback_packets = 1; break; /* Low */
-	case 1: feedback_packets = 2; break; /* Normal */
-	case 2: feedback_packets = 5; break; /* High */
-	default: feedback_packets = 2;
-	}
+	feedback_packets = 1; /* Lowest latency */
 
 	for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
 		struct urb *f_urb = tascam->feedback_urbs[i];
@@ -944,7 +977,7 @@ static void playback_urb_complete(struct urb *urb)
 	struct snd_pcm_substream *substream;
 	struct snd_pcm_runtime *runtime;
 	unsigned long flags;
-	char *src_buf, *dst_buf;
+	u8 *src_buf, *dst_buf;
 	size_t total_bytes_for_urb = 0;
 	snd_pcm_uframes_t offset_frames;
 	snd_pcm_uframes_t frames_to_copy;
@@ -990,30 +1023,22 @@ static void playback_urb_complete(struct urb *urb)
 	spin_unlock_irqrestore(&tascam->lock, flags);
 
 	if (total_bytes_for_urb > 0) {
-		int f;
-		src_buf = runtime->dma_area;
-		dst_buf = urb->transfer_buffer;
+		src_buf = runtime->dma_area + frames_to_bytes(runtime, offset_frames);
+		dst_buf = tascam->playback_routing_buffer;
 
-		for (f = 0; f < frames_to_copy; ++f) {
-			snd_pcm_uframes_t current_frame_pos = (offset_frames + f) % runtime->buffer_size;
-			char *src_frame = src_buf + frames_to_bytes(runtime, current_frame_pos);
-			char *dst_frame = dst_buf + (f * BYTES_PER_FRAME);
-
-			char *src_12 = src_frame;
-			char *src_34 = src_frame + 6;
-			char *dst_line_out = dst_frame;
-			char *dst_digital_out = dst_frame + 6;
-
-			if (tascam->line_out_source == 0)
-				memcpy(dst_line_out, src_12, 6);
-			else
-				memcpy(dst_line_out, src_34, 6);
-
-			if (tascam->digital_out_source == 0)
-				memcpy(dst_digital_out, src_12, 6);
-			else
-				memcpy(dst_digital_out, src_34, 6);
+		/* Handle ring buffer wrap-around */
+		if (offset_frames + frames_to_copy > runtime->buffer_size) {
+			size_t first_chunk_bytes = frames_to_bytes(runtime, runtime->buffer_size - offset_frames);
+			size_t second_chunk_bytes = total_bytes_for_urb - first_chunk_bytes;
+			memcpy(dst_buf, src_buf, first_chunk_bytes);
+			memcpy(dst_buf + first_chunk_bytes, runtime->dma_area, second_chunk_bytes);
+		} else {
+			memcpy(dst_buf, src_buf, total_bytes_for_urb);
 		}
+
+		/* Apply routing to the contiguous data in our routing buffer */
+		process_playback_routing_us144mkii(tascam, dst_buf, dst_buf, frames_to_copy);
+		memcpy(urb->transfer_buffer, dst_buf, total_bytes_for_urb);
 	}
 
 	urb->dev = tascam->dev;
@@ -1216,16 +1241,16 @@ static void tascam_capture_work_handler(struct work_struct *work)
 	struct snd_pcm_substream *substream = tascam->capture_substream;
 	struct snd_pcm_runtime *runtime;
 	unsigned long flags;
+	u8 *raw_block = tascam->capture_decode_raw_block;
+	s32 *decoded_block = tascam->capture_decode_dst_block;
+	s32 *routed_block = tascam->capture_routing_buffer;
 
 	if (!substream || !substream->runtime)
 		return;
 	runtime = substream->runtime;
 
-	u8 *raw_block = tascam->capture_decode_raw_block;
-	s32 *decoded_block = tascam->capture_decode_dst_block;
-
-	if (!raw_block || !decoded_block) {
-		dev_err(tascam->card->dev, "Capture decode buffers not allocated!\n");
+	if (!raw_block || !decoded_block || !routed_block) {
+		dev_err(tascam->card->dev, "Capture decode/routing buffers not allocated!\n");
 		return;
 	}
 
@@ -1251,43 +1276,31 @@ static void tascam_capture_work_handler(struct work_struct *work)
 			break;
 
 		decode_tascam_capture_block(raw_block, decoded_block);
+		process_capture_routing_us144mkii(tascam, decoded_block, routed_block);
 
 		spin_lock_irqsave(&tascam->lock, flags);
 		if (atomic_read(&tascam->capture_active)) {
 			int f;
 			for (f = 0; f < FRAMES_PER_DECODE_BLOCK; ++f) {
-				s32 *decoded_frame = decoded_block + (f * DECODED_CHANNELS_PER_FRAME);
-				char *dst_frame = runtime->dma_area + frames_to_bytes(runtime, tascam->driver_capture_pos);
+				// Get a pointer to the start of the current frame in the ALSA buffer
+				u8 *dst_frame_start = runtime->dma_area + frames_to_bytes(runtime, tascam->driver_capture_pos);
+				// Get a pointer to the start of the current routed frame (which contains 4 s32 channels)
+				s32 *routed_frame_start = routed_block + (f * NUM_CHANNELS);
+				int c;
 
-				s32 *src_analog = decoded_frame;
-				s32 *src_digital = decoded_frame + 2;
+				for (c = 0; c < NUM_CHANNELS; c++) {
+					// Pointer to the destination for the current channel (3 bytes)
+					u8 *dst_channel = dst_frame_start + (c * BYTES_PER_SAMPLE);
+					// Pointer to the source s32 for the current channel
+					s32 *src_channel_s32 = routed_frame_start + c;
 
-				/* The decoded samples are in S32_LE format. The ALSA format is
-				 * S24_3LE. We copy the 3 least significant bytes by starting
-				 * the memcpy from the second byte of the 32-bit integer.
-				 */
-				if (tascam->capture_12_source == 0) {
-					memcpy(dst_frame, ((char *)src_analog) + 1, 3);     // Ch1 from Analog 1
-					memcpy(dst_frame + 3, ((char *)(src_analog + 1)) + 1, 3); // Ch2 from Analog 2
-				} else {
-					memcpy(dst_frame, ((char *)src_digital) + 1, 3);     // Ch1 from Digital 1
-					memcpy(dst_frame + 3, ((char *)(src_digital + 1)) + 1, 3); // Ch2 from Digital 2
+					// The s32 sample is formatted as [0x00, LSB, Mid, MSB].
+					// We need to copy the 3 significant bytes, skipping the first 0x00 byte.
+					memcpy(dst_channel, ((char *)src_channel_s32) + 1, 3);
 				}
 
-				/* Since the device has only two analog inputs, channels 3-4 can be
-				 * sourced from a copy of the analog inputs or the digital input.
-				 */
-				if (tascam->capture_34_source == 0) {
-					memcpy(dst_frame + 6, ((char *)src_analog) + 1, 3);     // Ch3 from Analog 1
-					memcpy(dst_frame + 9, ((char *)(src_analog + 1)) + 1, 3); // Ch4 from Analog 2
-				} else {
-					memcpy(dst_frame + 6, ((char *)src_digital) + 1, 3);     // Ch3 from Digital 1
-					memcpy(dst_frame + 9, ((char *)(src_digital + 1)) + 1, 3); // Ch4 from Digital 2
-				}
-
-				tascam->driver_capture_pos++;
-				if (tascam->driver_capture_pos >= runtime->buffer_size)
-					tascam->driver_capture_pos = 0;
+				// Advance the driver's position in the ALSA buffer
+				tascam->driver_capture_pos = (tascam->driver_capture_pos + 1) % runtime->buffer_size;
 			}
 		}
 		spin_unlock_irqrestore(&tascam->lock, flags);
@@ -1346,8 +1359,6 @@ static int tascam_create_pcm(struct tascam_card *tascam)
 	if (err < 0)
 		return err;
 
-	err = snd_ctl_add(tascam->card, snd_ctl_new1(&tascam_latency_control, tascam));
-	if (err < 0) return err;
 	err = snd_ctl_add(tascam->card, snd_ctl_new1(&tascam_line_out_control, tascam));
 	if (err < 0) return err;
 	err = snd_ctl_add(tascam->card, snd_ctl_new1(&tascam_digital_out_control, tascam));
@@ -1474,7 +1485,6 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	spin_lock_init(&tascam->lock);
 	atomic_set(&tascam->active_urbs, 0);
 	INIT_WORK(&tascam->capture_work, tascam_capture_work_handler);
-	tascam->latency_profile = 1;
 	tascam->line_out_source = 0;
 	tascam->digital_out_source = 1;
 	tascam->capture_12_source = 0;

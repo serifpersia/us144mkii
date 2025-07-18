@@ -34,7 +34,6 @@ private:
     QPixmap m_background;
 
     QMap<QString, QLabel*> m_infoLabels;
-    QComboBox* m_latencyCombo;
     QComboBox* m_capture12Combo;
     QComboBox* m_capture34Combo;
     QComboBox* m_lineOutCombo;
