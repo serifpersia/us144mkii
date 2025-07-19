@@ -127,7 +127,81 @@ To make the driver load automatically every time you start your computer, follow
 
 Now, after a reboot, the `us144mkii` driver should load automatically.
 
+## TascamControlPanel
 
+A control panel app built with Qt6 and ALSA.
+
+Get it from releases or build it.
+
+## Prerequisites
+
+Before building the application, ensure you have the following installed on your system:
+
+*   **CMake** (version 3.16 or higher)
+*   **C++ Compiler** (supporting C++17, e.g., GCC/G++)
+*   **Qt6 Development Libraries** (specifically the `Widgets` module)
+*   **ALSA Development Libraries**
+*   **Make** (or Ninja)
+
+### Installation of Prerequisites by Distribution
+
+#### Debian/Ubuntu
+
+sudo apt update
+sudo apt install cmake build-essential qt6-base-dev qt6-base-dev-tools libasound2-dev
+
+#### Fedora/RHEL/CentOS
+
+sudo dnf install cmake "Development Tools" qt6-qtbase-devel alsa-lib-devel
+
+#### Arch Linux
+
+sudo pacman -Syu
+sudo pacman -S cmake base-devel qt6-base alsa-lib
+
+#### openSUSE
+
+sudo zypper install cmake gcc-c++ libqt6-qtbase-devel alsa-devel
+
+## Building the Application
+
+Follow these steps to build the `TascamControlPanel` application from source:
+
+1.  **Clone the repository** (if you haven't already):
+
+    ```git clone https://github.com/serifpersia/us144mkii.git```
+
+   ```cd tascam_controls/```
+
+2.  **Create a build directory** and navigate into it:
+
+   ```mkdir build```
+    ```cd build```
+
+3.  **Configure the project** with CMake:
+
+    ```cmake ..```
+
+    This step will check for all necessary dependencies and generate the build files.
+
+4.  **Build the application**:
+
+    ```make -j$(nproc)```
+
+    This command compiles the source code. The -j$(nproc) option uses all available CPU cores to speed up the compilation process.
+
+## Running the Application
+
+After a successful build, the executable will be located in the `build` directory.
+
+```./TascamControlPanel```
+
+## Cleaning the Build
+
+To remove all compiled files and intermediate artifacts, simply delete the `build` directory:
+
+cd ..
+rm -rf build
 
 ## License
 
