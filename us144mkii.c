@@ -2,28 +2,23 @@
 // Copyright (c) 2025 serifpersia <ramiserifpersia@gmail.com>
 /*
  * ALSA Driver for TASCAM US-144MKII Audio Interface
- *
- * This version includes a robust, state-machine-based MIDI implementation
- * to fix packet dropouts and a hardware activation sequence to enable MIDI input.
  */
 
 #include <linux/usb.h>
 #include <linux/workqueue.h>
 #include <linux/slab.h>
-#include <linux/bitops.h>
 #include <sound/core.h>
 #include <sound/pcm.h>
 #include <sound/rawmidi.h>
 #include <sound/initval.h>
 #include <sound/control.h>
-#include <linux/printk.h>
 
 MODULE_AUTHOR("serifpersia <ramiserifpersia@gmail.com>");
 MODULE_DESCRIPTION("ALSA Driver for TASCAM US-144MKII");
 MODULE_LICENSE("GPL v2");
 
 #define DRIVER_NAME "us144mkii"
-#define DRIVER_VERSION "2.5" // Version bump for MIDI fixes
+#define DRIVER_VERSION "1.6"
 
 /* --- Module Parameters --- */
 static int index[SNDRV_CARDS] = SNDRV_DEFAULT_IDX;
@@ -77,9 +72,8 @@ static int dev_idx;
 #define CAPTURE_RING_BUFFER_SIZE	(CAPTURE_URB_SIZE * NUM_CAPTURE_URBS * 4)
 #define NUM_MIDI_IN_URBS			4
 #define MIDI_IN_BUF_SIZE			64
-#define MIDI_OUT_BUF_SIZE			64 // Buffer in URB, must be >= 9
-#define NUM_MIDI_OUT_URBS			8  // Increased for better throughput
-#define MIDI_OUT_PACKET_QUEUE_SIZE	32 // Intermediate queue for 9-byte packets
+#define MIDI_OUT_BUF_SIZE			64
+#define NUM_MIDI_OUT_URBS			4
 #define USB_CTRL_TIMEOUT_MS			1000
 
 /* --- Audio Format Configuration --- */
@@ -93,17 +87,6 @@ static int dev_idx;
 #define DECODED_SAMPLE_SIZE			4
 #define FRAMES_PER_DECODE_BLOCK		8
 #define RAW_BYTES_PER_DECODE_BLOCK	512
-
-/* --- State machine for the MIDI output parser --- */
-enum tascam_midi_out_state {
-	MIDI_OUT_STATE_UNKNOWN,  /* Waiting for a status byte */
-	MIDI_OUT_STATE_1PARAM,   /* Waiting for 1 data byte (e.g., for Program Change) */
-	MIDI_OUT_STATE_2PARAM_1, /* Waiting for the 1st of 2 data bytes (e.g., for Note On) */
-	MIDI_OUT_STATE_2PARAM_2, /* Waiting for the 2nd of 2 data bytes */
-	MIDI_OUT_STATE_SYSEX_0,  /* In SysEx, waiting for 1st data byte of a 3-byte chunk */
-	MIDI_OUT_STATE_SYSEX_1,  /* In SysEx, waiting for 2nd data byte */
-	MIDI_OUT_STATE_SYSEX_2,  /* In SysEx, waiting for 3rd data byte */
-};
 
 /* --- Main Driver Data Structure --- */
 struct tascam_card {
@@ -150,33 +133,12 @@ struct tascam_card {
 	struct urb *midi_out_urbs[NUM_MIDI_OUT_URBS];
 	atomic_t midi_out_active;
 	struct work_struct midi_out_work;
-	unsigned long midi_out_urbs_in_flight; /* bitmask */
+	unsigned long midi_out_urbs_in_flight;
 	spinlock_t midi_out_lock;
-
-	/* --- NEW: MIDI Output Packet Queue --- */
-	/**
-	 * @midi_out_packet_queue: Ring buffer for formatted 9-byte MIDI packets.
-	 * The state machine places formatted packets here, and the work handler
-	 * dequeues them to send in individual URBs. This is critical because
-	 * the device expects one 9-byte bulk transfer per packet.
-	 */
-	u8 midi_out_packet_queue[MIDI_OUT_PACKET_QUEUE_SIZE][9];
-	int midi_out_queue_read_ptr;
-	volatile int midi_out_queue_write_ptr;
-
-	/* State machine for MIDI output stream */
-	struct {
-		enum tascam_midi_out_state state;
-		u8 data[2];        /* Buffer for holding partial MIDI messages */
-		u8 running_status; /* Currently active running status */
-	} midi_out_state;
-
-	/* State machine for MIDI input parser */
-	enum {
-		MIDI_IN_STATE_WAIT_PACKET_1,
-		MIDI_IN_STATE_WAIT_PACKET_2
-	} midi_in_state;
-	u8 midi_in_b0; /* Status byte from the first packet */
+	u8 midi_running_status;
+	/* State for proprietary MIDI input protocol */
+	u8 midi_in_pending_packet[9];
+	bool midi_in_has_pending_packet;
 
 	/* Shared state & Routing Matrix */
 	spinlock_t lock;
@@ -715,34 +677,22 @@ error:
 static int tascam_playback_open(struct snd_pcm_substream *substream)
 {
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
-	int err = 0;
 
 	substream->runtime->hw = tascam_pcm_hw;
 	tascam->playback_substream = substream;
 	atomic_set(&tascam->playback_active, 0);
 
-	if (!tascam->capture_substream) {
-		err = tascam_alloc_urbs(tascam);
-		if (err < 0)
-			return err;
-	}
 	return 0;
 }
 
 static int tascam_capture_open(struct snd_pcm_substream *substream)
 {
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
-	int err = 0;
 
 	substream->runtime->hw = tascam_pcm_hw;
 	tascam->capture_substream = substream;
 	atomic_set(&tascam->capture_active, 0);
 
-	if (!tascam->playback_substream) {
-		err = tascam_alloc_urbs(tascam);
-		if (err < 0)
-			return err;
-	}
 	return 0;
 }
 
@@ -750,8 +700,7 @@ static int tascam_playback_close(struct snd_pcm_substream *substream)
 {
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
 	tascam->playback_substream = NULL;
-	if (!tascam->capture_substream)
-		tascam_free_urbs(tascam);
+
 	return 0;
 }
 
@@ -759,8 +708,7 @@ static int tascam_capture_close(struct snd_pcm_substream *substream)
 {
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
 	tascam->capture_substream = NULL;
-	if (!tascam->playback_substream)
-		tascam_free_urbs(tascam);
+
 	return 0;
 }
 
@@ -770,8 +718,7 @@ static int tascam_capture_close(struct snd_pcm_substream *substream)
  * @rate: the target sample rate (e.g., 44100, 96000).
  *
  * This function sends a sequence of vendor-specific and UAC control messages
- * to configure the device hardware for the specified sample rate. This sequence
- * is also required to activate the MIDI ports.
+ * to configure the device hardware for the specified sample rate.
  *
  * Return: 0 on success, or a negative error code on failure.
  */
@@ -839,20 +786,6 @@ static int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
 	int err;
 	unsigned int rate = params_rate(params);
 
-	/* --- MODIFIED: Check if rate is already set --- */
-	/**
-	 * The device is configured to a default rate at probe time to enable
-	 * MIDI. If an audio application requests the same rate, we don't need
-	 * to re-run the entire configuration sequence.
-	 */
-	if (rate == tascam->current_rate) {
-		err = snd_pcm_lib_malloc_pages(substream, params_buffer_bytes(params));
-		if (err < 0)
-			return err;
-		// Rate is already configured, just return.
-		return 0;
-	}
-
 	err = snd_pcm_lib_malloc_pages(substream, params_buffer_bytes(params));
 	if (err < 0)
 		return err;
@@ -880,13 +813,14 @@ static int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
 		}
 	}
 
-	/* This will only run if the new rate is different from the current one */
-	err = us144mkii_configure_device_for_rate(tascam, rate);
-	if (err < 0) {
-		tascam->current_rate = 0;
-		return err;
+	if (tascam->current_rate != rate) {
+		err = us144mkii_configure_device_for_rate(tascam, rate);
+		if (err < 0) {
+			tascam->current_rate = 0;
+			return err;
+		}
+		tascam->current_rate = rate;
 	}
-	tascam->current_rate = rate;
 
 	return 0;
 }
@@ -918,7 +852,7 @@ static int tascam_playback_prepare(struct snd_pcm_substream *substream)
 	for (i = 0; i < FEEDBACK_ACCUMULATOR_SIZE; i++)
 		tascam->feedback_accumulator_pattern[i] = nominal_frames_per_packet;
 
-	feedback_packets = 1; /* Lowest latency */
+	feedback_packets = 1;
 
 	for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
 		struct urb *f_urb = tascam->feedback_urbs[i];
@@ -1488,15 +1422,14 @@ static void capture_urb_complete(struct urb *urb)
 		dev_err_ratelimited(tascam->card->dev, "Failed to resubmit capture URB: %d\n", ret);
 }
 
+
 /* --- ALSA RawMIDI Implementation --- */
 
 /**
- * tascam_midi_in_urb_complete - Completion handler for MIDI IN bulk URBs.
+ * tascam_midi_in_urb_complete
  * @urb: The completed URB.
- *
- * The device sends MIDI data in a peculiar 2-packet format. A standard 3-byte
- * MIDI message (e.g., Note On) is split across two 9-byte USB packets. This
- * function uses a simple state machine to reassemble these messages.
+ * each 9-byte USB packet contains a variable-length MIDI message fragment.
+ * All 0xFD bytes are padding and must be stripped.
  */
 static void tascam_midi_in_urb_complete(struct urb *urb)
 {
@@ -1505,61 +1438,68 @@ static void tascam_midi_in_urb_complete(struct urb *urb)
 
 	if (urb->status) {
 		if (urb->status != -ENOENT && urb->status != -ECONNRESET && urb->status != -ESHUTDOWN)
-			dev_info(tascam->card->dev, "MIDI IN URB cancelled: %d\n", urb->status);
+			dev_err(tascam->card->dev, "MIDI IN URB failed: status %d\n", urb->status);
 		return;
 	}
 
-	if (!tascam || !atomic_read(&tascam->midi_in_active) || !tascam->midi_in_substream)
-		goto resubmit;
+	if (!tascam || !atomic_read(&tascam->midi_in_active))
+		return;
 
-	/* The device sends MIDI data in 9-byte packets. */
-	if (urb->actual_length == 9) {
-		u8 *buf = urb->transfer_buffer;
+	if (tascam->midi_in_substream && urb->actual_length > 0) {
+		u8 *raw_buf = urb->transfer_buffer;
+		u8 stripped_buf[9]; /* Max possible size is 9 */
+		int i;
+		int stripped_len = 0;
 
-		/* Ignore pure 0xFD padding packets */
-		if (buf[0] == 0xfd && buf[1] == 0xfd)
-			goto resubmit;
+		/*
+		 * Strip all 0xFD padding bytes from the raw USB packet,
+		 * copying the result into a temporary buffer.
+		 */
+		for (i = 0; i < urb->actual_length; i++) {
+			if (raw_buf[i] != 0xfd) {
+				stripped_buf[stripped_len] = raw_buf[i];
+				stripped_len++;
+			}
+		}
 
-		if (tascam->midi_in_state == MIDI_IN_STATE_WAIT_PACKET_1) {
-			/* Packet 1 contains the first MIDI byte (status). */
-			tascam->midi_in_b0 = buf[1];
-			tascam->midi_in_state = MIDI_IN_STATE_WAIT_PACKET_2;
-		} else { /* MIDI_IN_STATE_WAIT_PACKET_2 */
-			/* Packet 2 contains the next two MIDI bytes. */
-			u8 msg[3];
-			msg[0] = tascam->midi_in_b0;
-			msg[1] = buf[0];
-			msg[2] = buf[1];
-
-			/* Determine message length from status byte */
-			if ((msg[0] >= 0x80 && msg[0] <= 0xbf) || (msg[0] >= 0xe0 && msg[0] <= 0xef) || (msg[0] == 0xf2)) {
-				snd_rawmidi_receive(tascam->midi_in_substream, msg, 3);
-			} else if ((msg[0] >= 0xc0 && msg[0] <= 0xdf) || (msg[0] == 0xf3)) {
-				snd_rawmidi_receive(tascam->midi_in_substream, msg, 2);
-			} else { /* 1-byte messages like F1, F6, F8-FF */
-				snd_rawmidi_receive(tascam->midi_in_substream, msg, 1);
+		/*
+		 * The last byte is often a terminator (0x00, 0xFF, etc.).
+		 * If the stripped message is a single byte and it's a terminator,
+		 * it's likely an empty keep-alive packet. We can ignore it.
+		 * A real single-byte message like Active Sensing (0xFE) will pass.
+		 */
+		if (stripped_len == 1 && stripped_buf[0] < 0x80) {
+			/* This is likely an empty packet, do nothing. */
+		} else if (stripped_len > 0) {
+			/*
+			 * The last byte might be a terminator. If so, don't send it.
+			 * A real MIDI data byte will never be > 0x7F.
+			 * A real status byte will be handled by the ALSA core.
+			 * Terminators like 0xFF are ambiguous (System Reset vs terminator).
+			 * Let's assume for now that if the last byte is not a valid
+			 * data byte for the preceding status, it's a terminator.
+			 * A simpler approach is to just check for 0x00 or 0xFF.
+			 */
+			if (stripped_buf[stripped_len - 1] == 0x00 ||
+			    stripped_buf[stripped_len - 1] == 0xff) {
+				stripped_len--;
 			}
 
-			/* Reset state for the next message */
-			tascam->midi_in_state = MIDI_IN_STATE_WAIT_PACKET_1;
+			if (stripped_len > 0) {
+				snd_rawmidi_receive(tascam->midi_in_substream, stripped_buf, stripped_len);
+			}
 		}
-	} else if (urb->actual_length > 0) {
-		dev_warn(tascam->card->dev, "Received unexpected MIDI IN data size: %d\n", urb->actual_length);
 	}
 
-resubmit:
-	if (atomic_read(&tascam->midi_in_active)) {
-		ret = usb_submit_urb(urb, GFP_ATOMIC);
-		if (ret < 0)
-			dev_err_ratelimited(tascam->card->dev, "Failed to resubmit MIDI IN URB: %d\n", ret);
-	}
+	ret = usb_submit_urb(urb, GFP_ATOMIC);
+	if (ret < 0)
+		dev_err(tascam->card->dev, "Failed to resubmit MIDI IN URB: error %d\n", ret);
 }
 
 static int tascam_midi_in_open(struct snd_rawmidi_substream *substream)
 {
 	struct tascam_card *tascam = substream->rmidi->private_data;
 	tascam->midi_in_substream = substream;
-	tascam->midi_in_state = MIDI_IN_STATE_WAIT_PACKET_1;
 	return 0;
 }
 
@@ -1574,8 +1514,9 @@ static void tascam_midi_in_trigger(struct snd_rawmidi_substream *substream, int 
 	int i, err;
 
 	if (up) {
+		dev_info(tascam->card->dev, "MIDI IN TRIGGER: START\n");
 		if (atomic_xchg(&tascam->midi_in_active, 1) == 0) {
-			tascam->midi_in_state = MIDI_IN_STATE_WAIT_PACKET_1;
+			tascam->midi_in_has_pending_packet = false;
 			for (i = 0; i < NUM_MIDI_IN_URBS; i++) {
 				err = usb_submit_urb(tascam->midi_in_urbs[i], GFP_KERNEL);
 				if (err < 0)
@@ -1583,6 +1524,7 @@ static void tascam_midi_in_trigger(struct snd_rawmidi_substream *substream, int 
 			}
 		}
 	} else {
+		dev_info(tascam->card->dev, "MIDI IN TRIGGER: STOP\n");
 		if (atomic_xchg(&tascam->midi_in_active, 0) == 1) {
 			for (i = 0; i < NUM_MIDI_IN_URBS; i++)
 				usb_kill_urb(tascam->midi_in_urbs[i]);
@@ -1596,122 +1538,14 @@ static struct snd_rawmidi_ops tascam_midi_in_ops = {
 	.trigger = tascam_midi_in_trigger,
 };
 
-/* --- REWRITTEN MIDI OUTPUT LOGIC --- */
-
-/**
- * format_tascam_midi_packets - Formats a MIDI message into two 9-byte packets.
- * @b0: The first byte of the MIDI message (status).
- * @b1: The second byte of the MIDI message (data1).
- * @b2: The third byte of the MIDI message (data2).
- * @packet1: Destination buffer for the first 9-byte packet.
- * @packet2: Destination buffer for the second 9-byte packet.
- *
- * This helper function creates the two 9-byte packets required by the hardware.
- */
-static void format_tascam_midi_packets(u8 b0, u8 b1, u8 b2, u8 *packet1, u8 *packet2)
-{
-	u8 cin = b0 >> 4;
-
-	/* Packet 1: Header and first MIDI byte */
-	memset(packet1, 0xfd, 9);
-	packet1[0] = (0 << 4) | cin; /* Cable 0, CIN */
-	packet1[1] = b0;
-	packet1[8] = 0x00;
-
-	/* Packet 2: Second and third MIDI bytes */
-	memset(packet2, 0xfd, 9);
-	packet2[0] = b1;
-	packet2[1] = b2;
-	packet2[8] = 0x00;
-}
-
-/**
- * tascam_midi_out_transmit_byte - Process one byte and enqueue formatted packets.
- * @tascam: The driver instance.
- * @b: The MIDI byte from the ALSA buffer.
- *
- * This function implements a state machine to parse a raw MIDI byte stream.
- * When a complete message is formed, it's formatted into one or two 9-byte
- * hardware packets and placed in the `midi_out_packet_queue`.
- */
-static void tascam_midi_out_transmit_byte(struct tascam_card *tascam, u8 b)
-{
-	u8 packet1[9], packet2[9];
-	bool send_two = false;
-
-	/* Helper macro to enqueue a single 9-byte packet */
-	#define ENQUEUE_PACKET(p) \
-	do { \
-		int next_write_ptr = (tascam->midi_out_queue_write_ptr + 1) % MIDI_OUT_PACKET_QUEUE_SIZE; \
-		if (next_write_ptr == tascam->midi_out_queue_read_ptr) { \
-			dev_warn_ratelimited(tascam->card->dev, "MIDI out queue full, dropping packet.\n"); \
-		} else { \
-			memcpy(tascam->midi_out_packet_queue[tascam->midi_out_queue_write_ptr], p, 9); \
-			tascam->midi_out_queue_write_ptr = next_write_ptr; \
-		} \
-	} while (0)
-
-	if (b >= 0xf8) { /* System Real-Time messages are single-packet */
-		format_tascam_midi_packets(b, 0, 0, packet1, packet2);
-		ENQUEUE_PACKET(packet1);
-		return;
-	}
-
-	if (b >= 0x80) { /* Status byte */
-		tascam->midi_out_state.running_status = (b >= 0xf0) ? 0 : b;
-		tascam->midi_out_state.data[0] = b;
-		if ((b >= 0xc0 && b <= 0xdf) || b == 0xf1 || b == 0xf3) {
-			tascam->midi_out_state.state = MIDI_OUT_STATE_1PARAM;
-		} else if (b == 0xf6) { /* Tune request */
-			format_tascam_midi_packets(b, 0, 0, packet1, packet2);
-			ENQUEUE_PACKET(packet1);
-			tascam->midi_out_state.state = MIDI_OUT_STATE_UNKNOWN;
-		} else { /* Note On/Off, Poly Pressure, Control Change, Pitch Bend, Song Position */
-			tascam->midi_out_state.state = MIDI_OUT_STATE_2PARAM_1;
-		}
-	} else { /* Data byte */
-		switch (tascam->midi_out_state.state) {
-		case MIDI_OUT_STATE_UNKNOWN:
-			if (tascam->midi_out_state.running_status) {
-				/* Handle running status: re-process with status byte first */
-				tascam_midi_out_transmit_byte(tascam, tascam->midi_out_state.running_status);
-				tascam_midi_out_transmit_byte(tascam, b);
-			}
-			break; /* else, orphaned data byte, ignore */
-		case MIDI_OUT_STATE_1PARAM:
-			format_tascam_midi_packets(tascam->midi_out_state.data[0], b, 0, packet1, packet2);
-			send_two = true;
-			tascam->midi_out_state.state = MIDI_OUT_STATE_UNKNOWN;
-			break;
-		case MIDI_OUT_STATE_2PARAM_1:
-			tascam->midi_out_state.data[1] = b;
-			tascam->midi_out_state.state = MIDI_OUT_STATE_2PARAM_2;
-			break;
-		case MIDI_OUT_STATE_2PARAM_2:
-			format_tascam_midi_packets(tascam->midi_out_state.data[0], tascam->midi_out_state.data[1], b, packet1, packet2);
-			send_two = true;
-			/* For running status, go back to waiting for the first data byte */
-			tascam->midi_out_state.state = MIDI_OUT_STATE_2PARAM_1;
-			break;
-		default:
-			/* SysEx not fully handled for brevity, but would enqueue here */
-			break;
-		}
-	}
-
-	if (send_two) {
-		ENQUEUE_PACKET(packet1);
-		ENQUEUE_PACKET(packet2);
-	}
-}
-
 /**
  * tascam_midi_out_urb_complete - Completion handler for MIDI OUT bulk URB.
  * @urb: The completed URB.
  *
  * This function runs in interrupt context. It marks the output URB as no
  * longer in-flight. It then re-schedules the work handler to check for and
- * send any more data waiting in the queue.
+ * send any more data waiting in the ALSA buffer. This is a safe, non-blocking
+ * way to continue the data transmission chain.
  */
 static void tascam_midi_out_urb_complete(struct urb *urb)
 {
@@ -1748,66 +1582,61 @@ static void tascam_midi_out_urb_complete(struct urb *urb)
 }
 
 /**
- * tascam_midi_out_work_handler - Deferred work for sending MIDI data.
+ * tascam_midi_out_work_handler
  * @work: The work_struct instance.
- *
- * This function runs in a kernel thread context. It has two phases:
- * 1. Pull all available bytes from the ALSA buffer and run them through the
- *    state machine, which enqueues formatted 9-byte packets.
- * 2. Dequeue packets one by one and send each in its own URB.
+ * output protocol: take the raw MIDI
+ * message bytes from the application, place them at the start of a 9-byte
+ * buffer, pad the rest with 0xFD, and add a terminator byte (0x00).
+ * This function pulls as many bytes as will fit into one packet from the
+ * ALSA buffer and sends them.
  */
 static void tascam_midi_out_work_handler(struct work_struct *work)
 {
 	struct tascam_card *tascam = container_of(work, struct tascam_card, midi_out_work);
+	struct snd_rawmidi_substream *substream = tascam->midi_out_substream;
 	unsigned long flags;
 	int urb_index;
-	u8 byte;
+	bool more_data;
 
-	if (!tascam->midi_out_substream || !atomic_read(&tascam->midi_out_active))
+	if (!substream || !atomic_read(&tascam->midi_out_active))
 		return;
 
-	/* Phase 1: Pull from ALSA and enqueue packets */
+start_work:
 	spin_lock_irqsave(&tascam->midi_out_lock, flags);
-	while (snd_rawmidi_transmit(tascam->midi_out_substream, &byte, 1) == 1)
-		tascam_midi_out_transmit_byte(tascam, byte);
-	spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
 
-	/* Phase 2: Dequeue packets and send them in URBs */
-	while (atomic_read(&tascam->midi_out_active)) {
-		struct urb *urb;
-
-		spin_lock_irqsave(&tascam->midi_out_lock, flags);
-
-		/* Check if there is anything to send */
-		if (tascam->midi_out_queue_read_ptr == tascam->midi_out_queue_write_ptr) {
-			spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
-			return; /* Queue is empty */
+	urb_index = -1;
+	for (int i = 0; i < NUM_MIDI_OUT_URBS; i++) {
+		if (!test_bit(i, &tascam->midi_out_urbs_in_flight)) {
+			urb_index = i;
+			break;
 		}
+	}
 
-		/* Find a free URB */
-		urb_index = -1;
-		for (int i = 0; i < NUM_MIDI_OUT_URBS; i++) {
-			if (!test_bit(i, &tascam->midi_out_urbs_in_flight)) {
-				urb_index = i;
-				break;
-			}
-		}
+	if (urb_index < 0) {
+		spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
+		return; /* No free URBs, will be rescheduled */
+	}
 
-		if (urb_index < 0) {
-			spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
-			return; /* No free URBs, completion will reschedule */
-		}
+	struct urb *urb = tascam->midi_out_urbs[urb_index];
+	u8 *buf = urb->transfer_buffer;
+	int bytes_to_send;
 
-		urb = tascam->midi_out_urbs[urb_index];
+	/*
+	 * We can send up to 8 bytes of MIDI data in one 9-byte packet.
+	 * The 9th byte is a terminator.
+	 */
+	bytes_to_send = snd_rawmidi_transmit(substream, buf, 8);
 
-		/* Dequeue one 9-byte packet and copy it to the URB */
-		memcpy(urb->transfer_buffer,
-		       tascam->midi_out_packet_queue[tascam->midi_out_queue_read_ptr],
-		       9);
-		urb->transfer_buffer_length = 9;
-		tascam->midi_out_queue_read_ptr = (tascam->midi_out_queue_read_ptr + 1) % MIDI_OUT_PACKET_QUEUE_SIZE;
+	if (bytes_to_send > 0) {
+		/* Pad the rest of the 9-byte packet with 0xFD */
+		if (bytes_to_send < 9)
+			memset(buf + bytes_to_send, 0xfd, 9 - bytes_to_send);
+
+		/* The last byte is a terminator. 0x00 is a safe choice. */
+		buf[8] = 0x00;
 
 		set_bit(urb_index, &tascam->midi_out_urbs_in_flight);
+		urb->transfer_buffer_length = 9;
 		spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
 
 		if (usb_submit_urb(urb, GFP_KERNEL) < 0) {
@@ -1816,22 +1645,23 @@ static void tascam_midi_out_work_handler(struct work_struct *work)
 			clear_bit(urb_index, &tascam->midi_out_urbs_in_flight);
 			spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
 		}
+
+		/* If there's more data, try to fill another URB immediately */
+		more_data = (snd_rawmidi_transmit_peek(substream, &buf[0], 1) == 1);
+		if (more_data)
+			goto start_work;
+
+	} else {
+		spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
 	}
 }
 
 static int tascam_midi_out_open(struct snd_rawmidi_substream *substream)
 {
 	struct tascam_card *tascam = substream->rmidi->private_data;
-
 	tascam->midi_out_substream = substream;
-	/* Initialize the MIDI output state machine. */
-	tascam->midi_out_state.state = MIDI_OUT_STATE_UNKNOWN;
-	tascam->midi_out_state.running_status = 0;
-
-	/* --- NEW: Initialize queue pointers --- */
-	tascam->midi_out_queue_read_ptr = 0;
-	tascam->midi_out_queue_write_ptr = 0;
-
+	/* Initialize the running status state for the packet packer. */
+	tascam->midi_running_status = 0;
 	return 0;
 }
 
@@ -1845,7 +1675,6 @@ static void tascam_midi_out_drain(struct snd_rawmidi_substream *substream)
 	struct tascam_card *tascam = substream->rmidi->private_data;
 	int i;
 
-	/* Ensure all pending work is finished and kill active URBs */
 	cancel_work_sync(&tascam->midi_out_work);
 	for (i = 0; i < NUM_MIDI_OUT_URBS; i++)
 		usb_kill_urb(tascam->midi_out_urbs[i]);
@@ -1856,10 +1685,10 @@ static void tascam_midi_out_trigger(struct snd_rawmidi_substream *substream, int
 	struct tascam_card *tascam = substream->rmidi->private_data;
 
 	if (up) {
-		if (atomic_xchg(&tascam->midi_out_active, 1) == 0)
-			schedule_work(&tascam->midi_out_work);
+		atomic_set(&tascam->midi_out_active, 1);
+		schedule_work(&tascam->midi_out_work);
 	} else {
-		atomic_xchg(&tascam->midi_out_active, 0);
+		atomic_set(&tascam->midi_out_active, 0);
 	}
 }
 
@@ -2063,6 +1892,7 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	spin_lock_init(&tascam->midi_out_lock);
 	INIT_WORK(&tascam->midi_out_work, tascam_midi_out_work_handler);
 	tascam->midi_out_urbs_in_flight = 0;
+	tascam->midi_in_has_pending_packet = false;
 
 	strscpy(card->driver, DRIVER_NAME, sizeof(card->driver));
 	strscpy(card->shortname, "TASCAM US-144MKII", sizeof(card->shortname));
@@ -2111,6 +1941,14 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	}
 	kfree(handshake_buf);
 
+
+	/*
+	 * Allocate all URBs now that the device is initialized.
+	*/
+	err = tascam_alloc_urbs(tascam);
+	if (err < 0)
+		goto release_iface1_and_free_card;
+
 	err = snd_pcm_new(tascam->card, "US144MKII", 0, 1, 1, &pcm);
 	if (err < 0)
 		goto release_iface1_and_free_card;
@@ -2124,22 +1962,6 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	err = tascam_create_midi(tascam);
 	if (err < 0)
 		goto release_iface1_and_free_card;
-
-	/* --- NEW: Perform initial configuration to enable MIDI --- */
-	/**
-	 * The device's MIDI ports are not active until the full sample rate
-	 * configuration sequence has been sent. We do this at probe time with
-	 * a default rate so that MIDI can be used without first starting an
-	 * audio stream.
-	 */
-	dev_info(&intf->dev, "Performing initial configuration for MIDI activation.\n");
-	err = us144mkii_configure_device_for_rate(tascam, 44100);
-	if (err < 0) {
-		dev_err(&intf->dev, "Initial device configuration failed, MIDI may not work.\n");
-		/* Don't fail the whole probe, as audio might still be configured later */
-	} else {
-		tascam->current_rate = 44100;
-	}
 
 	if (device_create_file(&intf->dev, &dev_attr_driver_version))
 		dev_warn(&intf->dev, "Could not create sysfs attribute for driver version\n");
@@ -2188,6 +2010,11 @@ static void tascam_disconnect(struct usb_interface *intf)
 
 	cancel_work_sync(&tascam->capture_work);
 	cancel_work_sync(&tascam->midi_out_work);
+
+	/*
+	* Free all URBs before freeing the card.
+	*/
+	tascam_free_urbs(tascam);
 
 	if (tascam->iface1) {
 		usb_set_intfdata(tascam->iface1, NULL);
