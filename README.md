@@ -12,7 +12,7 @@ This driver is under active development.
 *   **MIDI IN/OUT:**
 
 ### 📝 To-Do & Known Limitations
-*   Find Bugs, if possible improve perforamnce/stablity
+*   Find Bugs, if possible improve performance/stablity
 
 ## Installation and Usage
 
@@ -171,20 +171,20 @@ Follow these steps to build the `TascamControlPanel` application from source:
 
     ```git clone https://github.com/serifpersia/us144mkii.git```
 
-   ```cd tascam_controls/```
+    ```cd tascam_controls/```
 
 2.  **Create a build directory** and navigate into it:
 
-   ```mkdir build```
+    ```mkdir build```
     ```cd build```
 
-3.  **Configure the project** with CMake:
+4.  **Configure the project** with CMake:
 
     ```cmake ..```
 
     This step will check for all necessary dependencies and generate the build files.
 
-4.  **Build the application**:
+5.  **Build the application**:
 
     ```make -j$(nproc)```
 
