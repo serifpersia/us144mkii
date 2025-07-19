@@ -4,14 +4,15 @@ An unofficial ALSA kernel module for the TASCAM US-144MKII USB audio interface.
 
 ## ❗ Current Status: Work in Progress
 
-This driver is under active development. While playback is functional, several key features are not yet implemented.
+This driver is under active development.
 
 ### ✅ Implemented Features
 *   **Audio Playback:**
 *   **Audio Capture (Recording):** 
+*   **MIDI IN/OUT:**
 
 ### 📝 To-Do & Known Limitations
-*   **MIDI IN/OUT:** Not yet implemented.
+*   Find Bugs, if possible improve perforamnce/stablity
 
 ## Installation and Usage
 
