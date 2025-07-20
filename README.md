@@ -127,7 +127,10 @@ To make the driver load automatically every time you start your computer, follow
 
 Now, after a reboot, the `us144mkii` driver should load automatically.
 
-## TascamControlPanel
+### Tascam Control Panel
+
+<img width="552" height="469" alt="Screenshot_20250720_231914" src="https://github.com/user-attachments/assets/960f58dc-a072-492e-9cf8-189d2801af29" />
+
 
 A control panel app built with Qt6 and ALSA.
 
