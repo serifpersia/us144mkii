@@ -1568,7 +1568,6 @@ static void tascam_midi_in_trigger(struct snd_rawmidi_substream *substream, int 
 	int i, err;
 
 	if (up) {
-		dev_info(tascam->card->dev, "MIDI IN TRIGGER: START\n");
 		if (atomic_xchg(&tascam->midi_in_active, 1) == 0) {
 			tascam->midi_in_has_pending_packet = false;
 			for (i = 0; i < NUM_MIDI_IN_URBS; i++) {
@@ -1578,7 +1577,6 @@ static void tascam_midi_in_trigger(struct snd_rawmidi_substream *substream, int 
 			}
 		}
 	} else {
-		dev_info(tascam->card->dev, "MIDI IN TRIGGER: STOP\n");
 		if (atomic_xchg(&tascam->midi_in_active, 0) == 1) {
 			for (i = 0; i < NUM_MIDI_IN_URBS; i++)
 				usb_kill_urb(tascam->midi_in_urbs[i]);
