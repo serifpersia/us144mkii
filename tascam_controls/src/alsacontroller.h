@@ -18,7 +18,7 @@ public:
     std::string readSysfsAttr(const std::string& attr_name);
 
 private:
-    std::string m_card_id_str; // e.g., "hw:0"
+    std::string m_card_id_str;
     int m_card_num = -1;
     bool m_card_found = false;
 };

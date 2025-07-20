@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 
 #include <QApplication>
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QMessageBox>
 #include <QPainter>
 #include <QDebug>
@@ -79,6 +81,7 @@ const QString DARK_STYLESHEET = R"(
 MainWindow::MainWindow(QWidget *parent)
     : QWidget(parent)
     , m_alsa()
+    , m_aboutDialog(nullptr)
 {
     if (!m_alsa.isCardFound()) {
         QMessageBox::critical(this, "Error", "TASCAM US-144MKII Not Found.\nPlease ensure the device is connected and the 'us144mkii' driver is loaded.");
@@ -93,7 +96,7 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::initUi() {
     setWindowTitle("TASCAM US-144MKII Control Panel");
     setWindowIcon(QIcon(":/tascam-control-panel.png"));
-    setFixedSize(820, 450);
+    setFixedSize(550, 450);
     setStyleSheet(DARK_STYLESHEET);
 
     m_background.load(":/bg.png");
@@ -107,7 +110,6 @@ void MainWindow::initUi() {
 
     auto *leftPanel = new QVBoxLayout();
     auto *middlePanel = new QVBoxLayout();
-    auto *rightPanel = new QVBoxLayout();
 
     auto *logoLabel = new QLabel();
     logoLabel->setPixmap(QPixmap(":/logo.png").scaledToWidth(250, Qt::SmoothTransformation));
@@ -118,8 +120,7 @@ void MainWindow::initUi() {
     infoGrid->setSpacing(5);
     const QMap<QString, QString> infoData = {
         {"Driver Version:", "driver_version"}, {"Device:", "device"},
-        {"Sample Width:", "sample_width"}, {"Sample Rate:", "sample_rate"},
-        {"Sample Clock Source:", "clock_source"}, {"Digital Input Status:", "digital_status"}
+        {"Sample Width:", "sample_width"}, {"Sample Rate:", "sample_rate"}
     };
     int row = 0;
     for (auto it = infoData.constBegin(); it != infoData.constEnd(); ++it) {
@@ -133,10 +134,15 @@ void MainWindow::initUi() {
         row++;
     }
 
+    auto *deviceImageLabel = new QLabel();
+    deviceImageLabel->setPixmap(QPixmap(":/device.png").scaled(250, 250, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    deviceImageLabel->setAlignment(Qt::AlignCenter);
+
     leftPanel->addWidget(logoLabel);
     leftPanel->addWidget(titleLabel);
     leftPanel->addLayout(infoGrid);
     leftPanel->addStretch();
+    leftPanel->addWidget(deviceImageLabel);
 
     middlePanel->setSpacing(0);
 
@@ -149,48 +155,49 @@ void MainWindow::initUi() {
 
     auto capture12Pair = createControlWidget("ch1 and ch2", {"analog inputs", "digital inputs"});
     m_capture12Combo = capture12Pair.second;
+    m_capture12Combo->setToolTip("Select the source for capture channels 1 and 2.");
     auto capture34Pair = createControlWidget("ch3 and ch4", {"analog inputs", "digital inputs"});
     m_capture34Combo = capture34Pair.second;
+    m_capture34Combo->setToolTip("Select the source for capture channels 3 and 4.");
     addSection("INPUTS", capture12Pair.first);
     middlePanel->addWidget(capture34Pair.first);
 
     auto lineOutPair = createControlWidget("ch1 and ch2", {"ch1 and ch2", "ch3 and ch4"});
     m_lineOutCombo = lineOutPair.second;
+    m_lineOutCombo->setToolTip("Select the source for the line outputs.");
     addSection("LINE OUTPUTS", lineOutPair.first);
 
     auto digitalOutPair = createControlWidget("ch3 and ch4", {"ch1 and ch2", "ch3 and ch4"});
     m_digitalOutCombo = digitalOutPair.second;
+    m_digitalOutCombo->setToolTip("Select the source for the digital outputs.");
     addSection("DIGITAL OUTPUTS", digitalOutPair.first);
 
     middlePanel->addStretch();
 
-    auto *deviceImageLabel = new QLabel();
-    deviceImageLabel->setPixmap(QPixmap(":/device.png").scaled(250, 250, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    deviceImageLabel->setAlignment(Qt::AlignCenter);
+    auto *buttonLayout = new QHBoxLayout();
+    auto *aboutButton = new QPushButton("About");
+    aboutButton->setFixedSize(100, 30);
+    connect(aboutButton, &QPushButton::clicked, this, &MainWindow::showAboutDialog);
     auto *exitButton = new QPushButton("Exit");
     exitButton->setFixedSize(100, 30);
     connect(exitButton, &QPushButton::clicked, this, &QWidget::close);
+    buttonLayout->addWidget(aboutButton);
+    buttonLayout->addWidget(exitButton);
+    middlePanel->addLayout(buttonLayout);
 
-    rightPanel->addWidget(deviceImageLabel);
-    rightPanel->addStretch();
-    rightPanel->addWidget(exitButton, 0, Qt::AlignCenter);
+    topLevelLayout->addLayout(leftPanel, 1);
+    topLevelLayout->addLayout(middlePanel, 1);
 
-    topLevelLayout->addLayout(leftPanel, 3);
-    topLevelLayout->addLayout(middlePanel, 3);
-    topLevelLayout->addLayout(rightPanel, 3);
-
-    connect(m_lineOutCombo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Line OUTPUTS Source", index); });
-    connect(m_digitalOutCombo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Digital OUTPUTS Source", index); });
-    connect(m_capture12Combo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("ch1 and ch2 Source", index); });
-    connect(m_capture34Combo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("ch3 and ch4 Source", index); });
+    connect(m_lineOutCombo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Line OUTPUTS Source", index, m_lineOutCombo); });
+    connect(m_digitalOutCombo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Digital OUTPUTS Source", index, m_digitalOutCombo); });
+    connect(m_capture12Combo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("ch1 and ch2 Source", index, m_capture12Combo); });
+    connect(m_capture34Combo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("ch3 and ch4 Source", index, m_capture34Combo); });
 }
 
 void MainWindow::loadDynamicSettings() {
     m_infoLabels["driver_version"]->setText(QString::fromStdString(m_alsa.readSysfsAttr("driver_version")));
     m_infoLabels["device"]->setText("US-144 MKII");
     m_infoLabels["sample_width"]->setText("24 bits");
-    m_infoLabels["clock_source"]->setText("internal");
-    m_infoLabels["digital_status"]->setText("unavailable");
 
     long rate_val = m_alsa.getControlValue("Sample Rate");
     m_infoLabels["sample_rate"]->setText(rate_val > 0 ? QString("%1 kHz").arg(rate_val / 1000.0, 0, 'f', 1) : "N/A (inactive)");
@@ -208,8 +215,16 @@ void MainWindow::updateCombo(QComboBox* combo, const std::string& controlName) {
     combo->blockSignals(false);
 }
 
-void MainWindow::onControlChanged(const std::string& controlName, int index) {
+void MainWindow::onControlChanged(const std::string& controlName, int index, QComboBox* combo) {
     m_alsa.setControlValue(controlName, index);
+
+    if (combo) {
+        QString originalStyle = combo->styleSheet();
+        combo->setStyleSheet(originalStyle + " QComboBox { border: 1px solid #A020F0; }");
+        QTimer::singleShot(200, [combo, originalStyle]() {
+            combo->setStyleSheet(originalStyle);
+        });
+    }
 }
 
 std::pair<QWidget*, QComboBox*> MainWindow::createControlWidget(const QString& labelText, const QStringList& items) {
@@ -227,6 +242,42 @@ std::pair<QWidget*, QComboBox*> MainWindow::createControlWidget(const QString& l
     layout->addWidget(combo);
 
     return {container, combo};
+}
+
+void MainWindow::showAboutDialog() {
+    if (m_aboutDialog && m_aboutDialog->isVisible()) {
+        m_aboutDialog->raise();
+        m_aboutDialog->activateWindow();
+        return;
+    }
+
+    if (!m_aboutDialog) {
+        m_aboutDialog = new QDialog(this);
+        m_aboutDialog->setWindowTitle("About TASCAM US-144MKII Control Panel");
+        m_aboutDialog->setWindowIcon(QIcon(":/tascam-control-panel.png"));
+        m_aboutDialog->setFixedSize(400, 250);
+
+        auto *layout = new QVBoxLayout(m_aboutDialog);
+        auto *textLabel = new QLabel(m_aboutDialog);
+        textLabel->setTextFormat(Qt::RichText);
+        textLabel->setOpenExternalLinks(true);
+        textLabel->setText(QString("<b>TASCAM US-144MKII Control Panel</b><br>" 
+                             "Driver Version: %1<br><br>" 
+                             "Copyright @serifpersia 2025<br><br>" 
+                             "This application provides a graphical interface to control the TASCAM US-144MKII audio interface on Linux. " 
+                             "It utilizes the 'us144mkii' ALSA driver.<br><br>" 
+                             "For more information, bug reports, and contributions, please visit the GitHub repository:<br>" 
+                             "<a href='https://github.com/serifpersia/us144mkii'>https://github.com/serifpersia/us144mkii</a>").arg(m_infoLabels["driver_version"]->text()));
+        textLabel->setWordWrap(true);
+
+        auto *buttonBox = new QDialogButtonBox(QDialogButtonBox::Close);
+        connect(buttonBox, &QDialogButtonBox::rejected, m_aboutDialog, &QDialog::close);
+
+        layout->addWidget(textLabel);
+        layout->addWidget(buttonBox);
+    }
+
+    m_aboutDialog->show();
 }
 
 void MainWindow::paintEvent(QPaintEvent *event) {

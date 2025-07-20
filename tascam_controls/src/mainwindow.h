@@ -9,6 +9,7 @@
 class QLabel;
 class QComboBox;
 class QPushButton;
+class QDialog;
 
 class MainWindow : public QWidget
 {
@@ -27,7 +28,8 @@ private:
     void updateCombo(QComboBox* combo, const std::string& controlName);
 
 private slots:
-    void onControlChanged(const std::string& controlName, int index);
+    void onControlChanged(const std::string& controlName, int index, QComboBox* combo);
+    void showAboutDialog();
 
 private:
     AlsaController m_alsa;
@@ -38,6 +40,7 @@ private:
     QComboBox* m_capture34Combo;
     QComboBox* m_lineOutCombo;
     QComboBox* m_digitalOutCombo;
+    QDialog* m_aboutDialog;
 };
 
 #endif
