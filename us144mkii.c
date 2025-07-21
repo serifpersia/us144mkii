@@ -18,7 +18,7 @@ MODULE_DESCRIPTION("ALSA Driver for TASCAM US-144MKII");
 MODULE_LICENSE("GPL v2");
 
 #define DRIVER_NAME "us144mkii"
-#define DRIVER_VERSION "1.6.1"
+#define DRIVER_VERSION "1.7.0"
 
 /* --- Module Parameters --- */
 static int index[SNDRV_CARDS] = SNDRV_DEFAULT_IDX;
@@ -124,6 +124,7 @@ struct tascam_card {
 	s32 *capture_decode_dst_block;
 	s32 *capture_routing_buffer;
 	struct work_struct capture_work;
+	struct work_struct stop_work;
 
 	/* MIDI streams */
 	struct snd_rawmidi_substream *midi_in_substream;
@@ -159,6 +160,12 @@ struct tascam_card {
 	const unsigned int (*feedback_patterns)[8];
 	unsigned int feedback_base_value;
 	unsigned int feedback_max_value;
+
+	struct usb_anchor playback_anchor;
+	struct usb_anchor capture_anchor;
+	struct usb_anchor feedback_anchor;
+	struct usb_anchor midi_in_anchor;
+	struct usb_anchor midi_out_anchor;
 };
 
 static struct usb_driver tascam_alsa_driver;
@@ -484,9 +491,9 @@ static void tascam_free_urbs(struct tascam_card *tascam)
 {
 	int i;
 
+	usb_kill_anchored_urbs(&tascam->playback_anchor);
 	for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
 		if (tascam->playback_urbs[i]) {
-			usb_kill_urb(tascam->playback_urbs[i]);
 			usb_free_coherent(tascam->dev, tascam->playback_urb_alloc_size,
 					  tascam->playback_urbs[i]->transfer_buffer,
 					  tascam->playback_urbs[i]->transfer_dma);
@@ -495,9 +502,9 @@ static void tascam_free_urbs(struct tascam_card *tascam)
 		}
 	}
 
+	usb_kill_anchored_urbs(&tascam->feedback_anchor);
 	for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
 		if (tascam->feedback_urbs[i]) {
-			usb_kill_urb(tascam->feedback_urbs[i]);
 			usb_free_coherent(tascam->dev, tascam->feedback_urb_alloc_size,
 					  tascam->feedback_urbs[i]->transfer_buffer,
 					  tascam->feedback_urbs[i]->transfer_dma);
@@ -506,9 +513,9 @@ static void tascam_free_urbs(struct tascam_card *tascam)
 		}
 	}
 
+	usb_kill_anchored_urbs(&tascam->capture_anchor);
 	for (i = 0; i < NUM_CAPTURE_URBS; i++) {
 		if (tascam->capture_urbs[i]) {
-			usb_kill_urb(tascam->capture_urbs[i]);
 			usb_free_coherent(tascam->dev, tascam->capture_urb_alloc_size,
 					  tascam->capture_urbs[i]->transfer_buffer,
 					  tascam->capture_urbs[i]->transfer_dma);
@@ -517,10 +524,9 @@ static void tascam_free_urbs(struct tascam_card *tascam)
 		}
 	}
 
-	/* MIDI URB and buffer freeing */
+	usb_kill_anchored_urbs(&tascam->midi_in_anchor);
 	for (i = 0; i < NUM_MIDI_IN_URBS; i++) {
 		if (tascam->midi_in_urbs[i]) {
-			usb_kill_urb(tascam->midi_in_urbs[i]);
 			usb_free_coherent(tascam->dev, MIDI_IN_BUF_SIZE,
 					  tascam->midi_in_urbs[i]->transfer_buffer,
 					  tascam->midi_in_urbs[i]->transfer_dma);
@@ -529,9 +535,9 @@ static void tascam_free_urbs(struct tascam_card *tascam)
 		}
 	}
 
+	usb_kill_anchored_urbs(&tascam->midi_out_anchor);
 	for (i = 0; i < NUM_MIDI_OUT_URBS; i++) {
 		if (tascam->midi_out_urbs[i]) {
-			usb_kill_urb(tascam->midi_out_urbs[i]);
 			usb_free_coherent(tascam->dev, MIDI_OUT_BUF_SIZE,
 					  tascam->midi_out_urbs[i]->transfer_buffer,
 					  tascam->midi_out_urbs[i]->transfer_dma);
@@ -945,6 +951,17 @@ static int tascam_capture_prepare(struct snd_pcm_substream *substream)
 	return 0;
 }
 
+static void tascam_stop_work_handler(struct work_struct *work)
+{
+	struct tascam_card *tascam = container_of(work, struct tascam_card, stop_work);
+
+	usb_kill_anchored_urbs(&tascam->playback_anchor);
+	usb_kill_anchored_urbs(&tascam->feedback_anchor);
+	usb_kill_anchored_urbs(&tascam->capture_anchor);
+	atomic_set(&tascam->active_urbs, 0);
+	cancel_work_sync(&tascam->capture_work);
+}
+
 static int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 {
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
@@ -986,21 +1003,36 @@ static int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 		}
 
 		for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
+			usb_get_urb(tascam->feedback_urbs[i]);
+			usb_anchor_urb(tascam->feedback_urbs[i], &tascam->feedback_anchor);
 			err = usb_submit_urb(tascam->feedback_urbs[i], GFP_ATOMIC);
-			if (err < 0)
+			if (err < 0) {
+				usb_unanchor_urb(tascam->feedback_urbs[i]);
+				usb_put_urb(tascam->feedback_urbs[i]);
 				goto start_rollback;
+			}
 			atomic_inc(&tascam->active_urbs);
 		}
 		for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
+			usb_get_urb(tascam->playback_urbs[i]);
+			usb_anchor_urb(tascam->playback_urbs[i], &tascam->playback_anchor);
 			err = usb_submit_urb(tascam->playback_urbs[i], GFP_ATOMIC);
-			if (err < 0)
+			if (err < 0) {
+				usb_unanchor_urb(tascam->playback_urbs[i]);
+				usb_put_urb(tascam->playback_urbs[i]);
 				goto start_rollback;
+			}
 			atomic_inc(&tascam->active_urbs);
 		}
 		for (i = 0; i < NUM_CAPTURE_URBS; i++) {
+			usb_get_urb(tascam->capture_urbs[i]);
+			usb_anchor_urb(tascam->capture_urbs[i], &tascam->capture_anchor);
 			err = usb_submit_urb(tascam->capture_urbs[i], GFP_ATOMIC);
-			if (err < 0)
+			if (err < 0) {
+				usb_unanchor_urb(tascam->capture_urbs[i]);
+				usb_put_urb(tascam->capture_urbs[i]);
 				goto start_rollback;
+			}
 			atomic_inc(&tascam->active_urbs);
 		}
 		return 0;
@@ -1009,24 +1041,12 @@ start_rollback:
 		do_stop = true;
 	}
 
-	if (do_stop) {
-		for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
-			usb_unlink_urb(tascam->playback_urbs[i]);
-			atomic_dec(&tascam->active_urbs);
-		}
-		for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
-			usb_unlink_urb(tascam->feedback_urbs[i]);
-			atomic_dec(&tascam->active_urbs);
-		}
-		for (i = 0; i < NUM_CAPTURE_URBS; i++) {
-			usb_unlink_urb(tascam->capture_urbs[i]);
-			atomic_dec(&tascam->active_urbs);
-		}
-		cancel_work_sync(&tascam->capture_work);
-	}
+	if (do_stop)
+		schedule_work(&tascam->stop_work);
 
 	return err;
 }
+
 
 static snd_pcm_uframes_t tascam_playback_pointer(struct snd_pcm_substream *substream)
 {
@@ -1108,14 +1128,14 @@ static void playback_urb_complete(struct urb *urb)
 	if (urb->status) {
 		if (urb->status != -ENOENT && urb->status != -ECONNRESET && urb->status != -ESHUTDOWN)
 			dev_err_ratelimited(tascam->card->dev, "Playback URB failed: %d\n", urb->status);
-		return;
+		goto out;
 	}
 	if (!tascam || !atomic_read(&tascam->playback_active))
-		return;
+		goto out;
 
 	substream = tascam->playback_substream;
 	if (!substream || !substream->runtime)
-		return;
+		goto out;
 	runtime = substream->runtime;
 
 	spin_lock_irqsave(&tascam->lock, flags);
@@ -1165,9 +1185,16 @@ static void playback_urb_complete(struct urb *urb)
 	}
 
 	urb->dev = tascam->dev;
+	usb_get_urb(urb);
+	usb_anchor_urb(urb, &tascam->playback_anchor);
 	ret = usb_submit_urb(urb, GFP_ATOMIC);
-	if (ret < 0)
+	if (ret < 0) {
 		dev_err_ratelimited(tascam->card->dev, "Failed to resubmit playback URB: %d\n", ret);
+		usb_unanchor_urb(urb);
+		usb_put_urb(urb);
+	}
+out:
+	usb_put_urb(urb);
 }
 
 /**
@@ -1196,14 +1223,14 @@ static void feedback_urb_complete(struct urb *urb)
 	if (urb->status) {
 		if (urb->status != -ENOENT && urb->status != -ECONNRESET && urb->status != -ESHUTDOWN)
 			dev_err_ratelimited(tascam->card->dev, "Feedback URB failed: %d\n", urb->status);
-		return;
+		goto out;
 	}
 	if (!tascam || !atomic_read(&tascam->playback_active))
-		return;
+		goto out;
 
 	playback_ss = tascam->playback_substream;
 	if (!playback_ss || !playback_ss->runtime)
-		return;
+		goto out;
 	playback_rt = playback_ss->runtime;
 
 	capture_ss = tascam->capture_substream;
@@ -1308,9 +1335,16 @@ unlock_and_continue:
 		snd_pcm_period_elapsed(capture_ss);
 
 	urb->dev = tascam->dev;
+	usb_get_urb(urb);
+	usb_anchor_urb(urb, &tascam->feedback_anchor);
 	ret = usb_submit_urb(urb, GFP_ATOMIC);
-	if (ret < 0)
+	if (ret < 0) {
 		dev_err_ratelimited(tascam->card->dev, "Failed to resubmit feedback URB: %d\n", ret);
+		usb_unanchor_urb(urb);
+		usb_put_urb(urb);
+	}
+out:
+	usb_put_urb(urb);
 }
 
 /**
@@ -1449,10 +1483,10 @@ static void capture_urb_complete(struct urb *urb)
 	if (urb->status) {
 		if (urb->status != -ENOENT && urb->status != -ECONNRESET && urb->status != -ESHUTDOWN)
 			dev_err_ratelimited(tascam->card->dev, "Capture URB failed: %d\n", urb->status);
-		return;
+		goto out;
 	}
 	if (!tascam || !atomic_read(&tascam->capture_active))
-		return;
+		goto out;
 
 	if (urb->actual_length > 0) {
 		size_t i;
@@ -1470,9 +1504,16 @@ static void capture_urb_complete(struct urb *urb)
 		schedule_work(&tascam->capture_work);
 	}
 
+	usb_get_urb(urb);
+	usb_anchor_urb(urb, &tascam->capture_anchor);
 	ret = usb_submit_urb(urb, GFP_ATOMIC);
-	if (ret < 0)
+	if (ret < 0) {
 		dev_err_ratelimited(tascam->card->dev, "Failed to resubmit capture URB: %d\n", ret);
+		usb_unanchor_urb(urb);
+		usb_put_urb(urb);
+	}
+out:
+	usb_put_urb(urb);
 }
 
 
@@ -1493,11 +1534,11 @@ static void tascam_midi_in_urb_complete(struct urb *urb)
 	if (urb->status) {
 		if (urb->status != -ENOENT && urb->status != -ECONNRESET && urb->status != -ESHUTDOWN)
 			dev_err_ratelimited(tascam->card->dev, "MIDI IN URB failed: status %d\n", urb->status);
-		return;
+		goto out;
 	}
 
 	if (!tascam || !atomic_read(&tascam->midi_in_active))
-		return;
+		goto out;
 
 	if (tascam->midi_in_substream && urb->actual_length > 0) {
 		u8 *raw_buf = urb->transfer_buffer;
@@ -1544,9 +1585,16 @@ static void tascam_midi_in_urb_complete(struct urb *urb)
 		}
 	}
 
+	usb_get_urb(urb);
+	usb_anchor_urb(urb, &tascam->midi_in_anchor);
 	ret = usb_submit_urb(urb, GFP_ATOMIC);
-	if (ret < 0)
+	if (ret < 0) {
 		dev_err(tascam->card->dev, "Failed to resubmit MIDI IN URB: error %d\n", ret);
+		usb_unanchor_urb(urb);
+		usb_put_urb(urb);
+	}
+out:
+	usb_put_urb(urb);
 }
 
 static int tascam_midi_in_open(struct snd_rawmidi_substream *substream)
@@ -1571,16 +1619,19 @@ static void tascam_midi_in_trigger(struct snd_rawmidi_substream *substream, int 
 		if (atomic_xchg(&tascam->midi_in_active, 1) == 0) {
 			tascam->midi_in_has_pending_packet = false;
 			for (i = 0; i < NUM_MIDI_IN_URBS; i++) {
+				usb_get_urb(tascam->midi_in_urbs[i]);
+				usb_anchor_urb(tascam->midi_in_urbs[i], &tascam->midi_in_anchor);
 				err = usb_submit_urb(tascam->midi_in_urbs[i], GFP_KERNEL);
-				if (err < 0)
+				if (err < 0) {
 					dev_err(tascam->card->dev, "Failed to submit MIDI IN URB %d: %d\n", i, err);
+					usb_unanchor_urb(tascam->midi_in_urbs[i]);
+					usb_put_urb(tascam->midi_in_urbs[i]);
+				}
 			}
 		}
 	} else {
-		if (atomic_xchg(&tascam->midi_in_active, 0) == 1) {
-			for (i = 0; i < NUM_MIDI_IN_URBS; i++)
-				usb_kill_urb(tascam->midi_in_urbs[i]);
-		}
+		if (atomic_xchg(&tascam->midi_in_active, 0) == 1)
+			usb_kill_anchored_urbs(&tascam->midi_in_anchor);
 	}
 }
 
@@ -1611,7 +1662,7 @@ static void tascam_midi_out_urb_complete(struct urb *urb)
 	}
 
 	if (!tascam)
-		return;
+		goto out;
 
 	for (i = 0; i < NUM_MIDI_OUT_URBS; i++) {
 		if (tascam->midi_out_urbs[i] == urb) {
@@ -1622,7 +1673,7 @@ static void tascam_midi_out_urb_complete(struct urb *urb)
 
 	if (urb_index < 0) {
 		dev_err_ratelimited(tascam->card->dev, "Unknown MIDI OUT URB completed!\n");
-		return;
+		goto out;
 	}
 
 	spin_lock_irqsave(&tascam->midi_out_lock, flags);
@@ -1631,6 +1682,8 @@ static void tascam_midi_out_urb_complete(struct urb *urb)
 
 	if (atomic_read(&tascam->midi_out_active))
 		schedule_work(&tascam->midi_out_work);
+out:
+	usb_put_urb(urb);
 }
 
 /**
@@ -1692,11 +1745,15 @@ start_work:
 		urb->transfer_buffer_length = 9;
 		spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
 
+		usb_get_urb(urb);
+		usb_anchor_urb(urb, &tascam->midi_out_anchor);
 		if (usb_submit_urb(urb, GFP_KERNEL) < 0) {
 			dev_err_ratelimited(tascam->card->dev, "Failed to submit MIDI OUT URB %d\n", urb_index);
 			spin_lock_irqsave(&tascam->midi_out_lock, flags);
 			clear_bit(urb_index, &tascam->midi_out_urbs_in_flight);
 			spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
+			usb_unanchor_urb(urb);
+			usb_put_urb(urb);
 		}
 
 		/* If there's more data, try to fill another URB immediately */
@@ -1727,11 +1784,9 @@ static int tascam_midi_out_close(struct snd_rawmidi_substream *substream)
 static void tascam_midi_out_drain(struct snd_rawmidi_substream *substream)
 {
 	struct tascam_card *tascam = substream->rmidi->private_data;
-	int i;
 
 	cancel_work_sync(&tascam->midi_out_work);
-	for (i = 0; i < NUM_MIDI_OUT_URBS; i++)
-		usb_kill_urb(tascam->midi_out_urbs[i]);
+	usb_kill_anchored_urbs(&tascam->midi_out_anchor);
 }
 
 static void tascam_midi_out_trigger(struct snd_rawmidi_substream *substream, int up)
@@ -1832,18 +1887,11 @@ static int tascam_suspend(struct usb_interface *intf, pm_message_t message)
 	cancel_work_sync(&tascam->capture_work);
 	cancel_work_sync(&tascam->midi_out_work);
 
-	if (atomic_read(&tascam->midi_in_active)) {
-		int i;
-
-		for (i = 0; i < NUM_MIDI_IN_URBS; i++)
-			usb_kill_urb(tascam->midi_in_urbs[i]);
-	}
-	if (atomic_read(&tascam->midi_out_active)) {
-		int i;
-
-		for (i = 0; i < NUM_MIDI_OUT_URBS; i++)
-			usb_kill_urb(tascam->midi_out_urbs[i]);
-	}
+	usb_kill_anchored_urbs(&tascam->playback_anchor);
+	usb_kill_anchored_urbs(&tascam->capture_anchor);
+	usb_kill_anchored_urbs(&tascam->feedback_anchor);
+	usb_kill_anchored_urbs(&tascam->midi_in_anchor);
+	usb_kill_anchored_urbs(&tascam->midi_out_anchor);
 
 	return 0;
 }
@@ -1886,9 +1934,12 @@ static int tascam_resume(struct usb_interface *intf)
 		int i;
 
 		for (i = 0; i < NUM_MIDI_IN_URBS; i++) {
+			usb_anchor_urb(tascam->midi_in_urbs[i], &tascam->midi_in_anchor);
 			err = usb_submit_urb(tascam->midi_in_urbs[i], GFP_KERNEL);
-			if (err < 0)
+			if (err < 0) {
 				dev_err(&intf->dev, "Failed to resume MIDI IN URB %d: %d\n", i, err);
+				usb_unanchor_urb(tascam->midi_in_urbs[i]);
+			}
 		}
 	}
 	if (atomic_read(&tascam->midi_out_active))
@@ -1942,11 +1993,18 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	spin_lock_init(&tascam->lock);
 	atomic_set(&tascam->active_urbs, 0);
 	INIT_WORK(&tascam->capture_work, tascam_capture_work_handler);
+	INIT_WORK(&tascam->stop_work, tascam_stop_work_handler);
 	tascam->line_out_source = 0;
 	tascam->digital_out_source = 1;
 	tascam->capture_12_source = 0;
 	tascam->capture_34_source = 1;
 	tascam->current_rate = 0;
+
+	init_usb_anchor(&tascam->playback_anchor);
+	init_usb_anchor(&tascam->capture_anchor);
+	init_usb_anchor(&tascam->feedback_anchor);
+	init_usb_anchor(&tascam->midi_in_anchor);
+	init_usb_anchor(&tascam->midi_out_anchor);
 
 	/* MIDI initialization */
 	atomic_set(&tascam->midi_in_active, 0);
