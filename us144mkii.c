@@ -42,24 +42,43 @@ static int dev_idx;
 #define RT_D2H_CLASS_EP		(USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_ENDPOINT)
 #define RT_H2D_VENDOR_DEV	(USB_DIR_OUT | USB_TYPE_VENDOR | USB_RECIP_DEVICE)
 #define RT_D2H_VENDOR_DEV	(USB_DIR_IN | USB_TYPE_VENDOR | USB_RECIP_DEVICE)
-#define UAC_SET_CUR			0x01
-#define UAC_GET_CUR			0x81
-#define UAC_SAMPLING_FREQ_CONTROL	0x0100
-#define VENDOR_REQ_REGISTER_WRITE	0x41
-#define VENDOR_REQ_MODE_CONTROL		0x49
-#define MODE_VAL_HANDSHAKE_READ		0x0000
-#define MODE_VAL_CONFIG			0x0010
-#define MODE_VAL_STREAM_START		0x0030
+
+enum uac_request {
+	UAC_SET_CUR			= 0x01,
+	UAC_GET_CUR			= 0x81,
+};
+
+enum uac_control_selector {
+	UAC_SAMPLING_FREQ_CONTROL	= 0x0100,
+};
+
+enum tascam_vendor_request {
+	VENDOR_REQ_REGISTER_WRITE	= 0x41,
+	VENDOR_REQ_MODE_CONTROL		= 0x49,
+};
+
+enum tascam_mode_value {
+	MODE_VAL_HANDSHAKE_READ		= 0x0000,
+	MODE_VAL_CONFIG			= 0x0010,
+	MODE_VAL_STREAM_START		= 0x0030,
+};
+
 #define HANDSHAKE_SUCCESS_VAL		0x12
-#define REG_ADDR_UNKNOWN_0D		0x0d04
-#define REG_ADDR_UNKNOWN_0E		0x0e00
-#define REG_ADDR_UNKNOWN_0F		0x0f00
-#define REG_ADDR_RATE_44100		0x1000
-#define REG_ADDR_RATE_48000		0x1002
-#define REG_ADDR_RATE_88200		0x1008
-#define REG_ADDR_RATE_96000		0x100a
-#define REG_ADDR_UNKNOWN_11		0x110b
+
+enum tascam_register {
+	REG_ADDR_UNKNOWN_0D		= 0x0d04,
+	REG_ADDR_UNKNOWN_0E		= 0x0e00,
+	REG_ADDR_UNKNOWN_0F		= 0x0f00,
+	REG_ADDR_RATE_44100		= 0x1000,
+	REG_ADDR_RATE_48000		= 0x1002,
+	REG_ADDR_RATE_88200		= 0x1008,
+	REG_ADDR_RATE_96000		= 0x100a,
+	REG_ADDR_UNKNOWN_11		= 0x110b,
+};
+
 #define REG_VAL_ENABLE			0x0101
+
+
 
 /* --- URB Configuration --- */
 #define NUM_PLAYBACK_URBS		8
@@ -2056,8 +2075,12 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	if (err == 1 && handshake_buf[0] == HANDSHAKE_SUCCESS_VAL) {
 		dev_info(&intf->dev, "Handshake successful.\n");
 	} else {
-		dev_warn(&intf->dev, "Handshake failed (err %d, val 0x%02x), continuing anyway.\n",
-			 err, (unsigned int)(err > 0 ? handshake_buf[0] : 0));
+		if (handshake_buf[0] != HANDSHAKE_SUCCESS_VAL &&
+			handshake_buf[0] != MODE_VAL_STREAM_START &&
+			handshake_buf[0] != 0x32) {
+			dev_warn(&intf->dev, "Handshake failed with unexpected value (err %d, val 0x%02x), continuing anyway.\n",
+				err, (unsigned int)(err > 0 ? handshake_buf[0] : 0));
+		}
 	}
 	kfree(handshake_buf);
 
