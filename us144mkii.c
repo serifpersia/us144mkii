@@ -17,7 +17,7 @@ MODULE_DESCRIPTION("ALSA Driver for TASCAM US-144MKII");
 MODULE_LICENSE("GPL v2");
 
 #define DRIVER_NAME "us144mkii"
-#define DRIVER_VERSION "1.7.1"
+#define DRIVER_VERSION "1.7.2"
 
 /* --- Module Parameters --- */
 static int index[SNDRV_CARDS] = SNDRV_DEFAULT_IDX;
@@ -93,7 +93,7 @@ enum tascam_register {
 #define MIDI_OUT_BUF_SIZE		64
 #define NUM_MIDI_OUT_URBS		4
 #define USB_CTRL_TIMEOUT_MS		1000
-#define FEEDBACK_SYNC_LOSS_THRESHOLD	10
+#define FEEDBACK_SYNC_LOSS_THRESHOLD	41
 
 /* --- Audio Format Configuration --- */
 #define BYTES_PER_SAMPLE		3
@@ -143,6 +143,7 @@ struct tascam_card {
 	s32 *capture_decode_dst_block;
 	s32 *capture_routing_buffer;
 	struct work_struct capture_work;
+	struct work_struct start_work;
 	struct work_struct stop_work;
 
 	/* MIDI streams */
@@ -194,6 +195,7 @@ static void playback_urb_complete(struct urb *urb);
 static void feedback_urb_complete(struct urb *urb);
 static void capture_urb_complete(struct urb *urb);
 static void tascam_capture_work_handler(struct work_struct *work);
+static void tascam_start_work_handler(struct work_struct *work);
 static void tascam_midi_in_urb_complete(struct urb *urb);
 static void tascam_midi_out_urb_complete(struct urb *urb);
 static void tascam_midi_out_work_handler(struct work_struct *work);
@@ -463,24 +465,32 @@ static void process_capture_routing_us144mkii(struct tascam_card *tascam,
 
 /* --- Rate-to-Packet Fixing Data (Verified) --- */
 static const unsigned int patterns_48khz[5][8] = {
-	{5, 6, 6, 6, 5, 6, 6, 6}, {5, 6, 6, 6, 6, 6, 6, 6},
-	{6, 6, 6, 6, 6, 6, 6, 6}, {7, 6, 6, 6, 6, 6, 6, 6},
-	{7, 6, 6, 6, 7, 6, 6, 6}
+	{5, 6, 6, 6, 6, 6, 6, 6},
+	{6, 6, 6, 6, 6, 6, 6, 6},
+	{6, 6, 6, 6, 6, 6, 6, 6},
+	{6, 6, 6, 7, 6, 6, 6, 6},
+	{7, 6, 6, 7, 6, 6, 7, 6}
 };
 static const unsigned int patterns_96khz[5][8] = {
-	{11, 12, 12, 12, 11, 12, 12, 12}, {11, 12, 12, 12, 12, 12, 12, 12},
-	{12, 12, 12, 12, 12, 12, 12, 12}, {13, 12, 12, 12, 12, 12, 12, 12},
-	{13, 12, 12, 12, 13, 12, 12, 12}
+	{11, 12, 12, 12, 12, 12, 12, 12},
+	{12, 12, 12, 12, 12, 12, 12, 12},
+	{12, 12, 12, 12, 12, 12, 12, 12},
+	{12, 12, 13, 12, 12, 12, 12, 12},
+	{13, 12, 12, 13, 12, 12, 13, 12}
 };
 static const unsigned int patterns_88khz[5][8] = {
-	{10, 11, 11, 11, 10, 11, 11, 11}, {10, 11, 11, 11, 11, 11, 11, 11},
-	{11, 11, 11, 11, 11, 11, 11, 11}, {12, 11, 11, 11, 11, 11, 11, 11},
-	{12, 11, 11, 11, 12, 11, 11, 11}
+	{10, 11, 11, 11, 11, 11, 11, 11},
+	{11, 11, 11, 11, 11, 11, 11, 11},
+	{11, 11, 11, 11, 11, 11, 11, 11},
+	{11, 11, 12, 11, 11, 11, 11, 11},
+	{12, 11, 11, 12, 11, 11, 12, 11}
 };
 static const unsigned int patterns_44khz[5][8] = {
-	{5, 5, 5, 6, 5, 5, 5, 6}, {5, 5, 6, 5, 5, 6, 5, 6},
-	{5, 6, 5, 6, 5, 6, 5, 6}, {6, 5, 6, 6, 5, 6, 5, 6},
-	{6, 6, 6, 5, 6, 6, 6, 5}
+	{5, 5, 5, 5, 5, 5, 5, 6},
+	{5, 5, 5, 6, 5, 5, 5, 6},
+	{5, 5, 6, 5, 6, 5, 5, 6},
+	{5, 6, 5, 6, 5, 6, 5, 6},
+	{6, 6, 6, 6, 6, 6, 6, 5}
 };
 
 static const struct snd_pcm_hardware tascam_pcm_hw = {
@@ -864,23 +874,23 @@ static int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
 		switch (rate) {
 		case 44100:
 			tascam->feedback_patterns = patterns_44khz;
-			tascam->feedback_base_value = 42;
-			tascam->feedback_max_value = 46;
+			tascam->feedback_base_value = 43;
+			tascam->feedback_max_value = 45;
 			break;
 		case 48000:
 			tascam->feedback_patterns = patterns_48khz;
-			tascam->feedback_base_value = 46;
-			tascam->feedback_max_value = 50;
+			tascam->feedback_base_value = 47;
+			tascam->feedback_max_value = 49;
 			break;
 		case 88200:
 			tascam->feedback_patterns = patterns_88khz;
-			tascam->feedback_base_value = 86;
-			tascam->feedback_max_value = 90;
+			tascam->feedback_base_value = 87;
+			tascam->feedback_max_value = 89;
 			break;
 		case 96000:
 			tascam->feedback_patterns = patterns_96khz;
-			tascam->feedback_base_value = 94;
-			tascam->feedback_max_value = 98;
+			tascam->feedback_base_value = 95;
+			tascam->feedback_max_value = 97;
 			break;
 		default:
 			return -EINVAL;
@@ -903,6 +913,7 @@ static int tascam_pcm_hw_free(struct snd_pcm_substream *substream)
 {
 	return snd_pcm_lib_free_pages(substream);
 }
+
 
 static int tascam_playback_prepare(struct snd_pcm_substream *substream)
 {
@@ -982,6 +993,18 @@ static void tascam_stop_work_handler(struct work_struct *work)
 	cancel_work_sync(&tascam->capture_work);
 }
 
+static void tascam_start_work_handler(struct work_struct *work)
+{
+	struct tascam_card *tascam = container_of(work, struct tascam_card, start_work);
+	int err;
+
+	err = usb_control_msg(tascam->dev, usb_sndctrlpipe(tascam->dev, 0),
+			      VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV,
+			      0x1f00, 0x0001, NULL, 0, USB_CTRL_TIMEOUT_MS);
+	if (err < 0)
+		dev_err(tascam->card->dev, "Failed to send start streaming command: %d\n", err);
+}
+
 static int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 {
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
@@ -1055,6 +1078,9 @@ static int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 			}
 			atomic_inc(&tascam->active_urbs);
 		}
+
+		schedule_work(&tascam->start_work);
+
 		return 0;
 start_rollback:
 		dev_err(tascam->card->dev, "Failed to submit URBs to start stream: %d\n", err);
@@ -1146,7 +1172,8 @@ static void playback_urb_complete(struct urb *urb)
 	int ret, i;
 
 	if (urb->status) {
-		if (urb->status != -ENOENT && urb->status != -ECONNRESET && urb->status != -ESHUTDOWN)
+		if (urb->status != -ENOENT && urb->status != -ECONNRESET && urb->status != -ESHUTDOWN &&
+		    urb->status != -ENODEV)
 			dev_err_ratelimited(tascam->card->dev, "Playback URB failed: %d\n", urb->status);
 		goto out;
 	}
@@ -1241,7 +1268,8 @@ static void feedback_urb_complete(struct urb *urb)
 	bool capture_period_elapsed = false;
 
 	if (urb->status) {
-		if (urb->status != -ENOENT && urb->status != -ECONNRESET && urb->status != -ESHUTDOWN)
+		if (urb->status != -ENOENT && urb->status != -ECONNRESET && urb->status != -ESHUTDOWN &&
+		    urb->status != -ENODEV)
 			dev_err_ratelimited(tascam->card->dev, "Feedback URB failed: %d\n", urb->status);
 		goto out;
 	}
@@ -1293,9 +1321,13 @@ static void feedback_urb_complete(struct urb *urb)
 			if (tascam->feedback_synced) {
 				tascam->feedback_consecutive_errors++;
 				if (tascam->feedback_consecutive_errors > FEEDBACK_SYNC_LOSS_THRESHOLD) {
-					dev_warn_ratelimited(tascam->card->dev, "Feedback sync lost! (value: %u, errors: %u)\n",
-							 feedback_value, tascam->feedback_consecutive_errors);
+					dev_err(tascam->card->dev, "Fatal: Feedback sync lost. Stopping stream.\n");
+					if (playback_ss)
+						snd_pcm_stop(playback_ss, SNDRV_PCM_STATE_XRUN);
+					if (capture_ss)
+						snd_pcm_stop(capture_ss, SNDRV_PCM_STATE_XRUN);
 					tascam->feedback_synced = false;
+					goto unlock_and_continue;
 				}
 			}
 			for (i = 0; i < 8; i++) {
@@ -1501,7 +1533,8 @@ static void capture_urb_complete(struct urb *urb)
 	unsigned long flags;
 
 	if (urb->status) {
-		if (urb->status != -ENOENT && urb->status != -ECONNRESET && urb->status != -ESHUTDOWN)
+		if (urb->status != -ENOENT && urb->status != -ECONNRESET && urb->status != -ESHUTDOWN &&
+		    urb->status != -ENODEV && urb->status != -EPROTO)
 			dev_err_ratelimited(tascam->card->dev, "Capture URB failed: %d\n", urb->status);
 		goto out;
 	}
@@ -1989,6 +2022,7 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	spin_lock_init(&tascam->lock);
 	atomic_set(&tascam->active_urbs, 0);
 	INIT_WORK(&tascam->capture_work, tascam_capture_work_handler);
+	INIT_WORK(&tascam->start_work, tascam_start_work_handler);
 	INIT_WORK(&tascam->stop_work, tascam_stop_work_handler);
 	tascam->line_out_source = 0;
 	tascam->digital_out_source = 1;
@@ -2049,16 +2083,11 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	err = usb_control_msg(dev, usb_rcvctrlpipe(dev, 0), VENDOR_REQ_MODE_CONTROL,
 			      RT_D2H_VENDOR_DEV, MODE_VAL_HANDSHAKE_READ, 0x0000,
 			      handshake_buf, 1, USB_CTRL_TIMEOUT_MS);
-	if (err == 1 && handshake_buf[0] == HANDSHAKE_SUCCESS_VAL) {
-		dev_info(&intf->dev, "Handshake successful.\n");
-	} else {
-		if (handshake_buf[0] != HANDSHAKE_SUCCESS_VAL &&
-			handshake_buf[0] != MODE_VAL_STREAM_START &&
-			handshake_buf[0] != 0x32) {
-			dev_warn(&intf->dev, "Handshake failed with unexpected value (err %d, val 0x%02x), continuing anyway.\n",
-				err, (unsigned int)(err > 0 ? handshake_buf[0] : 0));
-		}
+	if (err < 0 || (handshake_buf[0] != HANDSHAKE_SUCCESS_VAL && handshake_buf[0] != 0x00)) {
+		dev_warn(&intf->dev, "Handshake failed with unexpected value (err %d, val 0x%02x), continuing anyway.\n",
+			 err, (unsigned int)(err > 0 ? handshake_buf[0] : 0));
 	}
+
 	kfree(handshake_buf);
 
 	/*
