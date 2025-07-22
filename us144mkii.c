@@ -6,7 +6,6 @@
 
 #include <linux/usb.h>
 #include <linux/workqueue.h>
-#include <linux/slab.h>
 #include <sound/core.h>
 #include <sound/pcm.h>
 #include <sound/rawmidi.h>
@@ -18,7 +17,7 @@ MODULE_DESCRIPTION("ALSA Driver for TASCAM US-144MKII");
 MODULE_LICENSE("GPL v2");
 
 #define DRIVER_NAME "us144mkii"
-#define DRIVER_VERSION "1.7.0"
+#define DRIVER_VERSION "1.7.1"
 
 /* --- Module Parameters --- */
 static int index[SNDRV_CARDS] = SNDRV_DEFAULT_IDX;
@@ -94,6 +93,7 @@ enum tascam_register {
 #define MIDI_OUT_BUF_SIZE		64
 #define NUM_MIDI_OUT_URBS		4
 #define USB_CTRL_TIMEOUT_MS		1000
+#define FEEDBACK_SYNC_LOSS_THRESHOLD	10
 
 /* --- Audio Format Configuration --- */
 #define BYTES_PER_SAMPLE		3
@@ -210,6 +210,7 @@ static ssize_t driver_version_show(struct device *dev,
 	return sysfs_emit(buf, "%s\n", DRIVER_VERSION);
 }
 static DEVICE_ATTR_RO(driver_version);
+
 
 /* --- ALSA Control Definitions --- */
 static const char * const playback_source_texts[] = {"Playback 1-2", "Playback 3-4"};
@@ -1291,7 +1292,7 @@ static void feedback_urb_complete(struct urb *urb)
 
 			if (tascam->feedback_synced) {
 				tascam->feedback_consecutive_errors++;
-				if (tascam->feedback_consecutive_errors > 10) {
+				if (tascam->feedback_consecutive_errors > FEEDBACK_SYNC_LOSS_THRESHOLD) {
 					dev_warn_ratelimited(tascam->card->dev, "Feedback sync lost! (value: %u, errors: %u)\n",
 							 feedback_value, tascam->feedback_consecutive_errors);
 					tascam->feedback_synced = false;
@@ -1549,10 +1550,16 @@ static void tascam_midi_in_urb_complete(struct urb *urb)
 {
 	struct tascam_card *tascam = urb->context;
 	int ret;
+	u8 *buf = urb->transfer_buffer;
+	int i;
 
 	if (urb->status) {
-		if (urb->status != -ENOENT && urb->status != -ECONNRESET && urb->status != -ESHUTDOWN)
-			dev_err_ratelimited(tascam->card->dev, "MIDI IN URB failed: status %d\n", urb->status);
+		if (urb->status != -ENOENT && urb->status != -ECONNRESET &&
+		    urb->status != -ESHUTDOWN && urb->status != -EPROTO)
+			dev_err_ratelimited(
+				tascam->card->dev,
+				"MIDI IN URB failed: status %d\n",
+				urb->status);
 		goto out;
 	}
 
@@ -1560,47 +1567,18 @@ static void tascam_midi_in_urb_complete(struct urb *urb)
 		goto out;
 
 	if (tascam->midi_in_substream && urb->actual_length > 0) {
-		u8 *raw_buf = urb->transfer_buffer;
-		u8 stripped_buf[9]; /* Max possible size is 9 */
-		int i;
-		int stripped_len = 0;
+		for (i = 0; i < urb->actual_length; ++i) {
+			/* Skip padding bytes */
+			if (buf[i] == 0xfd)
+				continue;
 
-		/*
-		 * Strip all 0xFD padding bytes from the raw USB packet,
-		 * copying the result into a temporary buffer.
-		 */
-		for (i = 0; i < urb->actual_length; i++) {
-			if (raw_buf[i] != 0xfd) {
-				stripped_buf[stripped_len] = raw_buf[i];
-				stripped_len++;
-			}
-		}
+			/* The last byte is often a terminator (0x00, 0xFF). Ignore it. */
+			if (i == (urb->actual_length - 1) &&
+			    (buf[i] == 0x00 || buf[i] == 0xff))
+				continue;
 
-		/*
-		 * The last byte is often a terminator (0x00, 0xFF, etc.).
-		 * If the stripped message is a single byte and it's a terminator,
-		 * it's likely an empty keep-alive packet. We can ignore it.
-		 * A real single-byte message like Active Sensing (0xFE) will pass.
-		 */
-		if (stripped_len == 1 && stripped_buf[0] < 0x80) {
-			/* This is likely an empty packet, do nothing. */
-		} else if (stripped_len > 0) {
-			/*
-			 * The last byte might be a terminator. If so, don't send it.
-			 * A real MIDI data byte will never be > 0x7F.
-			 * A real status byte will be handled by the ALSA core.
-			 * Terminators like 0xFF are ambiguous (System Reset vs terminator).
-			 * Let's assume for now that if the last byte is not a valid
-			 * data byte for the preceding status, it's a terminator.
-			 * A simpler approach is to just check for 0x00 or 0xFF.
-			 */
-			if (stripped_buf[stripped_len - 1] == 0x00 ||
-			    stripped_buf[stripped_len - 1] == 0xff) {
-				stripped_len--;
-			}
-
-			if (stripped_len > 0)
-				snd_rawmidi_receive(tascam->midi_in_substream, stripped_buf, stripped_len);
+			/* Submit valid MIDI bytes one by one */
+			snd_rawmidi_receive(tascam->midi_in_substream, &buf[i], 1);
 		}
 	}
 
@@ -1608,13 +1586,16 @@ static void tascam_midi_in_urb_complete(struct urb *urb)
 	usb_anchor_urb(urb, &tascam->midi_in_anchor);
 	ret = usb_submit_urb(urb, GFP_ATOMIC);
 	if (ret < 0) {
-		dev_err(tascam->card->dev, "Failed to resubmit MIDI IN URB: error %d\n", ret);
+		dev_err(tascam->card->dev,
+			"Failed to resubmit MIDI IN URB: error %d\n", ret);
 		usb_unanchor_urb(urb);
 		usb_put_urb(urb);
 	}
 out:
 	usb_put_urb(urb);
 }
+
+
 
 static int tascam_midi_in_open(struct snd_rawmidi_substream *substream)
 {
@@ -1717,47 +1698,46 @@ out:
  */
 static void tascam_midi_out_work_handler(struct work_struct *work)
 {
-	struct tascam_card *tascam = container_of(work, struct tascam_card, midi_out_work);
+	struct tascam_card *tascam =
+		container_of(work, struct tascam_card, midi_out_work);
 	struct snd_rawmidi_substream *substream = tascam->midi_out_substream;
-	unsigned long flags;
-	int urb_index;
-	bool more_data;
 
 	if (!substream || !atomic_read(&tascam->midi_out_active))
 		return;
 
-start_work:
-	spin_lock_irqsave(&tascam->midi_out_lock, flags);
+	while (snd_rawmidi_transmit_peek(substream, (u8[]){ 0 }, 1) == 1) {
+		unsigned long flags;
+		int urb_index;
+		struct urb *urb;
+		u8 *buf;
+		int bytes_to_send;
 
-	urb_index = -1;
-	for (int i = 0; i < NUM_MIDI_OUT_URBS; i++) {
-		if (!test_bit(i, &tascam->midi_out_urbs_in_flight)) {
-			urb_index = i;
-			break;
+		spin_lock_irqsave(&tascam->midi_out_lock, flags);
+
+		urb_index = -1;
+		for (int i = 0; i < NUM_MIDI_OUT_URBS; i++) {
+			if (!test_bit(i, &tascam->midi_out_urbs_in_flight)) {
+				urb_index = i;
+				break;
+			}
 		}
-	}
 
-	if (urb_index < 0) {
-		spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
-		return; /* No free URBs, will be rescheduled */
-	}
+		if (urb_index < 0) {
+			spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
+			return; /* No free URBs, will be rescheduled by completion handler */
+		}
 
-	struct urb *urb = tascam->midi_out_urbs[urb_index];
-	u8 *buf = urb->transfer_buffer;
-	int bytes_to_send;
+		urb = tascam->midi_out_urbs[urb_index];
+		buf = urb->transfer_buffer;
+		bytes_to_send = snd_rawmidi_transmit(substream, buf, 8);
 
-	/*
-	 * We can send up to 8 bytes of MIDI data in one 9-byte packet.
-	 * The 9th byte is a terminator.
-	 */
-	bytes_to_send = snd_rawmidi_transmit(substream, buf, 8);
+		if (bytes_to_send <= 0) {
+			spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
+			break; /* No more data */
+		}
 
-	if (bytes_to_send > 0) {
-		/* Pad the rest of the 9-byte packet with 0xFD */
 		if (bytes_to_send < 9)
 			memset(buf + bytes_to_send, 0xfd, 9 - bytes_to_send);
-
-		/* The last byte is a terminator. 0x00 is a safe choice. */
 		buf[8] = 0x00;
 
 		set_bit(urb_index, &tascam->midi_out_urbs_in_flight);
@@ -1767,23 +1747,20 @@ start_work:
 		usb_get_urb(urb);
 		usb_anchor_urb(urb, &tascam->midi_out_anchor);
 		if (usb_submit_urb(urb, GFP_KERNEL) < 0) {
-			dev_err_ratelimited(tascam->card->dev, "Failed to submit MIDI OUT URB %d\n", urb_index);
+			dev_err_ratelimited(
+				tascam->card->dev,
+				"Failed to submit MIDI OUT URB %d\n", urb_index);
 			spin_lock_irqsave(&tascam->midi_out_lock, flags);
-			clear_bit(urb_index, &tascam->midi_out_urbs_in_flight);
+			clear_bit(urb_index,
+				  &tascam->midi_out_urbs_in_flight);
 			spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
 			usb_unanchor_urb(urb);
 			usb_put_urb(urb);
+			break; /* Stop on error */
 		}
-
-		/* If there's more data, try to fill another URB immediately */
-		more_data = (snd_rawmidi_transmit_peek(substream, &buf[0], 1) == 1);
-		if (more_data)
-			goto start_work;
-
-	} else {
-		spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
 	}
 }
+
 
 static int tascam_midi_out_open(struct snd_rawmidi_substream *substream)
 {
@@ -2044,30 +2021,30 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	if (!tascam->iface1) {
 		dev_err(&intf->dev, "Interface 1 not found.\n");
 		err = -ENODEV;
-		goto free_card_obj;
+		goto fail;
 	}
 	err = usb_driver_claim_interface(&tascam_alsa_driver, tascam->iface1, tascam);
 	if (err < 0) {
 		dev_err(&intf->dev, "Could not claim interface 1: %d\n", err);
 		tascam->iface1 = NULL;
-		goto free_card_obj;
+		goto fail;
 	}
 
 	err = usb_set_interface(dev, 0, 1);
 	if (err < 0) {
 		dev_err(&intf->dev, "Set Alt Setting on Intf 0 failed: %d\n", err);
-		goto release_iface1_and_free_card;
+		goto fail;
 	}
 	err = usb_set_interface(dev, 1, 1);
 	if (err < 0) {
 		dev_err(&intf->dev, "Set Alt Setting on Intf 1 failed: %d\n", err);
-		goto release_iface1_and_free_card;
+		goto fail;
 	}
 
 	handshake_buf = kmalloc(1, GFP_KERNEL);
 	if (!handshake_buf) {
 		err = -ENOMEM;
-		goto release_iface1_and_free_card;
+		goto fail;
 	}
 	err = usb_control_msg(dev, usb_rcvctrlpipe(dev, 0), VENDOR_REQ_MODE_CONTROL,
 			      RT_D2H_VENDOR_DEV, MODE_VAL_HANDSHAKE_READ, 0x0000,
@@ -2089,40 +2066,39 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	 */
 	err = tascam_alloc_urbs(tascam);
 	if (err < 0)
-		goto release_iface1_and_free_card;
+		goto fail;
 
 	err = snd_pcm_new(tascam->card, "US144MKII", 0, 1, 1, &pcm);
 	if (err < 0)
-		goto release_iface1_and_free_card;
+		goto fail;
 	tascam->pcm = pcm;
 	pcm->private_data = tascam;
 
 	err = tascam_create_pcm(pcm);
 	if (err < 0)
-		goto release_iface1_and_free_card;
+		goto fail;
 
 	err = tascam_create_midi(tascam);
 	if (err < 0)
-		goto release_iface1_and_free_card;
+		goto fail;
 
 	if (device_create_file(&intf->dev, &dev_attr_driver_version))
 		dev_warn(&intf->dev, "Could not create sysfs attribute for driver version\n");
 
 	err = snd_card_register(card);
 	if (err < 0)
-		goto release_iface1_and_free_card;
+		goto fail;
 
 	dev_info(&intf->dev, "TASCAM US-144MKII driver initialized.\n");
 	dev_idx++;
 	return 0;
 
-release_iface1_and_free_card:
+fail:
 	if (tascam->iface1) {
 		usb_set_intfdata(tascam->iface1, NULL);
 		usb_driver_release_interface(&tascam_alsa_driver, tascam->iface1);
 		tascam->iface1 = NULL;
 	}
-free_card_obj:
 	snd_card_free(card);
 	return err;
 }
