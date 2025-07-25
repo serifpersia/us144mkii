@@ -13,6 +13,7 @@ This driver is under active development.
 
 ### 📝 To-Do & Known Limitations
 *   Find Bugs, if possible improve performance/stablity
+*   *MIDI IN/OUT works only in active audio streaming(DAW ALSA/JACK or browser audio)
 
 ## Installation and Usage
 
