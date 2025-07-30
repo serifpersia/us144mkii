@@ -1,10 +1,8 @@
-obj-m += us144mkii.o
+obj-m += snd-usb-us144mkii.o
+snd-usb-us144mkii-y := us144mkii.o pcm.o playback.o capture.o controls.o midi.o
 
-KDIR := /lib/modules/$(shell uname -r)/build
-PWD  := $(shell pwd)
-
-default:
-	$(MAKE) -C $(KDIR) M=$(PWD) modules
+all:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
 
 clean:
-	$(MAKE) -C $(KDIR) M=$(PWD) clean
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean

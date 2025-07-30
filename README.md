@@ -49,7 +49,7 @@ The standard kernel includes a driver that will conflict with our custom module.
 
 1.  **Create a blacklist file.** This tells the system *not* to load the `snd-usb-us122l` module.
     ```bash
-    echo "blacklist snd_usb_us122l" | sudo tee /etc/modprobe.d/blacklist-us144mkii.conf
+    echo "blacklist snd_usb_us122l" | sudo tee /etc/modprobe.d/blacklist-us122l.conf
     ```
 
 2.  **Rebuild your initramfs.** This is a critical step that ensures the blacklist is applied at the very start of the boot process, before the stock driver has a chance to load. Run the command corresponding to your distribution:
@@ -80,7 +80,7 @@ The standard kernel includes a driver that will conflict with our custom module.
 > ```
 > ATTR{idVendor}=="0644", ATTR{idProduct}=="8007", ATTR{authorized}="0"
 > ```
-> After saving, run `sudo udevadm control --reload` and reboot. Note that with this rule in place, you will likely need to load the `us144mkii` driver manually with `sudo insmod us144mkii.ko` each time. The `modprobe` method is preferred for automatic loading.
+> After saving, run `sudo udevadm control --reload` and reboot. Note that with this rule in place, you will likely need to load the `us144mkii` driver manually with `sudo insmod snd-usb-us144mkii.ko` each time. The `modprobe` method is preferred for automatic loading.
 
 
 ### Step 3: Compile and Load the Driver
@@ -95,7 +95,7 @@ This process will build the module from source and load it for your current sess
 
 3.  Load the compiled module into the kernel:
     ```bash
-    sudo insmod us144mkii.ko
+    sudo insmod snd-usb-us144mkii.ko
     ```
 
 4.  Connect your TASCAM US-144MKII. Verify that the driver loaded and the audio card is recognized by the system:
@@ -111,17 +111,13 @@ This process will build the module from source and load it for your current sess
 ### Step 4: Install for Automatic Loading on Boot
 To make the driver load automatically every time you start your computer, follow these steps after you have successfully compiled it in Step 3.
 
-1.  **Tell the system to load the module on boot.**
+1.  **Copy the compiled module to the kernel's extra modules directory.** This makes it available to system tools.
     ```bash
-    echo "us144mkii" | sudo tee /etc/modules-load.d/us144mkii.conf
+    sudo mkdir -p /lib/modules/$(uname -r)/extra/us144mkii
+    sudo cp snd-usb-us144mkii.ko /lib/modules/$(uname -r)/extra/us144mkii
     ```
 
-2.  **Copy the compiled module to the kernel's extra modules directory.** This makes it available to system tools.
-    ```bash
-    sudo cp us144mkii.ko /lib/modules/$(uname -r)/extra/
-    ```
-
-3.  **Update module dependencies.** This command rebuilds the map of modules so the kernel knows about our new driver.
+2.  **Update module dependencies.** This command rebuilds the map of modules so the kernel knows about our new driver.
     ```bash
     sudo depmod -a
     ```
