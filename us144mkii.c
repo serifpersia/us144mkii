@@ -1934,21 +1934,49 @@ static void tascam_card_private_free(struct snd_card *card)
 static int tascam_suspend(struct usb_interface *intf, pm_message_t message)
 {
 	struct tascam_card *tascam = usb_get_intfdata(intf);
+	int err;
 
-	if (!tascam || !tascam->pcm)
+	if (!tascam)
 		return 0;
 
-	snd_pcm_suspend_all(tascam->pcm);
+	/*
+	 * The device requires a specific sequence to enter a stable low-power
+	 * state. First, ensure all data transmission is stopped before
+	 * sending the final vendor command.
+	 */
+	if (tascam->pcm)
+		snd_pcm_suspend_all(tascam->pcm);
+
+	/*
+	 * Terminate all in-flight URBs to prevent access to the device
+	 * after it has been put to sleep.
+	 */
 	cancel_work_sync(&tascam->stop_work);
 	cancel_work_sync(&tascam->capture_work);
 	cancel_work_sync(&tascam->midi_in_work);
 	cancel_work_sync(&tascam->midi_out_work);
-
 	usb_kill_anchored_urbs(&tascam->playback_anchor);
 	usb_kill_anchored_urbs(&tascam->capture_anchor);
 	usb_kill_anchored_urbs(&tascam->feedback_anchor);
 	usb_kill_anchored_urbs(&tascam->midi_in_anchor);
 	usb_kill_anchored_urbs(&tascam->midi_out_anchor);
+
+	/*
+	 * Send the vendor-specific "Deep Sleep" command. Failure to send this
+	 * command before host-initiated suspend can leave the device in an
+	 * unstable state, leading to system freezes on idle (autosuspend).
+	 */
+	err = usb_control_msg(tascam->dev,
+			      usb_sndctrlpipe(tascam->dev, 0),
+			      0x00,       /* bRequest */
+			      0x40,       /* bmRequestType: H2D, Vendor, Device */
+			      0x0044,     /* wValue */
+			      0x0000,     /* wIndex */
+			      NULL,       /* data */
+			      0,          /* size */
+			      1000);      /* timeout */
+	if (err < 0)
+		dev_err(&intf->dev, "failed to send deep sleep command: %d\n", err);
 
 	return 0;
 }
@@ -1956,51 +1984,42 @@ static int tascam_suspend(struct usb_interface *intf, pm_message_t message)
 static int tascam_resume(struct usb_interface *intf)
 {
 	struct tascam_card *tascam = usb_get_intfdata(intf);
-	struct usb_device *dev;
 	int err;
 
 	if (!tascam)
 		return 0;
 
-	dev = tascam->dev;
-	dev_info(&intf->dev, "Resuming and re-initializing device...\n");
+	dev_info(&intf->dev, "resuming TASCAM US-144MKII\n");
 
-	err = usb_set_interface(dev, 0, 1);
+	/*
+	 * The device requires a full re-initialization sequence upon resume.
+	 * First, re-establish the active USB interface settings.
+	 */
+	err = usb_set_interface(tascam->dev, 0, 1);
 	if (err < 0) {
-		dev_err(&intf->dev, "Resume: Set Alt Setting on Intf 0 failed: %d\n", err);
+		dev_err(&intf->dev, "resume: failed to set alt setting on intf 0: %d\n", err);
 		return err;
 	}
-	err = usb_set_interface(dev, 1, 1);
+	err = usb_set_interface(tascam->dev, 1, 1);
 	if (err < 0) {
-		dev_err(&intf->dev, "Resume: Set Alt Setting on Intf 1 failed: %d\n", err);
+		dev_err(&intf->dev, "resume: failed to set alt setting on intf 1: %d\n", err);
 		return err;
 	}
 
+	/*
+	 * If a sample rate was active before suspend, the device state is lost
+	 * and must be fully restored by re-sending the entire rate
+	 * configuration sequence.
+	 */
 	if (tascam->current_rate > 0) {
-		dev_info(&intf->dev, "Restoring sample rate to %d Hz\n", tascam->current_rate);
+		dev_info(&intf->dev, "restoring sample rate to %d Hz\n", tascam->current_rate);
 		err = us144mkii_configure_device_for_rate(tascam, tascam->current_rate);
 		if (err < 0) {
-			dev_err(&intf->dev, "Resume: Failed to restore sample rate configuration\n");
-			tascam->current_rate = 0;
+			dev_err(&intf->dev, "resume: failed to restore sample rate: %d\n", err);
+			tascam->current_rate = 0; /* Invalidate rate on failure */
 			return err;
 		}
 	}
-
-	/* Resume MIDI streams if they were active */
-	if (atomic_read(&tascam->midi_in_active)) {
-		int i;
-
-		for (i = 0; i < NUM_MIDI_IN_URBS; i++) {
-			usb_anchor_urb(tascam->midi_in_urbs[i], &tascam->midi_in_anchor);
-			err = usb_submit_urb(tascam->midi_in_urbs[i], GFP_KERNEL);
-			if (err < 0) {
-				dev_err(&intf->dev, "Failed to resume MIDI IN URB %d: %d\n", i, err);
-				usb_unanchor_urb(tascam->midi_in_urbs[i]);
-			}
-		}
-	}
-	if (atomic_read(&tascam->midi_out_active))
-		schedule_work(&tascam->midi_out_work);
 
 	return 0;
 }
