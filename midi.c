@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-only
+// Copyright (c) 2025 serifpersia <ramiserifpersia@gmail.com>
 
 #include "us144mkii.h"
-#include "midi.h"
+
+
 
 /**
  * tascam_midi_in_work_handler() - Deferred work for processing MIDI input.
@@ -11,7 +13,7 @@
  * the kfifo, processes it by stripping protocol-specific padding bytes, and
  * passes the clean MIDI data to the ALSA rawmidi subsystem.
  */
-void tascam_midi_in_work_handler(struct work_struct *work)
+static void tascam_midi_in_work_handler(struct work_struct *work)
 {
 	struct tascam_card *tascam = container_of(work, struct tascam_card, midi_in_work);
 	u8 buf[MIDI_IN_BUF_SIZE];
@@ -89,6 +91,15 @@ out:
 	usb_put_urb(urb);
 }
 
+/**
+ * tascam_midi_in_open() - Opens the MIDI input substream.
+ * @substream: The ALSA rawmidi substream to open.
+ *
+ * This function stores a reference to the MIDI input substream in the
+ * driver's private data.
+ *
+ * Return: 0 on success.
+ */
 static int tascam_midi_in_open(struct snd_rawmidi_substream *substream)
 {
 	struct tascam_card *tascam = substream->rmidi->private_data;
@@ -97,11 +108,27 @@ static int tascam_midi_in_open(struct snd_rawmidi_substream *substream)
 	return 0;
 }
 
+/**
+ * tascam_midi_in_close() - Closes the MIDI input substream.
+ * @substream: The ALSA rawmidi substream to close.
+ *
+ * Return: 0 on success.
+ */
 static int tascam_midi_in_close(struct snd_rawmidi_substream *substream)
 {
 	return 0;
 }
 
+/**
+ * tascam_midi_in_trigger() - Triggers MIDI input stream activity.
+ * @substream: The ALSA rawmidi substream.
+ * @up: Boolean indicating whether to start (1) or stop (0) the stream.
+ *
+ * This function starts or stops the MIDI input URBs based on the 'up' parameter.
+ * When starting, it resets the kfifo and submits all MIDI input URBs.
+ * When stopping, it kills all anchored MIDI input URBs and cancels the
+ * associated workqueue.
+ */
 static void tascam_midi_in_trigger(struct snd_rawmidi_substream *substream, int up)
 {
 	struct tascam_card *tascam = substream->rmidi->private_data;
@@ -133,6 +160,12 @@ static void tascam_midi_in_trigger(struct snd_rawmidi_substream *substream, int 
 	}
 }
 
+/**
+ * tascam_midi_in_ops - ALSA rawmidi operations for MIDI input.
+ *
+ * This structure defines the callback functions for MIDI input stream operations,
+ * including open, close, and trigger.
+ */
 static struct snd_rawmidi_ops tascam_midi_in_ops = {
 	.open = tascam_midi_in_open,
 	.close = tascam_midi_in_close,
@@ -194,7 +227,7 @@ out:
  * This function pulls as many bytes as will fit into one packet from the
  * ALSA buffer and sends them.
  */
-void tascam_midi_out_work_handler(struct work_struct *work)
+static void tascam_midi_out_work_handler(struct work_struct *work)
 {
 	struct tascam_card *tascam =
 		container_of(work, struct tascam_card, midi_out_work);
@@ -261,6 +294,15 @@ void tascam_midi_out_work_handler(struct work_struct *work)
 }
 
 
+/**
+ * tascam_midi_out_open() - Opens the MIDI output substream.
+ * @substream: The ALSA rawmidi substream to open.
+ *
+ * This function stores a reference to the MIDI output substream in the
+ * driver's private data and initializes the MIDI running status.
+ *
+ * Return: 0 on success.
+ */
 static int tascam_midi_out_open(struct snd_rawmidi_substream *substream)
 {
 	struct tascam_card *tascam = substream->rmidi->private_data;
@@ -271,11 +313,24 @@ static int tascam_midi_out_open(struct snd_rawmidi_substream *substream)
 	return 0;
 }
 
+/**
+ * tascam_midi_out_close() - Closes the MIDI output substream.
+ * @substream: The ALSA rawmidi substream to close.
+ *
+ * Return: 0 on success.
+ */
 static int tascam_midi_out_close(struct snd_rawmidi_substream *substream)
 {
 	return 0;
 }
 
+/**
+ * tascam_midi_out_drain() - Drains the MIDI output stream.
+ * @substream: The ALSA rawmidi substream.
+ *
+ * This function cancels any pending MIDI output work and kills all
+ * anchored MIDI output URBs, ensuring all data is sent or discarded.
+ */
 static void tascam_midi_out_drain(struct snd_rawmidi_substream *substream)
 {
 	struct tascam_card *tascam = substream->rmidi->private_data;
@@ -284,6 +339,14 @@ static void tascam_midi_out_drain(struct snd_rawmidi_substream *substream)
 	usb_kill_anchored_urbs(&tascam->midi_out_anchor);
 }
 
+/**
+ * tascam_midi_out_trigger() - Triggers MIDI output stream activity.
+ * @substream: The ALSA rawmidi substream.
+ * @up: Boolean indicating whether to start (1) or stop (0) the stream.
+ *
+ * This function starts or stops the MIDI output workqueue based on the
+ * 'up' parameter.
+ */
 static void tascam_midi_out_trigger(struct snd_rawmidi_substream *substream, int up)
 {
 	struct tascam_card *tascam = substream->rmidi->private_data;
@@ -296,6 +359,12 @@ static void tascam_midi_out_trigger(struct snd_rawmidi_substream *substream, int
 	}
 }
 
+/**
+ * tascam_midi_out_ops - ALSA rawmidi operations for MIDI output.
+ *
+ * This structure defines the callback functions for MIDI output stream operations,
+ * including open, close, trigger, and drain.
+ */
 static struct snd_rawmidi_ops tascam_midi_out_ops = {
 	.open = tascam_midi_out_open,
 	.close = tascam_midi_out_close,
@@ -326,6 +395,9 @@ int tascam_create_midi(struct tascam_card *tascam)
 	tascam->rmidi->info_flags |= SNDRV_RAWMIDI_INFO_INPUT |
 				     SNDRV_RAWMIDI_INFO_OUTPUT |
 				     SNDRV_RAWMIDI_INFO_DUPLEX;
+
+	INIT_WORK(&tascam->midi_in_work, tascam_midi_in_work_handler);
+	INIT_WORK(&tascam->midi_out_work, tascam_midi_out_work_handler);
 
 	return 0;
 }
