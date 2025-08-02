@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-// Copyright (c) 2025 serifpersia <ramiserifpersia@gmail.com>
+// Copyright (c) 2025 Šerif Rami <ramiserifpersia@gmail.com>
 
 #ifndef __US144MKII_H
 #define __US144MKII_H
@@ -284,10 +284,10 @@ int tascam_alloc_urbs(struct tascam_card *tascam);
  */
 void tascam_stop_work_handler(struct work_struct *work);
 
-/* pcm.h */
-#include "pcm.h"
+/* us144mkii_pcm.h */
+#include "us144mkii_pcm.h"
 
-/* midi.c */
+/* us144mkii_midi.c */
 /**
  * tascam_midi_in_urb_complete() - Completion handler for MIDI IN URBs
  * @urb: The completed URB.
@@ -317,7 +317,7 @@ void tascam_midi_out_urb_complete(struct urb *urb);
  */
 int tascam_create_midi(struct tascam_card *tascam);
 
-/* controls.c */
+/* us144mkii_controls.c */
 /**
  * tascam_create_controls() - Creates and adds ALSA mixer controls for the device.
  * @tascam: The driver instance.

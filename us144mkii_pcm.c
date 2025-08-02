@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// Copyright (c) 2025 serifpersia <ramiserifpersia@gmail.com>
+// Copyright (c) 2025 Šerif Rami <ramiserifpersia@gmail.com>
 
 #include "us144mkii.h"
-#include "pcm.h"
 
 /**
- * @brief Rate-to-Packet Fixing Data (Verified)
+ * @brief Rate-to-Packet Fixing Data
  *
  * These static arrays define the number of audio frames per USB isochronous
  * packet for various sample rates. This data is crucial for maintaining

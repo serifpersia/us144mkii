@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// Copyright (c) 2025 serifpersia <ramiserifpersia@gmail.com>
+// Copyright (c) 2025 Šerif Rami <ramiserifpersia@gmail.com>
 
 #include "us144mkii.h"
-
-
 
 /**
  * tascam_midi_in_work_handler() - Deferred work for processing MIDI input.
@@ -166,7 +164,7 @@ static void tascam_midi_in_trigger(struct snd_rawmidi_substream *substream, int 
  * This structure defines the callback functions for MIDI input stream operations,
  * including open, close, and trigger.
  */
-static struct snd_rawmidi_ops tascam_midi_in_ops = {
+static const struct snd_rawmidi_ops tascam_midi_in_ops = {
 	.open = tascam_midi_in_open,
 	.close = tascam_midi_in_close,
 	.trigger = tascam_midi_in_trigger,
@@ -365,7 +363,7 @@ static void tascam_midi_out_trigger(struct snd_rawmidi_substream *substream, int
  * This structure defines the callback functions for MIDI output stream operations,
  * including open, close, trigger, and drain.
  */
-static struct snd_rawmidi_ops tascam_midi_out_ops = {
+static const struct snd_rawmidi_ops tascam_midi_out_ops = {
 	.open = tascam_midi_out_open,
 	.close = tascam_midi_out_close,
 	.trigger = tascam_midi_out_trigger,

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// Copyright (c) 2025 serifpersia <ramiserifpersia@gmail.com>
+// Copyright (c) 2025 Šerif Rami <ramiserifpersia@gmail.com>
 
 #include "us144mkii.h"
-#include "pcm.h"
 
 /**
  * tascam_playback_open() - Opens the PCM playback substream.
@@ -139,7 +138,7 @@ static snd_pcm_uframes_t tascam_playback_pointer(struct snd_pcm_substream *subst
  * including open, close, ioctl, hardware parameters, hardware free, prepare,
  * trigger, and pointer.
  */
-struct snd_pcm_ops tascam_playback_ops = {
+const struct snd_pcm_ops tascam_playback_ops = {
 	.open = tascam_playback_open,
 	.close = tascam_playback_close,
 	.ioctl = snd_pcm_lib_ioctl,

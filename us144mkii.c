@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// Copyright (c) 2025 serifpersia <ramiserifpersia@gmail.com>
+// Copyright (c) 2025 Šerif Rami <ramiserifpersia@gmail.com>
 /*
  * ALSA Driver for TASCAM US-144MKII Audio Interface
  */
 
 #include "us144mkii.h"
 
-MODULE_AUTHOR("serifpersia <ramiserifpersia@gmail.com>");
+MODULE_AUTHOR("Šerif Rami <ramiserifpersia@gmail.com>");
 MODULE_DESCRIPTION("ALSA Driver for TASCAM US-144MKII");
 MODULE_LICENSE("GPL v2");
 
@@ -440,7 +440,11 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	int err;
 	char *handshake_buf;
 
+	if (dev->speed != USB_SPEED_HIGH)
+		dev_info(&dev->dev, "Device is connected to a USB 1.1 port, this is not supported.\n");
+
 	if (intf->cur_altsetting->desc.bInterfaceNumber == 1) {
+
 		tascam = usb_get_intfdata(usb_ifnum_to_if(dev, 0));
 		if (tascam) {
 			usb_set_intfdata(intf, tascam);

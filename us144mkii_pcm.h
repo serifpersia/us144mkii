@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-// Copyright (c) 2025 serifpersia <ramiserifpersia@gmail.com>
+// Copyright (c) 2025 Šerif Rami <ramiserifpersia@gmail.com>
 
 #ifndef __US144MKII_PCM_H
 #define __US144MKII_PCM_H
@@ -21,7 +21,7 @@ extern const struct snd_pcm_hardware tascam_pcm_hw;
  * including open, close, ioctl, hardware parameters, hardware free, prepare,
  * trigger, and pointer.
  */
-extern struct snd_pcm_ops tascam_playback_ops;
+extern const struct snd_pcm_ops tascam_playback_ops;
 
 /**
  * tascam_capture_ops - ALSA PCM operations for capture.
@@ -30,7 +30,7 @@ extern struct snd_pcm_ops tascam_playback_ops;
  * including open, close, ioctl, hardware parameters, hardware free, prepare,
  * trigger, and pointer.
  */
-extern struct snd_pcm_ops tascam_capture_ops;
+extern const struct snd_pcm_ops tascam_capture_ops;
 
 /**
  * playback_urb_complete() - Completion handler for playback isochronous URBs.

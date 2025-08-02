@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// Copyright (c) 2025 serifpersia <ramiserifpersia@gmail.com>
+// Copyright (c) 2025 Šerif Rami <ramiserifpersia@gmail.com>
 
 #include "us144mkii.h"
-#include "pcm.h"
 
 /**
  * tascam_capture_open() - Opens the PCM capture substream.
@@ -96,7 +95,7 @@ static snd_pcm_uframes_t tascam_capture_pointer(struct snd_pcm_substream *substr
  * including open, close, ioctl, hardware parameters, hardware free, prepare,
  * trigger, and pointer.
  */
-struct snd_pcm_ops tascam_capture_ops = {
+const struct snd_pcm_ops tascam_capture_ops = {
 	.open = tascam_capture_open,
 	.close = tascam_capture_close,
 	.ioctl = snd_pcm_lib_ioctl,
