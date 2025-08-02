@@ -284,71 +284,8 @@ int tascam_alloc_urbs(struct tascam_card *tascam);
  */
 void tascam_stop_work_handler(struct work_struct *work);
 
-/* pcm.c */
-/**
- * playback_urb_complete() - Completion handler for playback isochronous URBs.
- * @urb: the completed URB
- *
- * This function runs in interrupt context. It calculates the number of bytes
- * to send in the next set of packets based on the feedback-driven clock,
- * copies the audio data from the ALSA ring buffer (applying routing), and
- * resubmits the URB.
- */
-void playback_urb_complete(struct urb *urb);
-
-/**
- * feedback_urb_complete() - Completion handler for feedback isochronous URBs.
- * @urb: the completed URB
- *
- * This is the master clock for the driver. It runs in interrupt context.
- * It reads the feedback value from the device, which indicates how many
- * samples the device has consumed. This information is used to adjust the
- * playback rate and to advance the capture stream pointer, keeping both
- * streams in sync. It then calls snd_pcm_period_elapsed if necessary and
- * resubmits itself.
- */
-void feedback_urb_complete(struct urb *urb);
-
-/**
- * capture_urb_complete() - Completion handler for capture bulk URBs.
- * @urb: the completed URB
- *
- * This function runs in interrupt context. It copies the received raw data
- * into an intermediate ring buffer and then schedules the workqueue to process
- * it. It then resubmits the URB to receive more data.
- */
-void capture_urb_complete(struct urb *urb);
-
-/**
- * tascam_init_pcm() - Initializes the ALSA PCM device.
- * @pcm: Pointer to the ALSA PCM device to initialize.
- *
- * This function sets up the PCM operations, adds ALSA controls for routing
- * and sample rate, and preallocates pages for the PCM buffer.
- *
- * Return: 0 on success, or a negative error code on failure.
- */
-int tascam_init_pcm(struct snd_pcm *pcm);
-
-/**
- * us144mkii_configure_device_for_rate() - Set sample rate via USB control msgs
- * @tascam: the tascam_card instance
- * @rate: the target sample rate (e.g., 44100, 96000)
- *
- * This function sends a sequence of vendor-specific and UAC control messages
- * to configure the device hardware for the specified sample rate.
- *
- * Return: 0 on success, or a negative error code on failure.
- */
-int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate);
-
-/**
- * tascam_pcm_hw - Hardware capabilities for TASCAM US-144MKII PCM.
- *
- * Defines the supported PCM formats, rates, channels, and buffer/period sizes
- * for the TASCAM US-144MKII audio interface.
- */
-extern const struct snd_pcm_hardware tascam_pcm_hw;
+/* pcm.h */
+#include "pcm.h"
 
 /* midi.c */
 /**

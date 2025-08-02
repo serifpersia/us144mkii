@@ -423,7 +423,7 @@ static int tascam_resume(struct usb_interface *intf)
  * @usb_id: The USB device ID.
  *
  * This function is the entry point for the USB driver when a matching device
- * is found. It performs initial device setup, including: 
+ * is found. It performs initial device setup, including:
  * - Checking for the second interface (MIDI) and associating it.
  * - Performing a vendor-specific handshake with the device.
  * - Setting alternate settings for USB interfaces.
