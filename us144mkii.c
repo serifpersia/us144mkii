@@ -525,6 +525,10 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	snprintf(card->longname, sizeof(card->longname), "%s (%04x:%04x) at %s",
 		 card->shortname, USB_VID_TASCAM, USB_PID_TASCAM_US144MKII, dev_name(&dev->dev));
 
+	err = device_create_file(&dev->dev, &dev_attr_driver_version);
+	if (err < 0)
+		dev_warn(&dev->dev, "could not create driver_version attribute, err: %d\n", err);
+
 
 
 	err = snd_pcm_new(card, "US144MKII PCM", 0, 1, 1, &tascam->pcm);
@@ -579,6 +583,7 @@ static void tascam_disconnect(struct usb_interface *intf)
 		return;
 
 	if (intf->cur_altsetting->desc.bInterfaceNumber == 0) {
+		device_remove_file(&tascam->dev->dev, &dev_attr_driver_version);
 		device_remove_file(&intf->dev, &dev_attr_driver_version);
 		usb_kill_anchored_urbs(&tascam->playback_anchor);
 		usb_kill_anchored_urbs(&tascam->capture_anchor);
