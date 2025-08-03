@@ -560,15 +560,9 @@ static int tascam_probe(struct usb_interface *intf,
 	card->private_free = tascam_card_private_free;
 
 	strscpy(card->driver, DRIVER_NAME, sizeof(card->driver));
-		if (dev->descriptor.idProduct == USB_PID_TASCAM_US144MKII) {
-		strscpy(card->shortname, "TASCAM US144MKII", sizeof(card->shortname));
-	} else if (dev->descriptor.idProduct == USB_PID_TASCAM_US122MKII) {
-		strscpy(card->shortname, "TASCAM US122MKII", sizeof(card->shortname));
-	} else {
-		strscpy(card->shortname, "TASCAM Unknown", sizeof(card->shortname));
-	}
+	strscpy(card->shortname, "TASCAM US-144MKII", sizeof(card->shortname));
 	snprintf(card->longname, sizeof(card->longname), "%s (%04x:%04x) at %s",
-		 card->shortname, USB_VID_TASCAM, dev->descriptor.idProduct,
+		 card->shortname, USB_VID_TASCAM, USB_PID_TASCAM_US144MKII,
 		 dev_name(&dev->dev));
 
 	err = device_create_file(&dev->dev, &dev_attr_driver_version);
@@ -645,7 +639,6 @@ static void tascam_disconnect(struct usb_interface *intf)
 
 static const struct usb_device_id tascam_usb_ids[] = {
 	{ USB_DEVICE(USB_VID_TASCAM, USB_PID_TASCAM_US144MKII) },
-	{ USB_DEVICE(USB_VID_TASCAM, USB_PID_TASCAM_US122MKII) },
 	{ /* Terminating entry */ }
 };
 MODULE_DEVICE_TABLE(usb, tascam_usb_ids);

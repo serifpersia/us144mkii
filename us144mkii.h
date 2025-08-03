@@ -19,7 +19,6 @@
 /* --- USB Device Identification --- */
 #define USB_VID_TASCAM 0x0644
 #define USB_PID_TASCAM_US144MKII 0x8020
-#define USB_PID_TASCAM_US122MKII 0x8021
 
 /* --- USB Endpoints (Alternate Setting 1) --- */
 #define EP_PLAYBACK_FEEDBACK 0x81
