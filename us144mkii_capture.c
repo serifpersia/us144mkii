@@ -86,7 +86,10 @@ tascam_capture_pointer(struct snd_pcm_substream *substream)
 	pos = tascam->capture_frames_processed;
 	spin_unlock_irqrestore(&tascam->lock, flags);
 
-	return runtime ? pos % runtime->buffer_size : 0;
+
+	u64 remainder = do_div(pos, runtime->buffer_size);
+	return runtime ? remainder : 0;
+
 }
 
 /**
