@@ -17,87 +17,86 @@
 #define DRIVER_VERSION "1.7.4"
 
 /* --- USB Device Identification --- */
-#define USB_VID_TASCAM				0x0644
-#define USB_PID_TASCAM_US144MKII	0x8020
+#define USB_VID_TASCAM 0x0644
+#define USB_PID_TASCAM_US144 0x800f
+#define USB_PID_TASCAM_US144MKII 0x8020
 
 /* --- USB Endpoints (Alternate Setting 1) --- */
-#define EP_PLAYBACK_FEEDBACK		0x81
-#define EP_AUDIO_OUT			0x02
-#define EP_MIDI_IN			0x83
-#define EP_MIDI_OUT			0x04
-#define EP_AUDIO_IN			0x86
+#define EP_PLAYBACK_FEEDBACK 0x81
+#define EP_AUDIO_OUT 0x02
+#define EP_MIDI_IN 0x83
+#define EP_MIDI_OUT 0x04
+#define EP_AUDIO_IN 0x86
 
 /* --- USB Control Message Protocol --- */
-#define RT_H2D_CLASS_EP		(USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_ENDPOINT)
-#define RT_D2H_CLASS_EP		(USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_ENDPOINT)
-#define RT_H2D_VENDOR_DEV	(USB_DIR_OUT | USB_TYPE_VENDOR | USB_RECIP_DEVICE)
-#define RT_D2H_VENDOR_DEV	(USB_DIR_IN | USB_TYPE_VENDOR | USB_RECIP_DEVICE)
+#define RT_H2D_CLASS_EP (USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_ENDPOINT)
+#define RT_D2H_CLASS_EP (USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_ENDPOINT)
+#define RT_H2D_VENDOR_DEV (USB_DIR_OUT | USB_TYPE_VENDOR | USB_RECIP_DEVICE)
+#define RT_D2H_VENDOR_DEV (USB_DIR_IN | USB_TYPE_VENDOR | USB_RECIP_DEVICE)
 
 enum uac_request {
-	UAC_SET_CUR			= 0x01,
-	UAC_GET_CUR			= 0x81,
+	UAC_SET_CUR = 0x01,
+	UAC_GET_CUR = 0x81,
 };
 
 enum uac_control_selector {
-	UAC_SAMPLING_FREQ_CONTROL	= 0x0100,
+	UAC_SAMPLING_FREQ_CONTROL = 0x0100,
 };
 
 enum tascam_vendor_request {
-	VENDOR_REQ_REGISTER_WRITE	= 0x41,
-	VENDOR_REQ_MODE_CONTROL		= 0x49,
+	VENDOR_REQ_REGISTER_WRITE = 0x41,
+	VENDOR_REQ_MODE_CONTROL = 0x49,
 };
 
 enum tascam_mode_value {
-	MODE_VAL_HANDSHAKE_READ		= 0x0000,
-	MODE_VAL_CONFIG			= 0x0010,
-	MODE_VAL_STREAM_START		= 0x0030,
+	MODE_VAL_HANDSHAKE_READ = 0x0000,
+	MODE_VAL_CONFIG = 0x0010,
+	MODE_VAL_STREAM_START = 0x0030,
 };
 
-#define HANDSHAKE_SUCCESS_VAL		0x12
+#define HANDSHAKE_SUCCESS_VAL 0x12
 
 enum tascam_register {
-	REG_ADDR_UNKNOWN_0D		= 0x0d04,
-	REG_ADDR_UNKNOWN_0E		= 0x0e00,
-	REG_ADDR_UNKNOWN_0F		= 0x0f00,
-	REG_ADDR_RATE_44100		= 0x1000,
-	REG_ADDR_RATE_48000		= 0x1002,
-	REG_ADDR_RATE_88200		= 0x1008,
-	REG_ADDR_RATE_96000		= 0x100a,
-	REG_ADDR_UNKNOWN_11		= 0x110b,
+	REG_ADDR_UNKNOWN_0D = 0x0d04,
+	REG_ADDR_UNKNOWN_0E = 0x0e00,
+	REG_ADDR_UNKNOWN_0F = 0x0f00,
+	REG_ADDR_RATE_44100 = 0x1000,
+	REG_ADDR_RATE_48000 = 0x1002,
+	REG_ADDR_RATE_88200 = 0x1008,
+	REG_ADDR_RATE_96000 = 0x100a,
+	REG_ADDR_UNKNOWN_11 = 0x110b,
 };
 
-#define REG_VAL_ENABLE			0x0101
-
-
+#define REG_VAL_ENABLE 0x0101
 
 /* --- URB Configuration --- */
-#define NUM_PLAYBACK_URBS		8
-#define PLAYBACK_URB_PACKETS		4
-#define NUM_FEEDBACK_URBS		4
-#define MAX_FEEDBACK_PACKETS		5
-#define FEEDBACK_PACKET_SIZE		3
-#define NUM_CAPTURE_URBS		8
-#define CAPTURE_URB_SIZE		512
-#define CAPTURE_RING_BUFFER_SIZE	(CAPTURE_URB_SIZE * NUM_CAPTURE_URBS * 4)
-#define NUM_MIDI_IN_URBS		4
-#define MIDI_IN_BUF_SIZE		64
-#define MIDI_IN_FIFO_SIZE		(MIDI_IN_BUF_SIZE * NUM_MIDI_IN_URBS)
-#define MIDI_OUT_BUF_SIZE		64
-#define NUM_MIDI_OUT_URBS		4
-#define USB_CTRL_TIMEOUT_MS		1000
-#define FEEDBACK_SYNC_LOSS_THRESHOLD	41
+#define NUM_PLAYBACK_URBS 8
+#define PLAYBACK_URB_PACKETS 4
+#define NUM_FEEDBACK_URBS 4
+#define MAX_FEEDBACK_PACKETS 5
+#define FEEDBACK_PACKET_SIZE 3
+#define NUM_CAPTURE_URBS 8
+#define CAPTURE_URB_SIZE 512
+#define CAPTURE_RING_BUFFER_SIZE (CAPTURE_URB_SIZE * NUM_CAPTURE_URBS * 4)
+#define NUM_MIDI_IN_URBS 4
+#define MIDI_IN_BUF_SIZE 64
+#define MIDI_IN_FIFO_SIZE (MIDI_IN_BUF_SIZE * NUM_MIDI_IN_URBS)
+#define MIDI_OUT_BUF_SIZE 64
+#define NUM_MIDI_OUT_URBS 4
+#define USB_CTRL_TIMEOUT_MS 1000
+#define FEEDBACK_SYNC_LOSS_THRESHOLD 41
 
 /* --- Audio Format Configuration --- */
-#define BYTES_PER_SAMPLE		3
-#define NUM_CHANNELS			4
-#define BYTES_PER_FRAME			(NUM_CHANNELS * BYTES_PER_SAMPLE)
-#define FEEDBACK_ACCUMULATOR_SIZE	128
+#define BYTES_PER_SAMPLE 3
+#define NUM_CHANNELS 4
+#define BYTES_PER_FRAME (NUM_CHANNELS * BYTES_PER_SAMPLE)
+#define FEEDBACK_ACCUMULATOR_SIZE 128
 
 /* --- Capture Decoding Defines --- */
-#define DECODED_CHANNELS_PER_FRAME	4
-#define DECODED_SAMPLE_SIZE		4
-#define FRAMES_PER_DECODE_BLOCK		8
-#define RAW_BYTES_PER_DECODE_BLOCK	512
+#define DECODED_CHANNELS_PER_FRAME 4
+#define DECODED_SAMPLE_SIZE 4
+#define FRAMES_PER_DECODE_BLOCK 8
+#define RAW_BYTES_PER_DECODE_BLOCK 512
 
 /**
  * struct tascam_card - Main driver data structure for the TASCAM US-144MKII.
@@ -229,10 +228,10 @@ struct tascam_card {
 	spinlock_t lock;
 	atomic_t active_urbs;
 	int current_rate;
-	unsigned int line_out_source;     /* 0: Playback 1-2, 1: Playback 3-4 */
-	unsigned int digital_out_source;  /* 0: Playback 1-2, 1: Playback 3-4 */
-	unsigned int capture_12_source;   /* 0: Analog In, 1: Digital In */
-	unsigned int capture_34_source;   /* 0: Analog In, 1: Digital In */
+	unsigned int line_out_source; /* 0: Playback 1-2, 1: Playback 3-4 */
+	unsigned int digital_out_source; /* 0: Playback 1-2, 1: Playback 3-4 */
+	unsigned int capture_12_source; /* 0: Analog In, 1: Digital In */
+	unsigned int capture_34_source; /* 0: Analog In, 1: Digital In */
 
 	unsigned int feedback_accumulator_pattern[FEEDBACK_ACCUMULATOR_SIZE];
 	unsigned int feedback_pattern_out_idx;

@@ -128,7 +128,8 @@ static snd_pcm_uframes_t tascam_playback_pointer(struct snd_pcm_substream *subst
 	pos = tascam->playback_frames_consumed;
 	spin_unlock_irqrestore(&tascam->lock, flags);
 
-	return runtime ? pos % runtime->buffer_size : 0;
+	u64 remainder = do_div(pos, runtime->buffer_size);
+	return runtime ? remainder : 0;
 }
 
 /**
