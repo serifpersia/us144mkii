@@ -14,7 +14,7 @@
 #include <sound/control.h>
 
 #define DRIVER_NAME "us144mkii"
-#define DRIVER_VERSION "1.7.4"
+#define DRIVER_VERSION "1.7.5"
 
 /* --- USB Device Identification --- */
 #define USB_VID_TASCAM 0x0644

@@ -84,7 +84,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_aboutDialog(nullptr)
 {
     if (!m_alsa.isCardFound()) {
-        QMessageBox::critical(this, "Error", "TASCAM US-144MKII Not Found.\nPlease ensure the device is connected and the 'us144mkii' driver is loaded.");
+        QMessageBox::critical(this, "Error", "TASCAM US-144/US-144MKII Not Found.\nPlease ensure the device is connected and the 'us144mkii' driver is loaded.");
         QTimer::singleShot(0, this, &QWidget::close);
         return;
     }
