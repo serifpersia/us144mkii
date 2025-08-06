@@ -3,11 +3,12 @@
 
 #include <string>
 #include <optional>
+#include <vector>
 
 class AlsaController
 {
 public:
-    AlsaController(const std::string& target_card_name = "US-144MKII");
+    AlsaController(const std::vector<std::string>& target_card_names = {"US-144MKII", "US-144"});
 
     std::optional<std::string> getCardId() const;
     int getCardNumber() const;
