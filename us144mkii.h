@@ -14,14 +14,11 @@
 #include <sound/rawmidi.h>
 
 #define DRIVER_NAME "us144mkii"
-#define DRIVER_VERSION "1.7.4"
+#define DRIVER_VERSION "1.7.5"
 
 /* --- USB Device Identification --- */
 #define USB_VID_TASCAM 0x0644
-<<<<<<< HEAD
 #define USB_PID_TASCAM_US144 0x800f
-=======
->>>>>>> f44b75094c078b0354fac280d769bc9a1bb6133b
 #define USB_PID_TASCAM_US144MKII 0x8020
 
 /* --- USB Endpoints (Alternate Setting 1) --- */
@@ -38,7 +35,6 @@
 #define RT_D2H_VENDOR_DEV (USB_DIR_IN | USB_TYPE_VENDOR | USB_RECIP_DEVICE)
 
 enum uac_request {
-<<<<<<< HEAD
   UAC_SET_CUR = 0x01,
   UAC_GET_CUR = 0x81,
 };
@@ -56,31 +52,11 @@ enum tascam_mode_value {
   MODE_VAL_HANDSHAKE_READ = 0x0000,
   MODE_VAL_CONFIG = 0x0010,
   MODE_VAL_STREAM_START = 0x0030,
-=======
-	UAC_SET_CUR = 0x01,
-	UAC_GET_CUR = 0x81,
-};
-
-enum uac_control_selector {
-	UAC_SAMPLING_FREQ_CONTROL = 0x0100,
-};
-
-enum tascam_vendor_request {
-	VENDOR_REQ_REGISTER_WRITE = 0x41,
-	VENDOR_REQ_MODE_CONTROL = 0x49,
-};
-
-enum tascam_mode_value {
-	MODE_VAL_HANDSHAKE_READ = 0x0000,
-	MODE_VAL_CONFIG = 0x0010,
-	MODE_VAL_STREAM_START = 0x0030,
->>>>>>> f44b75094c078b0354fac280d769bc9a1bb6133b
 };
 
 #define HANDSHAKE_SUCCESS_VAL 0x12
 
 enum tascam_register {
-<<<<<<< HEAD
   REG_ADDR_UNKNOWN_0D = 0x0d04,
   REG_ADDR_UNKNOWN_0E = 0x0e00,
   REG_ADDR_UNKNOWN_0F = 0x0f00,
@@ -89,16 +65,6 @@ enum tascam_register {
   REG_ADDR_RATE_88200 = 0x1008,
   REG_ADDR_RATE_96000 = 0x100a,
   REG_ADDR_UNKNOWN_11 = 0x110b,
-=======
-	REG_ADDR_UNKNOWN_0D = 0x0d04,
-	REG_ADDR_UNKNOWN_0E = 0x0e00,
-	REG_ADDR_UNKNOWN_0F = 0x0f00,
-	REG_ADDR_RATE_44100 = 0x1000,
-	REG_ADDR_RATE_48000 = 0x1002,
-	REG_ADDR_RATE_88200 = 0x1008,
-	REG_ADDR_RATE_96000 = 0x100a,
-	REG_ADDR_UNKNOWN_11 = 0x110b,
->>>>>>> f44b75094c078b0354fac280d769bc9a1bb6133b
 };
 
 #define REG_VAL_ENABLE 0x0101
@@ -264,7 +230,6 @@ struct tascam_card {
   spinlock_t midi_out_lock;
   u8 midi_running_status;
 
-<<<<<<< HEAD
   /* Shared state & Routing Matrix */
   spinlock_t lock;
   atomic_t active_urbs;
@@ -273,16 +238,6 @@ struct tascam_card {
   unsigned int digital_out_source; /* 0: Playback 1-2, 1: Playback 3-4 */
   unsigned int capture_12_source;  /* 0: Analog In, 1: Digital In */
   unsigned int capture_34_source;  /* 0: Analog In, 1: Digital In */
-=======
-	/* Shared state & Routing Matrix */
-	spinlock_t lock;
-	atomic_t active_urbs;
-	int current_rate;
-	unsigned int line_out_source; /* 0: Playback 1-2, 1: Playback 3-4 */
-	unsigned int digital_out_source; /* 0: Playback 1-2, 1: Playback 3-4 */
-	unsigned int capture_12_source; /* 0: Analog In, 1: Digital In */
-	unsigned int capture_34_source; /* 0: Analog In, 1: Digital In */
->>>>>>> f44b75094c078b0354fac280d769bc9a1bb6133b
 
   unsigned int feedback_accumulator_pattern[FEEDBACK_ACCUMULATOR_SIZE];
   unsigned int feedback_pattern_out_idx;

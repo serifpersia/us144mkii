@@ -69,20 +69,11 @@ static int tascam_capture_prepare(struct snd_pcm_substream *substream) {
  * Return: The current capture pointer position in frames.
  */
 static snd_pcm_uframes_t
-<<<<<<< HEAD
 tascam_capture_pointer(struct snd_pcm_substream *substream) {
   struct tascam_card *tascam = snd_pcm_substream_chip(substream);
   struct snd_pcm_runtime *runtime = substream->runtime;
   u64 pos;
   unsigned long flags;
-=======
-tascam_capture_pointer(struct snd_pcm_substream *substream)
-{
-	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
-	struct snd_pcm_runtime *runtime = substream->runtime;
-	u64 pos;
-	unsigned long flags;
->>>>>>> f44b75094c078b0354fac280d769bc9a1bb6133b
 
   if (!atomic_read(&tascam->capture_active))
     return 0;
@@ -125,25 +116,15 @@ const struct snd_pcm_ops tascam_capture_ops = {
 static void decode_tascam_capture_block(const u8 *src_block, s32 *dst_block) {
   int frame, bit;
 
-<<<<<<< HEAD
   memset(dst_block, 0,
          FRAMES_PER_DECODE_BLOCK * DECODED_CHANNELS_PER_FRAME *
              DECODED_SAMPLE_SIZE);
-=======
-	memset(dst_block, 0,
-	       FRAMES_PER_DECODE_BLOCK * DECODED_CHANNELS_PER_FRAME *
-		       DECODED_SAMPLE_SIZE);
->>>>>>> f44b75094c078b0354fac280d769bc9a1bb6133b
 
   for (frame = 0; frame < FRAMES_PER_DECODE_BLOCK; ++frame) {
     const u8 *p_src_frame_base = src_block + frame * 64;
     s32 *p_dst_frame = dst_block + frame * 4;
 
-<<<<<<< HEAD
     s32 ch[4] = {0};
-=======
-		s32 ch[4] = { 0 };
->>>>>>> f44b75094c078b0354fac280d769bc9a1bb6133b
 
     for (bit = 0; bit < 24; ++bit) {
       u8 byte1 = p_src_frame_base[bit];
@@ -176,7 +157,6 @@ static void decode_tascam_capture_block(const u8 *src_block, s32 *dst_block) {
  * copies the final audio data into the ALSA capture ring buffer. This offloads
  * * the CPU-intensive decoding from the time-sensitive URB completion handlers.
  */
-<<<<<<< HEAD
 void tascam_capture_work_handler(struct work_struct *work) {
   struct tascam_card *tascam =
       container_of(work, struct tascam_card, capture_work);
@@ -186,42 +166,21 @@ void tascam_capture_work_handler(struct work_struct *work) {
   u8 *raw_block = tascam->capture_decode_raw_block;
   s32 *decoded_block = tascam->capture_decode_dst_block;
   s32 *routed_block = tascam->capture_routing_buffer;
-=======
-void tascam_capture_work_handler(struct work_struct *work)
-{
-	struct tascam_card *tascam =
-		container_of(work, struct tascam_card, capture_work);
-	struct snd_pcm_substream *substream = tascam->capture_substream;
-	struct snd_pcm_runtime *runtime;
-	unsigned long flags;
-	u8 *raw_block = tascam->capture_decode_raw_block;
-	s32 *decoded_block = tascam->capture_decode_dst_block;
-	s32 *routed_block = tascam->capture_routing_buffer;
->>>>>>> f44b75094c078b0354fac280d769bc9a1bb6133b
 
   if (!substream || !substream->runtime)
     return;
   runtime = substream->runtime;
 
-<<<<<<< HEAD
   if (!raw_block || !decoded_block || !routed_block) {
     dev_err(tascam->card->dev,
             "Capture decode/routing buffers not allocated!\n");
     return;
   }
-=======
-	if (!raw_block || !decoded_block || !routed_block) {
-		dev_err(tascam->card->dev,
-			"Capture decode/routing buffers not allocated!\n");
-		return;
-	}
->>>>>>> f44b75094c078b0354fac280d769bc9a1bb6133b
 
   while (atomic_read(&tascam->capture_active)) {
     size_t write_ptr, read_ptr, available_data;
     bool can_process;
 
-<<<<<<< HEAD
     spin_lock_irqsave(&tascam->lock, flags);
     write_ptr = tascam->capture_ring_buffer_write_ptr;
     read_ptr = tascam->capture_ring_buffer_read_ptr;
@@ -229,21 +188,10 @@ void tascam_capture_work_handler(struct work_struct *work)
                          ? (write_ptr - read_ptr)
                          : (CAPTURE_RING_BUFFER_SIZE - read_ptr + write_ptr);
     can_process = (available_data >= RAW_BYTES_PER_DECODE_BLOCK);
-=======
-		spin_lock_irqsave(&tascam->lock, flags);
-		write_ptr = tascam->capture_ring_buffer_write_ptr;
-		read_ptr = tascam->capture_ring_buffer_read_ptr;
-		available_data = (write_ptr >= read_ptr) ?
-					 (write_ptr - read_ptr) :
-					 (CAPTURE_RING_BUFFER_SIZE - read_ptr +
-					  write_ptr);
-		can_process = (available_data >= RAW_BYTES_PER_DECODE_BLOCK);
->>>>>>> f44b75094c078b0354fac280d769bc9a1bb6133b
 
     if (can_process) {
       size_t i;
 
-<<<<<<< HEAD
       for (i = 0; i < RAW_BYTES_PER_DECODE_BLOCK; i++)
         raw_block[i] = tascam->capture_ring_buffer[(read_ptr + i) %
                                                    CAPTURE_RING_BUFFER_SIZE];
@@ -251,36 +199,17 @@ void tascam_capture_work_handler(struct work_struct *work)
           (read_ptr + RAW_BYTES_PER_DECODE_BLOCK) % CAPTURE_RING_BUFFER_SIZE;
     }
     spin_unlock_irqrestore(&tascam->lock, flags);
-=======
-			for (i = 0; i < RAW_BYTES_PER_DECODE_BLOCK; i++)
-				raw_block[i] =
-					tascam->capture_ring_buffer
-						[(read_ptr + i) %
-						 CAPTURE_RING_BUFFER_SIZE];
-			tascam->capture_ring_buffer_read_ptr =
-				(read_ptr + RAW_BYTES_PER_DECODE_BLOCK) %
-				CAPTURE_RING_BUFFER_SIZE;
-		}
-		spin_unlock_irqrestore(&tascam->lock, flags);
->>>>>>> f44b75094c078b0354fac280d769bc9a1bb6133b
 
     if (!can_process)
       break;
 
-<<<<<<< HEAD
     decode_tascam_capture_block(raw_block, decoded_block);
     process_capture_routing_us144mkii(tascam, decoded_block, routed_block);
-=======
-		decode_tascam_capture_block(raw_block, decoded_block);
-		process_capture_routing_us144mkii(tascam, decoded_block,
-						  routed_block);
->>>>>>> f44b75094c078b0354fac280d769bc9a1bb6133b
 
     spin_lock_irqsave(&tascam->lock, flags);
     if (atomic_read(&tascam->capture_active)) {
       int f;
 
-<<<<<<< HEAD
       for (f = 0; f < FRAMES_PER_DECODE_BLOCK; ++f) {
         u8 *dst_frame_start =
             runtime->dma_area +
@@ -301,37 +230,6 @@ void tascam_capture_work_handler(struct work_struct *work)
     }
     spin_unlock_irqrestore(&tascam->lock, flags);
   }
-=======
-			for (f = 0; f < FRAMES_PER_DECODE_BLOCK; ++f) {
-				u8 *dst_frame_start =
-					runtime->dma_area +
-					frames_to_bytes(
-						runtime,
-						tascam->driver_capture_pos);
-				s32 *routed_frame_start =
-					routed_block + (f * NUM_CHANNELS);
-				int c;
-
-				for (c = 0; c < NUM_CHANNELS; c++) {
-					u8 *dst_channel =
-						dst_frame_start +
-						(c * BYTES_PER_SAMPLE);
-					s32 *src_channel_s32 =
-						routed_frame_start + c;
-
-					memcpy(dst_channel,
-					       ((char *)src_channel_s32) + 1,
-					       3);
-				}
-
-				tascam->driver_capture_pos =
-					(tascam->driver_capture_pos + 1) %
-					runtime->buffer_size;
-			}
-		}
-		spin_unlock_irqrestore(&tascam->lock, flags);
-	}
->>>>>>> f44b75094c078b0354fac280d769bc9a1bb6133b
 }
 
 /**
@@ -347,7 +245,6 @@ void capture_urb_complete(struct urb *urb) {
   int ret;
   unsigned long flags;
 
-<<<<<<< HEAD
   if (urb->status) {
     if (urb->status != -ENOENT && urb->status != -ECONNRESET &&
         urb->status != -ESHUTDOWN && urb->status != -ENODEV &&
@@ -358,25 +255,11 @@ void capture_urb_complete(struct urb *urb) {
   }
   if (!tascam || !atomic_read(&tascam->capture_active))
     goto out;
-=======
-	if (urb->status) {
-		if (urb->status != -ENOENT && urb->status != -ECONNRESET &&
-		    urb->status != -ESHUTDOWN && urb->status != -ENODEV &&
-		    urb->status != -EPROTO)
-			dev_err_ratelimited(tascam->card->dev,
-					    "Capture URB failed: %d\n",
-					    urb->status);
-		goto out;
-	}
-	if (!tascam || !atomic_read(&tascam->capture_active))
-		goto out;
->>>>>>> f44b75094c078b0354fac280d769bc9a1bb6133b
 
   if (urb->actual_length > 0) {
     size_t i;
     size_t write_ptr;
 
-<<<<<<< HEAD
     spin_lock_irqsave(&tascam->lock, flags);
     write_ptr = tascam->capture_ring_buffer_write_ptr;
     for (i = 0; i < urb->actual_length; i++) {
@@ -385,22 +268,10 @@ void capture_urb_complete(struct urb *urb) {
     }
     tascam->capture_ring_buffer_write_ptr = write_ptr;
     spin_unlock_irqrestore(&tascam->lock, flags);
-=======
-		spin_lock_irqsave(&tascam->lock, flags);
-		write_ptr = tascam->capture_ring_buffer_write_ptr;
-		for (i = 0; i < urb->actual_length; i++) {
-			tascam->capture_ring_buffer[write_ptr] =
-				((u8 *)urb->transfer_buffer)[i];
-			write_ptr = (write_ptr + 1) % CAPTURE_RING_BUFFER_SIZE;
-		}
-		tascam->capture_ring_buffer_write_ptr = write_ptr;
-		spin_unlock_irqrestore(&tascam->lock, flags);
->>>>>>> f44b75094c078b0354fac280d769bc9a1bb6133b
 
     schedule_work(&tascam->capture_work);
   }
 
-<<<<<<< HEAD
   usb_get_urb(urb);
   usb_anchor_urb(urb, &tascam->capture_anchor);
   ret = usb_submit_urb(urb, GFP_ATOMIC);
@@ -410,18 +281,6 @@ void capture_urb_complete(struct urb *urb) {
     usb_unanchor_urb(urb);
     usb_put_urb(urb);
   }
-=======
-	usb_get_urb(urb);
-	usb_anchor_urb(urb, &tascam->capture_anchor);
-	ret = usb_submit_urb(urb, GFP_ATOMIC);
-	if (ret < 0) {
-		dev_err_ratelimited(tascam->card->dev,
-				    "Failed to resubmit capture URB: %d\n",
-				    ret);
-		usb_unanchor_urb(urb);
-		usb_put_urb(urb);
-	}
->>>>>>> f44b75094c078b0354fac280d769bc9a1bb6133b
 out:
   usb_put_urb(urb);
 }
