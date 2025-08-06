@@ -364,6 +364,7 @@ int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd) {
       if (err < 0) {
         usb_unanchor_urb(tascam->feedback_urbs[i]);
         usb_put_urb(tascam->feedback_urbs[i]);
+        atomic_dec(&tascam->active_urbs); /* Decrement on failed submission */
         goto start_rollback;
       }
       atomic_inc(&tascam->active_urbs);
@@ -375,6 +376,7 @@ int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd) {
       if (err < 0) {
         usb_unanchor_urb(tascam->playback_urbs[i]);
         usb_put_urb(tascam->playback_urbs[i]);
+        atomic_dec(&tascam->active_urbs); /* Decrement on failed submission */
         goto start_rollback;
       }
       atomic_inc(&tascam->active_urbs);
@@ -386,6 +388,7 @@ int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd) {
       if (err < 0) {
         usb_unanchor_urb(tascam->capture_urbs[i]);
         usb_put_urb(tascam->capture_urbs[i]);
+        atomic_dec(&tascam->active_urbs); /* Decrement on failed submission */
         goto start_rollback;
       }
       atomic_inc(&tascam->active_urbs);

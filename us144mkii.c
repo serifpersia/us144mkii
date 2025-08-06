@@ -121,8 +121,7 @@ void tascam_free_urbs(struct tascam_card *tascam) {
     }
   }
 
-  kfree(tascam->playback_routing_buffer);
-  tascam->playback_routing_buffer = NULL;
+  
   kfree(tascam->capture_routing_buffer);
   tascam->capture_routing_buffer = NULL;
   kfree(tascam->capture_decode_dst_block);
@@ -265,10 +264,7 @@ int tascam_alloc_urbs(struct tascam_card *tascam) {
   if (!tascam->capture_decode_dst_block)
     goto error;
 
-  tascam->playback_routing_buffer =
-      kmalloc(tascam->playback_urb_alloc_size, GFP_KERNEL);
-  if (!tascam->playback_routing_buffer)
-    goto error;
+  
 
   tascam->capture_routing_buffer =
       kmalloc(FRAMES_PER_DECODE_BLOCK * DECODED_CHANNELS_PER_FRAME *
@@ -419,6 +415,15 @@ static int tascam_resume(struct usb_interface *intf) {
   return 0;
 }
 
+static void tascam_error_timer(struct timer_list *t) {
+  struct tascam_card *tascam = from_timer(tascam, t, error_timer);
+
+  if (atomic_read(&tascam->midi_in_active))
+    schedule_work(&tascam->midi_in_work);
+  if (atomic_read(&tascam->midi_out_active))
+    schedule_work(&tascam->midi_out_work);
+}
+
 /**
  * tascam_probe() - Probes for the TASCAM US-144MKII device.
  * @intf: The USB interface being probed.
@@ -519,6 +524,8 @@ static int tascam_probe(struct usb_interface *intf,
   init_usb_anchor(&tascam->midi_in_anchor);
   init_usb_anchor(&tascam->midi_out_anchor);
 
+  timer_setup(&tascam->error_timer, tascam_error_timer, 0);
+
   INIT_WORK(&tascam->stop_work, tascam_stop_work_handler);
 
   if (kfifo_alloc(&tascam->midi_in_fifo, MIDI_IN_FIFO_SIZE, GFP_KERNEL))
@@ -601,6 +608,7 @@ static void tascam_disconnect(struct usb_interface *intf) {
     usb_kill_anchored_urbs(&tascam->feedback_anchor);
     usb_kill_anchored_urbs(&tascam->midi_in_anchor);
     usb_kill_anchored_urbs(&tascam->midi_out_anchor);
+    timer_delete_sync(&tascam->error_timer);
     snd_card_disconnect(tascam->card);
     tascam_free_urbs(tascam);
     snd_card_free(tascam->card);

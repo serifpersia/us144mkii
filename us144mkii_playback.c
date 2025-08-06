@@ -161,7 +161,7 @@ void playback_urb_complete(struct urb *urb) {
   struct snd_pcm_substream *substream;
   struct snd_pcm_runtime *runtime;
   unsigned long flags;
-  u8 *src_buf, *dst_buf;
+  
   size_t total_bytes_for_urb = 0;
   snd_pcm_uframes_t offset_frames;
   snd_pcm_uframes_t frames_to_copy;
@@ -213,8 +213,7 @@ void playback_urb_complete(struct urb *urb) {
   spin_unlock_irqrestore(&tascam->lock, flags);
 
   if (total_bytes_for_urb > 0) {
-    src_buf = runtime->dma_area + frames_to_bytes(runtime, offset_frames);
-    dst_buf = tascam->playback_routing_buffer;
+    u8 *dst_buf = urb->transfer_buffer;
 
     /* Handle ring buffer wrap-around */
     if (offset_frames + frames_to_copy > runtime->buffer_size) {
@@ -222,17 +221,15 @@ void playback_urb_complete(struct urb *urb) {
           frames_to_bytes(runtime, runtime->buffer_size - offset_frames);
       size_t second_chunk_bytes = total_bytes_for_urb - first_chunk_bytes;
 
-      memcpy(dst_buf, src_buf, first_chunk_bytes);
-      memcpy(dst_buf + first_chunk_bytes, runtime->dma_area,
-             second_chunk_bytes);
+      memcpy(dst_buf, runtime->dma_area + frames_to_bytes(runtime, offset_frames), first_chunk_bytes);
+      memcpy(dst_buf + first_chunk_bytes, runtime->dma_area, second_chunk_bytes);
     } else {
-      memcpy(dst_buf, src_buf, total_bytes_for_urb);
+      memcpy(dst_buf, runtime->dma_area + frames_to_bytes(runtime, offset_frames), total_bytes_for_urb);
     }
 
     /* Apply routing to the contiguous data in our routing buffer */
     process_playback_routing_us144mkii(tascam, dst_buf, dst_buf,
                                        frames_to_copy);
-    memcpy(urb->transfer_buffer, dst_buf, total_bytes_for_urb);
   }
 
   urb->dev = tascam->dev;
@@ -244,6 +241,7 @@ void playback_urb_complete(struct urb *urb) {
                         "Failed to resubmit playback URB: %d\n", ret);
     usb_unanchor_urb(urb);
     usb_put_urb(urb);
+    atomic_dec(&tascam->active_urbs); /* Decrement on failed resubmission */
   }
 out:
   usb_put_urb(urb);
@@ -273,9 +271,11 @@ void feedback_urb_complete(struct urb *urb) {
 
   if (urb->status) {
     if (urb->status != -ENOENT && urb->status != -ECONNRESET &&
-        urb->status != -ESHUTDOWN && urb->status != -ENODEV)
+        urb->status != -ESHUTDOWN && urb->status != -ENODEV) {
       dev_err_ratelimited(tascam->card->dev, "Feedback URB failed: %d\n",
                           urb->status);
+      atomic_dec(&tascam->active_urbs); /* Decrement on failed resubmission */
+    }
     goto out;
   }
   if (!tascam || !atomic_read(&tascam->playback_active))
@@ -418,3 +418,4 @@ unlock_and_continue:
 out:
   usb_put_urb(urb);
 }
+

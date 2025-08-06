@@ -7,6 +7,7 @@
 #include <linux/kfifo.h>
 #include <linux/usb.h>
 #include <linux/workqueue.h>
+#include <linux/timer.h>
 #include <sound/control.h>
 #include <sound/core.h>
 #include <sound/initval.h>
@@ -179,6 +180,46 @@ enum tascam_register {
  * @midi_out_anchor: USB anchor for MIDI output URBs.
  */
 struct tascam_card {
+  /* --- Hot Path Data (frequently accessed, especially in IRQ/workqueue) --- */
+  spinlock_t lock; // Main lock, highly contended
+  atomic_t playback_active;
+  atomic_t capture_active;
+  atomic_t active_urbs; // Also frequently updated
+
+  // Playback state (updated by feedback_urb_complete and playback_urb_complete)
+  u64 playback_frames_consumed;
+  snd_pcm_uframes_t driver_playback_pos;
+  u64 last_period_pos;
+
+  // Capture state (updated by feedback_urb_complete and capture_urb_complete)
+  snd_pcm_uframes_t driver_capture_pos;
+  u64 capture_frames_processed;
+  u64 last_capture_period_pos;
+
+  // Feedback related (critical for audio sync)
+  unsigned int feedback_accumulator_pattern[FEEDBACK_ACCUMULATOR_SIZE];
+  unsigned int feedback_pattern_out_idx;
+  unsigned int feedback_pattern_in_idx;
+  bool feedback_synced;
+  unsigned int feedback_consecutive_errors;
+  unsigned int feedback_urb_skip_count;
+  const unsigned int (*feedback_patterns)[8];
+  unsigned int feedback_base_value;
+  unsigned int feedback_max_value;
+
+  // MIDI state (frequently accessed in MIDI handlers)
+  atomic_t midi_in_active;
+  atomic_t midi_out_active;
+  spinlock_t midi_in_lock;
+  spinlock_t midi_out_lock;
+  unsigned long midi_out_urbs_in_flight;
+  u8 midi_running_status;
+  bool in_sysex;
+  struct timer_list error_timer; // Timer for MIDI error retry
+
+  int current_rate; // Also accessed frequently, moved up
+
+  /* --- Less Hot Data (pointers, configuration, work structs) --- */
   struct usb_device *dev;
   struct usb_interface *iface0;
   struct usb_interface *iface1;
@@ -186,70 +227,46 @@ struct tascam_card {
   struct snd_pcm *pcm;
   struct snd_rawmidi *rmidi;
 
-  /* Playback stream */
+  // Substream pointers
   struct snd_pcm_substream *playback_substream;
+  struct snd_pcm_substream *capture_substream;
+  struct snd_rawmidi_substream *midi_in_substream;
+  struct snd_rawmidi_substream *midi_out_substream;
+
+  // URB arrays and sizes
   struct urb *playback_urbs[NUM_PLAYBACK_URBS];
   size_t playback_urb_alloc_size;
   struct urb *feedback_urbs[NUM_FEEDBACK_URBS];
   size_t feedback_urb_alloc_size;
-  atomic_t playback_active;
-  u64 playback_frames_consumed;
-  snd_pcm_uframes_t driver_playback_pos;
-  u64 last_period_pos;
-  u8 *playback_routing_buffer;
-
-  /* Capture stream */
-  struct snd_pcm_substream *capture_substream;
   struct urb *capture_urbs[NUM_CAPTURE_URBS];
   size_t capture_urb_alloc_size;
-  atomic_t capture_active;
-  snd_pcm_uframes_t driver_capture_pos;
-  u64 capture_frames_processed;
-  u64 last_capture_period_pos;
+  struct urb *midi_in_urbs[NUM_MIDI_IN_URBS];
+  struct urb *midi_out_urbs[NUM_MIDI_OUT_URBS];
+
+  // Buffers (pointers to external allocations)
   u8 *capture_ring_buffer;
   size_t capture_ring_buffer_read_ptr;
   size_t capture_ring_buffer_write_ptr;
   u8 *capture_decode_raw_block;
   s32 *capture_decode_dst_block;
   s32 *capture_routing_buffer;
+
+  // Work structs
   struct work_struct capture_work;
   struct work_struct stop_work;
-
-  /* MIDI streams */
-  struct snd_rawmidi_substream *midi_in_substream;
-  struct snd_rawmidi_substream *midi_out_substream;
-  struct urb *midi_in_urbs[NUM_MIDI_IN_URBS];
-  atomic_t midi_in_active;
-  struct kfifo midi_in_fifo;
   struct work_struct midi_in_work;
-  spinlock_t midi_in_lock;
-  struct urb *midi_out_urbs[NUM_MIDI_OUT_URBS];
-  atomic_t midi_out_active;
   struct work_struct midi_out_work;
-  unsigned long midi_out_urbs_in_flight;
-  spinlock_t midi_out_lock;
-  u8 midi_running_status;
 
-  /* Shared state & Routing Matrix */
-  spinlock_t lock;
-  atomic_t active_urbs;
-  int current_rate;
-  unsigned int line_out_source;    /* 0: Playback 1-2, 1: Playback 3-4 */
-  unsigned int digital_out_source; /* 0: Playback 1-2, 1: Playback 3-4 */
-  unsigned int capture_12_source;  /* 0: Analog In, 1: Digital In */
-  unsigned int capture_34_source;  /* 0: Analog In, 1: Digital In */
+  // FIFOs
+  struct kfifo midi_in_fifo;
 
-  unsigned int feedback_accumulator_pattern[FEEDBACK_ACCUMULATOR_SIZE];
-  unsigned int feedback_pattern_out_idx;
-  unsigned int feedback_pattern_in_idx;
-  bool feedback_synced;
-  unsigned int feedback_consecutive_errors;
-  unsigned int feedback_urb_skip_count;
+  // Routing Matrix settings
+  unsigned int line_out_source;
+  unsigned int digital_out_source;
+  unsigned int capture_12_source;
+  unsigned int capture_34_source;
 
-  const unsigned int (*feedback_patterns)[8];
-  unsigned int feedback_base_value;
-  unsigned int feedback_max_value;
-
+  // USB anchors
   struct usb_anchor playback_anchor;
   struct usb_anchor capture_anchor;
   struct usb_anchor feedback_anchor;

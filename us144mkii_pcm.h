@@ -67,6 +67,47 @@ void feedback_urb_complete(struct urb *urb);
 void capture_urb_complete(struct urb *urb);
 
 /**
+ * prepare_playback_urb() - Prepares and submits a playback URB.
+ * @tascam: the tascam_card instance
+ *
+ * This function gets a free playback URB, calculates the number of frames to
+ * send based on the feedback accumulator, copies audio data from the ALSA
+ * ring buffer, applies routing, and submits the URB.
+ */
+void prepare_playback_urb(struct tascam_card *tascam);
+
+/**
+ * feedback_urb_complete() - Completion handler for feedback isochronous URBs.
+ * @urb: the completed URB
+ *
+ * This is the master clock for the driver. It runs in interrupt context.
+ * It reads the feedback value from the device, which indicates how many
+ * samples the device has consumed. This information is used to adjust the
+ * playback rate and to advance the capture stream pointer, keeping both
+ * streams in sync. It then calls snd_pcm_period_elapsed if necessary and
+ * resubmits itself.
+ */
+void feedback_urb_complete(struct urb *urb);
+
+/**
+ * retire_capture_urb() - Completion handler for capture bulk URBs.
+ * @urb: the completed URB
+ *
+ * This function runs in interrupt context. It copies the received raw data
+ * into an intermediate ring buffer and then schedules the workqueue to process
+ * it. It then calls prepare_capture_urb() to submit the next URB.
+ */
+void retire_capture_urb(struct urb *urb);
+
+/**
+ * prepare_capture_urb() - Prepares and submits a capture URB.
+ * @tascam: the tascam_card instance
+ *
+ * This function gets a free capture URB from the anchor and submits it.
+ */
+void prepare_capture_urb(struct tascam_card *tascam);
+
+/**
  * tascam_init_pcm() - Initializes the ALSA PCM device.
  * @pcm: Pointer to the ALSA PCM device to initialize.
  *

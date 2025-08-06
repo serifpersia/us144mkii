@@ -32,16 +32,28 @@ static void tascam_midi_in_work_handler(struct work_struct *work) {
       continue;
 
     for (i = 0; i < len; ++i) {
+      u8 byte = buf[i];
+
       /* Skip padding bytes */
-      if (buf[i] == 0xfd)
+      if (byte == 0xfd)
         continue;
 
-      /* The last byte is often a terminator (0x00, 0xFF). Ignore it. */
-      if (i == (len - 1) && (buf[i] == 0x00 || buf[i] == 0xff))
-        continue;
+      if (byte == 0xf0) { /* SysEx Start */
+        tascam->in_sysex = true;
+      } else if (byte == 0xf7) { /* SysEx End */
+        tascam->in_sysex = false;
+      } else if (tascam->in_sysex) {
+        /* Inside a SysEx message */
+      } else if (byte & 0x80) { /* Status byte */
+        tascam->midi_running_status = byte;
+      } else { /* Data byte */
+        if (tascam->midi_running_status != 0)
+          snd_rawmidi_receive(tascam->midi_in_substream,
+                                &tascam->midi_running_status, 1);
+      }
 
       /* Submit valid MIDI bytes one by one */
-      snd_rawmidi_receive(tascam->midi_in_substream, &buf[i], 1);
+      snd_rawmidi_receive(tascam->midi_in_substream, &byte, 1);
     }
   }
 }
@@ -60,9 +72,11 @@ void tascam_midi_in_urb_complete(struct urb *urb) {
 
   if (urb->status) {
     if (urb->status != -ENOENT && urb->status != -ECONNRESET &&
-        urb->status != -ESHUTDOWN && urb->status != -EPROTO)
+        urb->status != -ESHUTDOWN && urb->status != -EPROTO) {
       dev_err_ratelimited(tascam->card->dev, "MIDI IN URB failed: status %d\n",
                           urb->status);
+      mod_timer(&tascam->error_timer, jiffies + msecs_to_jiffies(50));
+    }
     goto out;
   }
 
@@ -182,9 +196,11 @@ void tascam_midi_out_urb_complete(struct urb *urb) {
 
   if (urb->status) {
     if (urb->status != -ENOENT && urb->status != -ECONNRESET &&
-        urb->status != -ESHUTDOWN)
+        urb->status != -ESHUTDOWN) {
       dev_err_ratelimited(tascam->card->dev, "MIDI OUT URB failed: %d\n",
                           urb->status);
+      mod_timer(&tascam->error_timer, jiffies + msecs_to_jiffies(50));
+    }
   }
 
   if (!tascam)
