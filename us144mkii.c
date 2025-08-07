@@ -121,7 +121,6 @@ void tascam_free_urbs(struct tascam_card *tascam) {
     }
   }
 
-  
   kfree(tascam->capture_routing_buffer);
   tascam->capture_routing_buffer = NULL;
   kfree(tascam->capture_decode_dst_block);
@@ -169,10 +168,10 @@ int tascam_alloc_urbs(struct tascam_card *tascam) {
     urb->complete = playback_urb_complete;
   }
 
-  tascam->feedback_urb_alloc_size = FEEDBACK_PACKET_SIZE * MAX_FEEDBACK_PACKETS;
+  tascam->feedback_urb_alloc_size = FEEDBACK_PACKET_SIZE * FEEDBACK_URB_PACKETS;
 
   for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
-    struct urb *f_urb = usb_alloc_urb(MAX_FEEDBACK_PACKETS, GFP_KERNEL);
+    struct urb *f_urb = usb_alloc_urb(FEEDBACK_URB_PACKETS, GFP_KERNEL);
 
     if (!f_urb)
       goto error;
@@ -263,8 +262,6 @@ int tascam_alloc_urbs(struct tascam_card *tascam) {
               GFP_KERNEL);
   if (!tascam->capture_decode_dst_block)
     goto error;
-
-  
 
   tascam->capture_routing_buffer =
       kmalloc(FRAMES_PER_DECODE_BLOCK * DECODED_CHANNELS_PER_FRAME *

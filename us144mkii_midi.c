@@ -49,7 +49,7 @@ static void tascam_midi_in_work_handler(struct work_struct *work) {
       } else { /* Data byte */
         if (tascam->midi_running_status != 0)
           snd_rawmidi_receive(tascam->midi_in_substream,
-                                &tascam->midi_running_status, 1);
+                              &tascam->midi_running_status, 1);
       }
 
       /* Submit valid MIDI bytes one by one */

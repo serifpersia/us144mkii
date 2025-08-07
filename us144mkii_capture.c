@@ -192,10 +192,12 @@ void tascam_capture_work_handler(struct work_struct *work) {
     if (can_process) {
       size_t bytes_to_end = CAPTURE_RING_BUFFER_SIZE - read_ptr;
       if (bytes_to_end >= RAW_BYTES_PER_DECODE_BLOCK) {
-        memcpy(raw_block, tascam->capture_ring_buffer + read_ptr, RAW_BYTES_PER_DECODE_BLOCK);
+        memcpy(raw_block, tascam->capture_ring_buffer + read_ptr,
+               RAW_BYTES_PER_DECODE_BLOCK);
       } else {
         memcpy(raw_block, tascam->capture_ring_buffer + read_ptr, bytes_to_end);
-        memcpy(raw_block + bytes_to_end, tascam->capture_ring_buffer, RAW_BYTES_PER_DECODE_BLOCK - bytes_to_end);
+        memcpy(raw_block + bytes_to_end, tascam->capture_ring_buffer,
+               RAW_BYTES_PER_DECODE_BLOCK - bytes_to_end);
       }
       tascam->capture_ring_buffer_read_ptr =
           (read_ptr + RAW_BYTES_PER_DECODE_BLOCK) % CAPTURE_RING_BUFFER_SIZE;
@@ -287,4 +289,3 @@ void capture_urb_complete(struct urb *urb) {
 out:
   usb_put_urb(urb);
 }
-

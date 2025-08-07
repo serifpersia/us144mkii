@@ -5,9 +5,9 @@
 #define __US144MKII_H
 
 #include <linux/kfifo.h>
+#include <linux/timer.h>
 #include <linux/usb.h>
 #include <linux/workqueue.h>
-#include <linux/timer.h>
 #include <sound/control.h>
 #include <sound/core.h>
 #include <sound/initval.h>
@@ -71,10 +71,10 @@ enum tascam_register {
 #define REG_VAL_ENABLE 0x0101
 
 /* --- URB Configuration --- */
-#define NUM_PLAYBACK_URBS 8
-#define PLAYBACK_URB_PACKETS 4
+#define NUM_PLAYBACK_URBS 4
+#define PLAYBACK_URB_PACKETS 8
 #define NUM_FEEDBACK_URBS 4
-#define MAX_FEEDBACK_PACKETS 5
+#define FEEDBACK_URB_PACKETS 1
 #define FEEDBACK_PACKET_SIZE 3
 #define NUM_CAPTURE_URBS 8
 #define CAPTURE_URB_SIZE 512
@@ -168,10 +168,7 @@ enum tascam_register {
  * @feedback_consecutive_errors: Counter for consecutive feedback errors.
  * @feedback_urb_skip_count: Number of feedback URBs to skip initially for
  * stabilization.
- * @feedback_patterns: Pointer to the current feedback patterns based on sample
- * rate.
- * @feedback_base_value: Base value for feedback pattern lookup.
- * @feedback_max_value: Max value for feedback pattern lookup.
+ * @fpo: Holds the state for the dynamic feedback pattern generation.
  *
  * @playback_anchor: USB anchor for playback URBs.
  * @capture_anchor: USB anchor for capture URBs.
@@ -203,9 +200,16 @@ struct tascam_card {
   bool feedback_synced;
   unsigned int feedback_consecutive_errors;
   unsigned int feedback_urb_skip_count;
-  const unsigned int (*feedback_patterns)[8];
-  unsigned int feedback_base_value;
-  unsigned int feedback_max_value;
+
+  struct us144mkii_frame_pattern_observer {
+    unsigned int sample_rate_khz;
+    unsigned int base_feedback_value;
+    int feedback_offset;
+    unsigned int full_frame_patterns[5][8];
+    unsigned int current_index;
+    unsigned int previous_index;
+    bool sync_locked;
+  } fpo;
 
   // MIDI state (frequently accessed in MIDI handlers)
   atomic_t midi_in_active;

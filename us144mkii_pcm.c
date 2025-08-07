@@ -4,6 +4,68 @@
 #include "us144mkii.h"
 
 /**
+ * fpoInitPattern() - Generates a packet distribution pattern.
+ * @size: The number of elements in the pattern array (e.g., 8).
+ * @pattern_array: Pointer to the array to be populated.
+ * @initial_value: The base value to initialize each element with.
+ * @target_sum: The desired sum of all elements in the final array.
+ *
+ * This function initializes an array with a base value and then iteratively
+ * adjusts the elements to match a target sum, distributing the difference
+ * as evenly as possible.
+ */
+static void fpoInitPattern(unsigned int size, unsigned int *pattern_array,
+                           unsigned int initial_value, int target_sum) {
+  unsigned int current_sum;
+  int diff;
+  int abs_diff;
+  unsigned int stride;
+  unsigned int i;
+
+  if (!size)
+    return;
+
+  /* 1. Initialize the array with the base value. */
+  current_sum = 0;
+  for (i = 0; i < size; ++i) {
+    pattern_array[i] = initial_value;
+  }
+  current_sum = size * initial_value;
+
+  /* 2. Iteratively adjust until the sum is correct. */
+  while (current_sum != target_sum) {
+    diff = target_sum - current_sum;
+    abs_diff = (diff > 0) ? diff : -diff;
+
+    if (abs_diff == 0)
+      break;
+
+    /* Calculate the stride to distribute the adjustments. */
+    stride = size / abs_diff;
+    if (stride == 0) {
+      /* This would happen if the difference is larger than the array
+       * size, which indicates a problem. The original code breaks
+       * here.
+       */
+      break;
+    }
+
+    /* Apply the adjustments. */
+    for (i = 0; i < size; i += stride) {
+      if (diff > 0)
+        pattern_array[i]++;
+      else
+        pattern_array[i]--;
+    }
+
+    /* Recalculate the sum for the next iteration. */
+    current_sum = 0;
+    for (i = 0; i < size; ++i)
+      current_sum += pattern_array[i];
+  }
+}
+
+/**
  * @brief Rate-to-Packet Fixing Data
  *
  * These static arrays define the number of audio frames per USB isochronous
@@ -15,28 +77,6 @@
  * which helps the driver adjust the packet size dynamically to match the
  * device's consumption rate.
  */
-static const unsigned int patterns_48khz[5][8] = {{5, 6, 6, 6, 6, 6, 6, 6},
-                                                  {6, 6, 6, 6, 6, 6, 6, 6},
-                                                  {6, 6, 6, 6, 6, 6, 6, 6},
-                                                  {6, 6, 6, 7, 6, 6, 6, 6},
-                                                  {7, 6, 6, 7, 6, 6, 7, 6}};
-static const unsigned int patterns_96khz[5][8] = {
-    {11, 12, 12, 12, 12, 12, 12, 12},
-    {12, 12, 12, 12, 12, 12, 12, 12},
-    {12, 12, 12, 12, 12, 12, 12, 12},
-    {12, 12, 13, 12, 12, 12, 12, 12},
-    {13, 12, 12, 13, 12, 12, 13, 12}};
-static const unsigned int patterns_88khz[5][8] = {
-    {10, 11, 11, 11, 11, 11, 11, 11},
-    {11, 11, 11, 11, 11, 11, 11, 11},
-    {11, 11, 11, 11, 11, 11, 11, 11},
-    {11, 11, 12, 11, 11, 11, 11, 11},
-    {12, 11, 11, 12, 11, 11, 12, 11}};
-static const unsigned int patterns_44khz[5][8] = {{5, 5, 5, 5, 5, 5, 5, 6},
-                                                  {5, 5, 5, 6, 5, 5, 5, 6},
-                                                  {5, 5, 6, 5, 6, 5, 5, 6},
-                                                  {5, 6, 5, 6, 5, 6, 5, 6},
-                                                  {6, 6, 6, 6, 6, 6, 6, 5}};
 
 const struct snd_pcm_hardware tascam_pcm_hw = {
     .info = (SNDRV_PCM_INFO_MMAP | SNDRV_PCM_INFO_INTERLEAVED |
@@ -256,29 +296,19 @@ int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
     return err;
 
   if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
-    switch (rate) {
-    case 44100:
-      tascam->feedback_patterns = patterns_44khz;
-      tascam->feedback_base_value = 43;
-      tascam->feedback_max_value = 45;
-      break;
-    case 48000:
-      tascam->feedback_patterns = patterns_48khz;
-      tascam->feedback_base_value = 47;
-      tascam->feedback_max_value = 49;
-      break;
-    case 88200:
-      tascam->feedback_patterns = patterns_88khz;
-      tascam->feedback_base_value = 87;
-      tascam->feedback_max_value = 89;
-      break;
-    case 96000:
-      tascam->feedback_patterns = patterns_96khz;
-      tascam->feedback_base_value = 95;
-      tascam->feedback_max_value = 97;
-      break;
-    default:
-      return -EINVAL;
+    tascam->fpo.sample_rate_khz = rate / 1000;
+    tascam->fpo.base_feedback_value = tascam->fpo.sample_rate_khz;
+    tascam->fpo.feedback_offset = 2;
+    tascam->fpo.current_index = 0;
+    tascam->fpo.previous_index = 0;
+    tascam->fpo.sync_locked = false;
+
+    unsigned int initial_value = tascam->fpo.sample_rate_khz / 8;
+    for (int i = 0; i < 5; i++) {
+      int target_sum =
+          tascam->fpo.sample_rate_khz - tascam->fpo.feedback_offset + i;
+      fpoInitPattern(8, tascam->fpo.full_frame_patterns[i], initial_value,
+                     target_sum);
     }
   }
 

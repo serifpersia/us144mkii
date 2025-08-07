@@ -55,7 +55,6 @@ static int tascam_playback_prepare(struct snd_pcm_substream *substream) {
   int i, u;
   size_t nominal_frames_per_packet, nominal_bytes_per_packet;
   size_t total_bytes_in_urb;
-  unsigned int feedback_packets;
 
   tascam->driver_playback_pos = 0;
   tascam->playback_frames_consumed = 0;
@@ -70,15 +69,13 @@ static int tascam_playback_prepare(struct snd_pcm_substream *substream) {
   for (i = 0; i < FEEDBACK_ACCUMULATOR_SIZE; i++)
     tascam->feedback_accumulator_pattern[i] = nominal_frames_per_packet;
 
-  feedback_packets = 1;
-
   for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
     struct urb *f_urb = tascam->feedback_urbs[i];
     int j;
 
-    f_urb->number_of_packets = feedback_packets;
-    f_urb->transfer_buffer_length = feedback_packets * FEEDBACK_PACKET_SIZE;
-    for (j = 0; j < feedback_packets; j++) {
+    f_urb->number_of_packets = FEEDBACK_URB_PACKETS;
+    f_urb->transfer_buffer_length = FEEDBACK_URB_PACKETS * FEEDBACK_PACKET_SIZE;
+    for (j = 0; j < FEEDBACK_URB_PACKETS; j++) {
       f_urb->iso_frame_desc[j].offset = j * FEEDBACK_PACKET_SIZE;
       f_urb->iso_frame_desc[j].length = FEEDBACK_PACKET_SIZE;
     }
@@ -161,7 +158,7 @@ void playback_urb_complete(struct urb *urb) {
   struct snd_pcm_substream *substream;
   struct snd_pcm_runtime *runtime;
   unsigned long flags;
-  
+
   size_t total_bytes_for_urb = 0;
   snd_pcm_uframes_t offset_frames;
   snd_pcm_uframes_t frames_to_copy;
@@ -221,10 +218,15 @@ void playback_urb_complete(struct urb *urb) {
           frames_to_bytes(runtime, runtime->buffer_size - offset_frames);
       size_t second_chunk_bytes = total_bytes_for_urb - first_chunk_bytes;
 
-      memcpy(dst_buf, runtime->dma_area + frames_to_bytes(runtime, offset_frames), first_chunk_bytes);
-      memcpy(dst_buf + first_chunk_bytes, runtime->dma_area, second_chunk_bytes);
+      memcpy(dst_buf,
+             runtime->dma_area + frames_to_bytes(runtime, offset_frames),
+             first_chunk_bytes);
+      memcpy(dst_buf + first_chunk_bytes, runtime->dma_area,
+             second_chunk_bytes);
     } else {
-      memcpy(dst_buf, runtime->dma_area + frames_to_bytes(runtime, offset_frames), total_bytes_for_urb);
+      memcpy(dst_buf,
+             runtime->dma_area + frames_to_bytes(runtime, offset_frames),
+             total_bytes_for_urb);
     }
 
     /* Apply routing to the contiguous data in our routing buffer */
@@ -308,11 +310,20 @@ void feedback_urb_complete(struct urb *urb) {
       feedback_value =
           *((u8 *)urb->transfer_buffer + urb->iso_frame_desc[p].offset);
 
-    if (packet_ok && feedback_value >= tascam->feedback_base_value &&
-        feedback_value <= tascam->feedback_max_value) {
-      pattern =
-          tascam
-              ->feedback_patterns[feedback_value - tascam->feedback_base_value];
+    if (packet_ok) {
+      int delta = feedback_value - tascam->fpo.base_feedback_value +
+                  tascam->fpo.feedback_offset;
+      int pattern_idx;
+
+      if (delta < 0) {
+        pattern_idx = 0; // Clamp to the lowest pattern
+      } else if (delta >= 5) {
+        pattern_idx = 4; // Clamp to the highest pattern
+      } else {
+        pattern_idx = delta;
+      }
+
+      pattern = tascam->fpo.full_frame_patterns[pattern_idx];
       tascam->feedback_consecutive_errors = 0;
       int i;
 
@@ -418,4 +429,3 @@ unlock_and_continue:
 out:
   usb_put_urb(urb);
 }
-
