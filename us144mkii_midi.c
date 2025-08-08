@@ -11,51 +11,36 @@
  * the kfifo, processes it by stripping protocol-specific padding bytes, and
  * passes the clean MIDI data to the ALSA rawmidi subsystem.
  */
-static void tascam_midi_in_work_handler(struct work_struct *work) {
-  struct tascam_card *tascam =
-      container_of(work, struct tascam_card, midi_in_work);
-  u8 buf[MIDI_IN_BUF_SIZE];
-  unsigned int len;
-  int i;
+static void tascam_midi_in_work_handler(struct work_struct *work)
+{
+	struct tascam_card *tascam = container_of(work, struct tascam_card, midi_in_work);
+	u8 buf[MIDI_IN_BUF_SIZE];
+	u8 clean_buf[MIDI_IN_BUF_SIZE];
+	unsigned int len, clean_len;
 
-  if (!tascam->midi_in_substream)
-    return;
+	if (!tascam->midi_in_substream)
+		return;
 
-  while (!kfifo_is_empty(&tascam->midi_in_fifo)) {
-    len = kfifo_out_spinlocked(&tascam->midi_in_fifo, buf, sizeof(buf),
-                               &tascam->midi_in_lock);
+	while (!kfifo_is_empty(&tascam->midi_in_fifo)) {
+		len = kfifo_out_spinlocked(&tascam->midi_in_fifo,
+					   buf, sizeof(buf), &tascam->midi_in_lock);
 
-    if (len == 0)
-      continue;
+		if (len == 0)
+			continue;
 
-    if (!tascam->midi_in_substream)
-      continue;
+		if (!tascam->midi_in_substream)
+			continue;
 
-    for (i = 0; i < len; ++i) {
-      u8 byte = buf[i];
+		clean_len = 0;
+		for (int i = 0; i < len; ++i) {
+			if (buf[i] == 0xfd) continue;
+			if (i == (len - 1) && (buf[i] == 0x00 || buf[i] == 0xff)) continue;
+			clean_buf[clean_len++] = buf[i];
+		}
 
-      /* Skip padding bytes */
-      if (byte == 0xfd)
-        continue;
-
-      if (byte == 0xf0) { /* SysEx Start */
-        tascam->in_sysex = true;
-      } else if (byte == 0xf7) { /* SysEx End */
-        tascam->in_sysex = false;
-      } else if (tascam->in_sysex) {
-        /* Inside a SysEx message */
-      } else if (byte & 0x80) { /* Status byte */
-        tascam->midi_running_status = byte;
-      } else { /* Data byte */
-        if (tascam->midi_running_status != 0)
-          snd_rawmidi_receive(tascam->midi_in_substream,
-                              &tascam->midi_running_status, 1);
-      }
-
-      /* Submit valid MIDI bytes one by one */
-      snd_rawmidi_receive(tascam->midi_in_substream, &byte, 1);
-    }
-  }
+		if (clean_len > 0)
+			snd_rawmidi_receive(tascam->midi_in_substream, clean_buf, clean_len);
+	}
 }
 
 /**
@@ -75,7 +60,6 @@ void tascam_midi_in_urb_complete(struct urb *urb) {
         urb->status != -ESHUTDOWN && urb->status != -EPROTO) {
       dev_err_ratelimited(tascam->card->dev, "MIDI IN URB failed: status %d\n",
                           urb->status);
-      mod_timer(&tascam->error_timer, jiffies + msecs_to_jiffies(50));
     }
     goto out;
   }
@@ -199,7 +183,6 @@ void tascam_midi_out_urb_complete(struct urb *urb) {
         urb->status != -ESHUTDOWN) {
       dev_err_ratelimited(tascam->card->dev, "MIDI OUT URB failed: %d\n",
                           urb->status);
-      mod_timer(&tascam->error_timer, jiffies + msecs_to_jiffies(50));
     }
   }
 
@@ -338,6 +321,19 @@ static int tascam_midi_out_close(struct snd_rawmidi_substream *substream) {
  */
 static void tascam_midi_out_drain(struct snd_rawmidi_substream *substream) {
   struct tascam_card *tascam = substream->rmidi->private_data;
+  bool in_flight = true;
+
+  while (in_flight) {
+    in_flight = false;
+    for (int i = 0; i < NUM_MIDI_OUT_URBS; i++) {
+        if (test_bit(i, &tascam->midi_out_urbs_in_flight)) {
+            in_flight = true;
+            break;
+        }
+    }
+    if (in_flight)
+        schedule_timeout_uninterruptible(1);
+  }
 
   cancel_work_sync(&tascam->midi_out_work);
   usb_kill_anchored_urbs(&tascam->midi_out_anchor);

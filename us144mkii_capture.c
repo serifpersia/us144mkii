@@ -82,6 +82,9 @@ tascam_capture_pointer(struct snd_pcm_substream *substream) {
   pos = tascam->capture_frames_processed;
   spin_unlock_irqrestore(&tascam->lock, flags);
 
+  if (runtime->buffer_size == 0)
+    return 0;
+
   u64 remainder = do_div(pos, runtime->buffer_size);
   return runtime ? remainder : 0;
 }
@@ -261,16 +264,21 @@ void capture_urb_complete(struct urb *urb) {
     goto out;
 
   if (urb->actual_length > 0) {
-    size_t i;
     size_t write_ptr;
+    size_t bytes_to_end;
 
     spin_lock_irqsave(&tascam->lock, flags);
     write_ptr = tascam->capture_ring_buffer_write_ptr;
-    for (i = 0; i < urb->actual_length; i++) {
-      tascam->capture_ring_buffer[write_ptr] = ((u8 *)urb->transfer_buffer)[i];
-      write_ptr = (write_ptr + 1) % CAPTURE_RING_BUFFER_SIZE;
+    bytes_to_end = CAPTURE_RING_BUFFER_SIZE - write_ptr;
+
+    if (urb->actual_length > bytes_to_end) {
+        memcpy(tascam->capture_ring_buffer + write_ptr, urb->transfer_buffer, bytes_to_end);
+        memcpy(tascam->capture_ring_buffer, urb->transfer_buffer + bytes_to_end, urb->actual_length - bytes_to_end);
+    } else {
+        memcpy(tascam->capture_ring_buffer + write_ptr, urb->transfer_buffer, urb->actual_length);
     }
-    tascam->capture_ring_buffer_write_ptr = write_ptr;
+
+    tascam->capture_ring_buffer_write_ptr = (write_ptr + urb->actual_length) % CAPTURE_RING_BUFFER_SIZE;
     spin_unlock_irqrestore(&tascam->lock, flags);
 
     schedule_work(&tascam->capture_work);

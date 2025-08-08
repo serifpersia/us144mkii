@@ -16,52 +16,20 @@
  */
 static void fpoInitPattern(unsigned int size, unsigned int *pattern_array,
                            unsigned int initial_value, int target_sum) {
-  unsigned int current_sum;
-  int diff;
-  int abs_diff;
-  unsigned int stride;
-  unsigned int i;
+  int diff, i;
 
   if (!size)
     return;
 
-  /* 1. Initialize the array with the base value. */
-  current_sum = 0;
-  for (i = 0; i < size; ++i) {
+  for (i = 0; i < size; ++i)
     pattern_array[i] = initial_value;
-  }
-  current_sum = size * initial_value;
 
-  /* 2. Iteratively adjust until the sum is correct. */
-  while (current_sum != target_sum) {
-    diff = target_sum - current_sum;
-    abs_diff = (diff > 0) ? diff : -diff;
-
-    if (abs_diff == 0)
-      break;
-
-    /* Calculate the stride to distribute the adjustments. */
-    stride = size / abs_diff;
-    if (stride == 0) {
-      /* This would happen if the difference is larger than the array
-       * size, which indicates a problem. The original code breaks
-       * here.
-       */
-      break;
-    }
-
-    /* Apply the adjustments. */
-    for (i = 0; i < size; i += stride) {
-      if (diff > 0)
-        pattern_array[i]++;
-      else
-        pattern_array[i]--;
-    }
-
-    /* Recalculate the sum for the next iteration. */
-    current_sum = 0;
-    for (i = 0; i < size; ++i)
-      current_sum += pattern_array[i];
+  diff = target_sum - (size * initial_value);
+  for (i = 0; i < abs(diff); ++i) {
+    if (diff > 0)
+      pattern_array[i]++;
+    else
+      pattern_array[i]--;
   }
 }
 

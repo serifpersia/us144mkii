@@ -286,7 +286,6 @@ void tascam_stop_work_handler(struct work_struct *work) {
   usb_kill_anchored_urbs(&tascam->feedback_anchor);
   usb_kill_anchored_urbs(&tascam->capture_anchor);
   atomic_set(&tascam->active_urbs, 0);
-  cancel_work_sync(&tascam->capture_work);
 }
 
 /**
@@ -508,6 +507,7 @@ static int tascam_probe(struct usb_interface *intf,
   }
 
   tascam = card->private_data;
+  card->private_free = tascam_card_private_free;
   tascam->dev = usb_get_dev(dev);
   tascam->card = card;
   tascam->iface0 = intf;
@@ -525,10 +525,10 @@ static int tascam_probe(struct usb_interface *intf,
 
   INIT_WORK(&tascam->stop_work, tascam_stop_work_handler);
 
-  if (kfifo_alloc(&tascam->midi_in_fifo, MIDI_IN_FIFO_SIZE, GFP_KERNEL))
-    goto free_card;
-
-  card->private_free = tascam_card_private_free;
+  if (kfifo_alloc(&tascam->midi_in_fifo, MIDI_IN_FIFO_SIZE, GFP_KERNEL)) {
+    snd_card_free(card);
+    return -ENOMEM;
+  }
 
   strscpy(card->driver, DRIVER_NAME, sizeof(card->driver));
   if (dev->descriptor.idProduct == USB_PID_TASCAM_US144) {
@@ -599,15 +599,20 @@ static void tascam_disconnect(struct usb_interface *intf) {
 
   if (intf->cur_altsetting->desc.bInterfaceNumber == 0) {
     device_remove_file(&tascam->dev->dev, &dev_attr_driver_version);
-    device_remove_file(&intf->dev, &dev_attr_driver_version);
+
+    /* Ensure all deferred work is complete before freeing resources */
+    snd_card_disconnect(tascam->card);
+    cancel_work_sync(&tascam->stop_work);
+    cancel_work_sync(&tascam->capture_work);
+    cancel_work_sync(&tascam->midi_in_work);
+    cancel_work_sync(&tascam->midi_out_work);
+
     usb_kill_anchored_urbs(&tascam->playback_anchor);
     usb_kill_anchored_urbs(&tascam->capture_anchor);
     usb_kill_anchored_urbs(&tascam->feedback_anchor);
     usb_kill_anchored_urbs(&tascam->midi_in_anchor);
     usb_kill_anchored_urbs(&tascam->midi_out_anchor);
     timer_delete_sync(&tascam->error_timer);
-    snd_card_disconnect(tascam->card);
-    tascam_free_urbs(tascam);
     snd_card_free(tascam->card);
     dev_idx--;
   }
