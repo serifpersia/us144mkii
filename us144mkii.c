@@ -320,26 +320,25 @@ static void tascam_card_private_free(struct snd_card *card) {
  *
  * Return: 0 on success.
  */
-static int tascam_suspend(struct usb_interface *intf, pm_message_t message)
-{
-	struct tascam_card *tascam = usb_get_intfdata(intf);
+static int tascam_suspend(struct usb_interface *intf, pm_message_t message) {
+  struct tascam_card *tascam = usb_get_intfdata(intf);
 
-	if (!tascam)
-		return 0;
+  if (!tascam)
+    return 0;
 
-	snd_pcm_suspend_all(tascam->pcm);
+  snd_pcm_suspend_all(tascam->pcm);
 
-	cancel_work_sync(&tascam->stop_work);
-	cancel_work_sync(&tascam->capture_work);
-	cancel_work_sync(&tascam->midi_in_work);
-	cancel_work_sync(&tascam->midi_out_work);
-	usb_kill_anchored_urbs(&tascam->playback_anchor);
-	usb_kill_anchored_urbs(&tascam->capture_anchor);
-	usb_kill_anchored_urbs(&tascam->feedback_anchor);
-	usb_kill_anchored_urbs(&tascam->midi_in_anchor);
-	usb_kill_anchored_urbs(&tascam->midi_out_anchor);
+  cancel_work_sync(&tascam->stop_work);
+  cancel_work_sync(&tascam->capture_work);
+  cancel_work_sync(&tascam->midi_in_work);
+  cancel_work_sync(&tascam->midi_out_work);
+  usb_kill_anchored_urbs(&tascam->playback_anchor);
+  usb_kill_anchored_urbs(&tascam->capture_anchor);
+  usb_kill_anchored_urbs(&tascam->feedback_anchor);
+  usb_kill_anchored_urbs(&tascam->midi_in_anchor);
+  usb_kill_anchored_urbs(&tascam->midi_out_anchor);
 
-	return 0;
+  return 0;
 }
 
 /**
@@ -457,7 +456,6 @@ static int tascam_probe(struct usb_interface *intf,
     dev_err(&dev->dev, "Unexpected handshake value: 0x%x\n", handshake_buf[0]);
     return -ENODEV;
   }
-
 
   err = usb_set_interface(dev, 0, 1);
   if (err < 0) {

@@ -187,9 +187,8 @@ void playback_urb_complete(struct urb *urb) {
       size_t bytes_for_packet;
 
       if (tascam->feedback_synced) {
-        frames_for_packet =
-            tascam->feedback_accumulator_pattern
-                [tascam->feedback_pattern_out_idx];
+        frames_for_packet = tascam->feedback_accumulator_pattern
+                                [tascam->feedback_pattern_out_idx];
         tascam->feedback_pattern_out_idx =
             (tascam->feedback_pattern_out_idx + 1) % FEEDBACK_ACCUMULATOR_SIZE;
       } else {
@@ -328,8 +327,8 @@ void feedback_urb_complete(struct urb *urb) {
         int i;
 
         for (i = 0; i < 8; i++) {
-          unsigned int in_idx = (tascam->feedback_pattern_in_idx + i) %
-                                FEEDBACK_ACCUMULATOR_SIZE;
+          unsigned int in_idx =
+              (tascam->feedback_pattern_in_idx + i) % FEEDBACK_ACCUMULATOR_SIZE;
 
           tascam->feedback_accumulator_pattern[in_idx] = pattern[i];
           total_frames_in_urb += pattern[i];
@@ -353,8 +352,8 @@ void feedback_urb_complete(struct urb *urb) {
           }
         }
         for (i = 0; i < 8; i++) {
-          unsigned int in_idx = (tascam->feedback_pattern_in_idx + i) %
-                                FEEDBACK_ACCUMULATOR_SIZE;
+          unsigned int in_idx =
+              (tascam->feedback_pattern_in_idx + i) % FEEDBACK_ACCUMULATOR_SIZE;
 
           tascam->feedback_accumulator_pattern[in_idx] = nominal_frames;
           total_frames_in_urb += nominal_frames;
@@ -388,8 +387,8 @@ void feedback_urb_complete(struct urb *urb) {
     }
 
     if (playback_rt->period_size > 0) {
-      u64 current_period = div_u64(tascam->playback_frames_consumed,
-                                   playback_rt->period_size);
+      u64 current_period =
+          div_u64(tascam->playback_frames_consumed, playback_rt->period_size);
 
       if (current_period > tascam->last_period_pos) {
         tascam->last_period_pos = current_period;
@@ -399,8 +398,8 @@ void feedback_urb_complete(struct urb *urb) {
 
     if (atomic_read(&tascam->capture_active) && capture_rt &&
         capture_rt->period_size > 0) {
-      u64 current_capture_period = div_u64(tascam->capture_frames_processed,
-                                           capture_rt->period_size);
+      u64 current_capture_period =
+          div_u64(tascam->capture_frames_processed, capture_rt->period_size);
 
       if (current_capture_period > tascam->last_capture_period_pos) {
         tascam->last_capture_period_pos = current_capture_period;

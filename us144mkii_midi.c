@@ -11,36 +11,27 @@
  * the kfifo, processes it by stripping protocol-specific padding bytes, and
  * passes the clean MIDI data to the ALSA rawmidi subsystem.
  */
-static void tascam_midi_in_work_handler(struct work_struct *work)
-{
-	struct tascam_card *tascam = container_of(work, struct tascam_card, midi_in_work);
-	u8 buf[MIDI_IN_BUF_SIZE];
-	u8 clean_buf[MIDI_IN_BUF_SIZE];
-	unsigned int len, clean_len;
+static void tascam_midi_in_work_handler(struct work_struct *work) {
+  struct tascam_card *tascam =
+      container_of(work, struct tascam_card, midi_in_work);
+  u8 buf[9];
+  u8 clean_buf[8];
+  unsigned int count, clean_count;
 
-	if (!tascam->midi_in_substream)
-		return;
+  if (!tascam->midi_in_substream)
+    return;
 
-	while (!kfifo_is_empty(&tascam->midi_in_fifo)) {
-		len = kfifo_out_spinlocked(&tascam->midi_in_fifo,
-					   buf, sizeof(buf), &tascam->midi_in_lock);
+  while (kfifo_out_spinlocked(&tascam->midi_in_fifo, buf, sizeof(buf),
+                              &tascam->midi_in_lock) == sizeof(buf)) {
+    clean_count = 0;
+    for (count = 0; count < 8; ++count) {
+      if (buf[count] != 0xfd)
+        clean_buf[clean_count++] = buf[count];
+    }
 
-		if (len == 0)
-			continue;
-
-		if (!tascam->midi_in_substream)
-			continue;
-
-		clean_len = 0;
-		for (int i = 0; i < len; ++i) {
-			if (buf[i] == 0xfd) continue;
-			if (i == (len - 1) && (buf[i] == 0x00 || buf[i] == 0xff)) continue;
-			clean_buf[clean_len++] = buf[i];
-		}
-
-		if (clean_len > 0)
-			snd_rawmidi_receive(tascam->midi_in_substream, clean_buf, clean_len);
-	}
+    if (clean_count > 0)
+      snd_rawmidi_receive(tascam->midi_in_substream, clean_buf, clean_count);
+  }
 }
 
 /**
@@ -327,13 +318,13 @@ static void tascam_midi_out_drain(struct snd_rawmidi_substream *substream) {
   while (in_flight) {
     in_flight = false;
     for (int i = 0; i < NUM_MIDI_OUT_URBS; i++) {
-        if (test_bit(i, &tascam->midi_out_urbs_in_flight)) {
-            in_flight = true;
-            break;
-        }
+      if (test_bit(i, &tascam->midi_out_urbs_in_flight)) {
+        in_flight = true;
+        break;
+      }
     }
     if (in_flight)
-        schedule_timeout_uninterruptible(1);
+      schedule_timeout_uninterruptible(1);
   }
 
   cancel_work_sync(&tascam->midi_out_work);
