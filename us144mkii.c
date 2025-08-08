@@ -320,52 +320,26 @@ static void tascam_card_private_free(struct snd_card *card) {
  *
  * Return: 0 on success.
  */
-static int tascam_suspend(struct usb_interface *intf, pm_message_t message) {
-  struct tascam_card *tascam = usb_get_intfdata(intf);
-  int err;
+static int tascam_suspend(struct usb_interface *intf, pm_message_t message)
+{
+	struct tascam_card *tascam = usb_get_intfdata(intf);
 
-  if (!tascam)
-    return 0;
+	if (!tascam)
+		return 0;
 
-  /*
-   * The device requires a specific sequence to enter a stable low-power
-   * state. First, ensure all data transmission is stopped before
-   * sending the final vendor command.
-   */
-  if (tascam->pcm)
-    snd_pcm_suspend_all(tascam->pcm);
+	snd_pcm_suspend_all(tascam->pcm);
 
-  /*
-   * Terminate all in-flight URBs to prevent access to the device
-   * after it has been put to sleep.
-   */
-  cancel_work_sync(&tascam->stop_work);
-  cancel_work_sync(&tascam->capture_work);
-  cancel_work_sync(&tascam->midi_in_work);
-  cancel_work_sync(&tascam->midi_out_work);
-  usb_kill_anchored_urbs(&tascam->playback_anchor);
-  usb_kill_anchored_urbs(&tascam->capture_anchor);
-  usb_kill_anchored_urbs(&tascam->feedback_anchor);
-  usb_kill_anchored_urbs(&tascam->midi_in_anchor);
-  usb_kill_anchored_urbs(&tascam->midi_out_anchor);
+	cancel_work_sync(&tascam->stop_work);
+	cancel_work_sync(&tascam->capture_work);
+	cancel_work_sync(&tascam->midi_in_work);
+	cancel_work_sync(&tascam->midi_out_work);
+	usb_kill_anchored_urbs(&tascam->playback_anchor);
+	usb_kill_anchored_urbs(&tascam->capture_anchor);
+	usb_kill_anchored_urbs(&tascam->feedback_anchor);
+	usb_kill_anchored_urbs(&tascam->midi_in_anchor);
+	usb_kill_anchored_urbs(&tascam->midi_out_anchor);
 
-  /*
-   * Send the vendor-specific "Deep Sleep" command. Failure to send this
-   * command before host-initiated suspend can leave the device in an
-   * unstable state, leading to system freezes on idle (autosuspend).
-   */
-  err = usb_control_msg(tascam->dev, usb_sndctrlpipe(tascam->dev, 0),
-                        0x00,   /* bRequest */
-                        0x40,   /* bmRequestType: H2D, Vendor, Device */
-                        0x0044, /* wValue */
-                        0x0000, /* wIndex */
-                        NULL,   /* data */
-                        0,      /* size */
-                        1000);  /* timeout */
-  if (err < 0)
-    dev_err(&intf->dev, "failed to send deep sleep command: %d\n", err);
-
-  return 0;
+	return 0;
 }
 
 /**
