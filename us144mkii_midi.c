@@ -124,13 +124,13 @@ static void tascam_midi_in_trigger(struct snd_rawmidi_substream *substream,
                                    int up) {
   struct tascam_card *tascam = substream->rmidi->private_data;
   int i, err;
-  unsigned long flags;
 
   if (up) {
     if (atomic_xchg(&tascam->midi_in_active, 1) == 0) {
-      spin_lock_irqsave(&tascam->midi_in_lock, flags);
-      kfifo_reset(&tascam->midi_in_fifo);
-      spin_unlock_irqrestore(&tascam->midi_in_lock, flags);
+      {
+        guard(spinlock_irqsave)(&tascam->midi_in_lock);
+        kfifo_reset(&tascam->midi_in_fifo);
+      }
 
       for (i = 0; i < NUM_MIDI_IN_URBS; i++) {
         usb_get_urb(tascam->midi_in_urbs[i]);
@@ -175,7 +175,6 @@ static const struct snd_rawmidi_ops tascam_midi_in_ops = {
  */
 void tascam_midi_out_urb_complete(struct urb *urb) {
   struct tascam_card *tascam = urb->context;
-  unsigned long flags;
   int i, urb_index = -1;
 
   if (urb->status) {
@@ -184,6 +183,7 @@ void tascam_midi_out_urb_complete(struct urb *urb) {
       dev_err_ratelimited(tascam->card->dev, "MIDI OUT URB failed: %d\n",
                           urb->status);
     }
+    goto out;
   }
 
   if (!tascam)
@@ -201,12 +201,14 @@ void tascam_midi_out_urb_complete(struct urb *urb) {
     goto out;
   }
 
-  spin_lock_irqsave(&tascam->midi_out_lock, flags);
-  clear_bit(urb_index, &tascam->midi_out_urbs_in_flight);
-  spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
+  {
+    guard(spinlock_irqsave)(&tascam->midi_out_lock);
+    clear_bit(urb_index, &tascam->midi_out_urbs_in_flight);
+  }
 
   if (atomic_read(&tascam->midi_out_active))
     schedule_work(&tascam->midi_out_work);
+
 out:
   usb_put_urb(urb);
 }
@@ -231,52 +233,51 @@ static void tascam_midi_out_work_handler(struct work_struct *work) {
     return;
 
   while (snd_rawmidi_transmit_peek(substream, (u8[]){0}, 1) == 1) {
-    unsigned long flags;
     int urb_index;
     struct urb *urb;
     u8 *buf;
     int bytes_to_send;
 
-    spin_lock_irqsave(&tascam->midi_out_lock, flags);
+    {
+      guard(spinlock_irqsave)(&tascam->midi_out_lock);
 
-    urb_index = -1;
-    for (i = 0; i < NUM_MIDI_OUT_URBS; i++) {
-      if (!test_bit(i, &tascam->midi_out_urbs_in_flight)) {
-        urb_index = i;
-        break;
+      urb_index = -1;
+      for (i = 0; i < NUM_MIDI_OUT_URBS; i++) {
+        if (!test_bit(i, &tascam->midi_out_urbs_in_flight)) {
+          urb_index = i;
+          break;
+        }
       }
+
+      if (urb_index < 0) {
+        return; /* No free URBs, will be rescheduled by completion handler */
+      }
+
+      urb = tascam->midi_out_urbs[urb_index];
+      buf = urb->transfer_buffer;
+      bytes_to_send = snd_rawmidi_transmit(substream, buf, 8);
+
+      if (bytes_to_send <= 0) {
+        break; /* No more data */
+      }
+
+      if (bytes_to_send < 9)
+        memset(buf + bytes_to_send, 0xfd, 9 - bytes_to_send);
+      buf[8] = 0x00;
+
+      set_bit(urb_index, &tascam->midi_out_urbs_in_flight);
+      urb->transfer_buffer_length = 9;
     }
-
-    if (urb_index < 0) {
-      spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
-      return; /* No free URBs, will be rescheduled by completion handler */
-    }
-
-    urb = tascam->midi_out_urbs[urb_index];
-    buf = urb->transfer_buffer;
-    bytes_to_send = snd_rawmidi_transmit(substream, buf, 8);
-
-    if (bytes_to_send <= 0) {
-      spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
-      break; /* No more data */
-    }
-
-    if (bytes_to_send < 9)
-      memset(buf + bytes_to_send, 0xfd, 9 - bytes_to_send);
-    buf[8] = 0x00;
-
-    set_bit(urb_index, &tascam->midi_out_urbs_in_flight);
-    urb->transfer_buffer_length = 9;
-    spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
 
     usb_get_urb(urb);
     usb_anchor_urb(urb, &tascam->midi_out_anchor);
     if (usb_submit_urb(urb, GFP_KERNEL) < 0) {
       dev_err_ratelimited(tascam->card->dev,
                           "Failed to submit MIDI OUT URB %d\n", urb_index);
-      spin_lock_irqsave(&tascam->midi_out_lock, flags);
-      clear_bit(urb_index, &tascam->midi_out_urbs_in_flight);
-      spin_unlock_irqrestore(&tascam->midi_out_lock, flags);
+      {
+        guard(spinlock_irqsave)(&tascam->midi_out_lock);
+        clear_bit(urb_index, &tascam->midi_out_urbs_in_flight);
+      }
       usb_unanchor_urb(urb);
       usb_put_urb(urb);
       break; /* Stop on error */

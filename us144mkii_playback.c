@@ -113,14 +113,12 @@ tascam_playback_pointer(struct snd_pcm_substream *substream) {
   struct tascam_card *tascam = snd_pcm_substream_chip(substream);
   struct snd_pcm_runtime *runtime = substream->runtime;
   u64 pos;
-  unsigned long flags;
 
   if (!atomic_read(&tascam->playback_active))
     return 0;
 
-  spin_lock_irqsave(&tascam->lock, flags);
+  guard(spinlock_irqsave)(&tascam->lock);
   pos = tascam->playback_frames_consumed;
-  spin_unlock_irqrestore(&tascam->lock, flags);
 
   if (runtime->buffer_size == 0)
     return 0;
@@ -160,7 +158,6 @@ void playback_urb_complete(struct urb *urb) {
   struct tascam_card *tascam = urb->context;
   struct snd_pcm_substream *substream;
   struct snd_pcm_runtime *runtime;
-  unsigned long flags;
 
   size_t total_bytes_for_urb = 0;
   snd_pcm_uframes_t offset_frames;
@@ -182,35 +179,35 @@ void playback_urb_complete(struct urb *urb) {
     goto out;
   runtime = substream->runtime;
 
-  spin_lock_irqsave(&tascam->lock, flags);
+  {
+    guard(spinlock_irqsave)(&tascam->lock);
 
-  for (i = 0; i < urb->number_of_packets; i++) {
-    unsigned int frames_for_packet;
-    size_t bytes_for_packet;
+    for (i = 0; i < urb->number_of_packets; i++) {
+      unsigned int frames_for_packet;
+      size_t bytes_for_packet;
 
-    if (tascam->feedback_synced) {
-      frames_for_packet =
-          tascam
-              ->feedback_accumulator_pattern[tascam->feedback_pattern_out_idx];
-      tascam->feedback_pattern_out_idx =
-          (tascam->feedback_pattern_out_idx + 1) % FEEDBACK_ACCUMULATOR_SIZE;
-    } else {
-      frames_for_packet = runtime->rate / 8000;
+      if (tascam->feedback_synced) {
+        frames_for_packet =
+            tascam->feedback_accumulator_pattern
+                [tascam->feedback_pattern_out_idx];
+        tascam->feedback_pattern_out_idx =
+            (tascam->feedback_pattern_out_idx + 1) % FEEDBACK_ACCUMULATOR_SIZE;
+      } else {
+        frames_for_packet = runtime->rate / 8000;
+      }
+      bytes_for_packet = frames_for_packet * BYTES_PER_FRAME;
+
+      urb->iso_frame_desc[i].offset = total_bytes_for_urb;
+      urb->iso_frame_desc[i].length = bytes_for_packet;
+      total_bytes_for_urb += bytes_for_packet;
     }
-    bytes_for_packet = frames_for_packet * BYTES_PER_FRAME;
+    urb->transfer_buffer_length = total_bytes_for_urb;
 
-    urb->iso_frame_desc[i].offset = total_bytes_for_urb;
-    urb->iso_frame_desc[i].length = bytes_for_packet;
-    total_bytes_for_urb += bytes_for_packet;
+    offset_frames = tascam->driver_playback_pos;
+    frames_to_copy = bytes_to_frames(runtime, total_bytes_for_urb);
+    tascam->driver_playback_pos =
+        (offset_frames + frames_to_copy) % runtime->buffer_size;
   }
-  urb->transfer_buffer_length = total_bytes_for_urb;
-
-  offset_frames = tascam->driver_playback_pos;
-  frames_to_copy = bytes_to_frames(runtime, total_bytes_for_urb);
-  tascam->driver_playback_pos =
-      (offset_frames + frames_to_copy) % runtime->buffer_size;
-
-  spin_unlock_irqrestore(&tascam->lock, flags);
 
   if (total_bytes_for_urb > 0) {
     u8 *dst_buf = urb->transfer_buffer;
@@ -267,7 +264,6 @@ void feedback_urb_complete(struct urb *urb) {
   struct tascam_card *tascam = urb->context;
   struct snd_pcm_substream *playback_ss, *capture_ss;
   struct snd_pcm_runtime *playback_rt, *capture_rt;
-  unsigned long flags;
   u64 total_frames_in_urb = 0;
   int ret, p;
   unsigned int old_in_idx, new_in_idx;
@@ -294,126 +290,126 @@ void feedback_urb_complete(struct urb *urb) {
   capture_ss = tascam->capture_substream;
   capture_rt = capture_ss ? capture_ss->runtime : NULL;
 
-  spin_lock_irqsave(&tascam->lock, flags);
+  {
+    guard(spinlock_irqsave)(&tascam->lock);
 
-  if (tascam->feedback_urb_skip_count > 0) {
-    tascam->feedback_urb_skip_count--;
-    goto unlock_and_continue;
-  }
+    if (tascam->feedback_urb_skip_count > 0) {
+      tascam->feedback_urb_skip_count--;
+      goto continue_unlock;
+    }
 
-  old_in_idx = tascam->feedback_pattern_in_idx;
+    old_in_idx = tascam->feedback_pattern_in_idx;
 
-  for (p = 0; p < urb->number_of_packets; p++) {
-    u8 feedback_value = 0;
-    const unsigned int *pattern;
-    bool packet_ok = (urb->iso_frame_desc[p].status == 0 &&
-                      urb->iso_frame_desc[p].actual_length >= 1);
+    for (p = 0; p < urb->number_of_packets; p++) {
+      u8 feedback_value = 0;
+      const unsigned int *pattern;
+      bool packet_ok = (urb->iso_frame_desc[p].status == 0 &&
+                        urb->iso_frame_desc[p].actual_length >= 1);
 
-    if (packet_ok)
-      feedback_value =
-          *((u8 *)urb->transfer_buffer + urb->iso_frame_desc[p].offset);
+      if (packet_ok)
+        feedback_value =
+            *((u8 *)urb->transfer_buffer + urb->iso_frame_desc[p].offset);
 
-    if (packet_ok) {
-      int delta = feedback_value - tascam->fpo.base_feedback_value +
-                  tascam->fpo.feedback_offset;
-      int pattern_idx;
+      if (packet_ok) {
+        int delta = feedback_value - tascam->fpo.base_feedback_value +
+                    tascam->fpo.feedback_offset;
+        int pattern_idx;
 
-      if (delta < 0) {
-        pattern_idx = 0; // Clamp to the lowest pattern
-      } else if (delta >= 5) {
-        pattern_idx = 4; // Clamp to the highest pattern
+        if (delta < 0) {
+          pattern_idx = 0; // Clamp to the lowest pattern
+        } else if (delta >= 5) {
+          pattern_idx = 4; // Clamp to the highest pattern
+        } else {
+          pattern_idx = delta;
+        }
+
+        pattern = tascam->fpo.full_frame_patterns[pattern_idx];
+        tascam->feedback_consecutive_errors = 0;
+        int i;
+
+        for (i = 0; i < 8; i++) {
+          unsigned int in_idx = (tascam->feedback_pattern_in_idx + i) %
+                                FEEDBACK_ACCUMULATOR_SIZE;
+
+          tascam->feedback_accumulator_pattern[in_idx] = pattern[i];
+          total_frames_in_urb += pattern[i];
+        }
       } else {
-        pattern_idx = delta;
-      }
+        unsigned int nominal_frames = playback_rt->rate / 8000;
+        int i;
 
-      pattern = tascam->fpo.full_frame_patterns[pattern_idx];
-      tascam->feedback_consecutive_errors = 0;
-      int i;
+        if (tascam->feedback_synced) {
+          tascam->feedback_consecutive_errors++;
+          if (tascam->feedback_consecutive_errors >
+              FEEDBACK_SYNC_LOSS_THRESHOLD) {
+            dev_err(tascam->card->dev,
+                    "Fatal: Feedback sync lost. Stopping stream.\n");
+            if (playback_ss)
+              snd_pcm_stop(playback_ss, SNDRV_PCM_STATE_XRUN);
+            if (capture_ss)
+              snd_pcm_stop(capture_ss, SNDRV_PCM_STATE_XRUN);
+            tascam->feedback_synced = false;
+            goto continue_unlock;
+          }
+        }
+        for (i = 0; i < 8; i++) {
+          unsigned int in_idx = (tascam->feedback_pattern_in_idx + i) %
+                                FEEDBACK_ACCUMULATOR_SIZE;
 
-      for (i = 0; i < 8; i++) {
-        unsigned int in_idx =
-            (tascam->feedback_pattern_in_idx + i) % FEEDBACK_ACCUMULATOR_SIZE;
-
-        tascam->feedback_accumulator_pattern[in_idx] = pattern[i];
-        total_frames_in_urb += pattern[i];
-      }
-    } else {
-      unsigned int nominal_frames = playback_rt->rate / 8000;
-      int i;
-
-      if (tascam->feedback_synced) {
-        tascam->feedback_consecutive_errors++;
-        if (tascam->feedback_consecutive_errors >
-            FEEDBACK_SYNC_LOSS_THRESHOLD) {
-          dev_err(tascam->card->dev,
-                  "Fatal: Feedback sync lost. Stopping stream.\n");
-          if (playback_ss)
-            snd_pcm_stop(playback_ss, SNDRV_PCM_STATE_XRUN);
-          if (capture_ss)
-            snd_pcm_stop(capture_ss, SNDRV_PCM_STATE_XRUN);
-          tascam->feedback_synced = false;
-          goto unlock_and_continue;
+          tascam->feedback_accumulator_pattern[in_idx] = nominal_frames;
+          total_frames_in_urb += nominal_frames;
         }
       }
-      for (i = 0; i < 8; i++) {
-        unsigned int in_idx =
-            (tascam->feedback_pattern_in_idx + i) % FEEDBACK_ACCUMULATOR_SIZE;
+      tascam->feedback_pattern_in_idx =
+          (tascam->feedback_pattern_in_idx + 8) % FEEDBACK_ACCUMULATOR_SIZE;
+    }
 
-        tascam->feedback_accumulator_pattern[in_idx] = nominal_frames;
-        total_frames_in_urb += nominal_frames;
+    new_in_idx = tascam->feedback_pattern_in_idx;
+
+    if (!tascam->feedback_synced) {
+      unsigned int out_idx = tascam->feedback_pattern_out_idx;
+      bool is_ahead = (new_in_idx - out_idx) % FEEDBACK_ACCUMULATOR_SIZE <
+                      (FEEDBACK_ACCUMULATOR_SIZE / 2);
+      bool was_behind = (old_in_idx - out_idx) % FEEDBACK_ACCUMULATOR_SIZE >=
+                        (FEEDBACK_ACCUMULATOR_SIZE / 2);
+
+      if (is_ahead && was_behind) {
+        dev_dbg(tascam->card->dev, "Sync Acquired! (in: %u, out: %u)\n",
+                new_in_idx, out_idx);
+        tascam->feedback_synced = true;
+        tascam->feedback_consecutive_errors = 0;
       }
     }
-    tascam->feedback_pattern_in_idx =
-        (tascam->feedback_pattern_in_idx + 8) % FEEDBACK_ACCUMULATOR_SIZE;
-  }
 
-  new_in_idx = tascam->feedback_pattern_in_idx;
+    if (total_frames_in_urb > 0) {
+      tascam->playback_frames_consumed += total_frames_in_urb;
+      if (atomic_read(&tascam->capture_active))
+        tascam->capture_frames_processed += total_frames_in_urb;
+    }
 
-  if (!tascam->feedback_synced) {
-    unsigned int out_idx = tascam->feedback_pattern_out_idx;
-    bool is_ahead = (new_in_idx - out_idx) % FEEDBACK_ACCUMULATOR_SIZE <
-                    (FEEDBACK_ACCUMULATOR_SIZE / 2);
-    bool was_behind = (old_in_idx - out_idx) % FEEDBACK_ACCUMULATOR_SIZE >=
-                      (FEEDBACK_ACCUMULATOR_SIZE / 2);
+    if (playback_rt->period_size > 0) {
+      u64 current_period = div_u64(tascam->playback_frames_consumed,
+                                   playback_rt->period_size);
 
-    if (is_ahead && was_behind) {
-      dev_dbg(tascam->card->dev, "Sync Acquired! (in: %u, out: %u)\n",
-              new_in_idx, out_idx);
-      tascam->feedback_synced = true;
-      tascam->feedback_consecutive_errors = 0;
+      if (current_period > tascam->last_period_pos) {
+        tascam->last_period_pos = current_period;
+        playback_period_elapsed = true;
+      }
+    }
+
+    if (atomic_read(&tascam->capture_active) && capture_rt &&
+        capture_rt->period_size > 0) {
+      u64 current_capture_period = div_u64(tascam->capture_frames_processed,
+                                           capture_rt->period_size);
+
+      if (current_capture_period > tascam->last_capture_period_pos) {
+        tascam->last_capture_period_pos = current_capture_period;
+        capture_period_elapsed = true;
+      }
     }
   }
 
-  if (total_frames_in_urb > 0) {
-    tascam->playback_frames_consumed += total_frames_in_urb;
-    if (atomic_read(&tascam->capture_active))
-      tascam->capture_frames_processed += total_frames_in_urb;
-  }
-
-  if (playback_rt->period_size > 0) {
-    u64 current_period =
-        div_u64(tascam->playback_frames_consumed, playback_rt->period_size);
-
-    if (current_period > tascam->last_period_pos) {
-      tascam->last_period_pos = current_period;
-      playback_period_elapsed = true;
-    }
-  }
-
-  if (atomic_read(&tascam->capture_active) && capture_rt &&
-      capture_rt->period_size > 0) {
-    u64 current_capture_period =
-        div_u64(tascam->capture_frames_processed, capture_rt->period_size);
-
-    if (current_capture_period > tascam->last_capture_period_pos) {
-      tascam->last_capture_period_pos = current_capture_period;
-      capture_period_elapsed = true;
-    }
-  }
-
-unlock_and_continue:
-  spin_unlock_irqrestore(&tascam->lock, flags);
-
+continue_unlock:
   if (playback_period_elapsed)
     snd_pcm_period_elapsed(playback_ss);
   if (capture_period_elapsed)

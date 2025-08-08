@@ -415,7 +415,7 @@ static int tascam_probe(struct usb_interface *intf,
   struct snd_card *card;
   struct tascam_card *tascam;
   int err;
-  char *handshake_buf;
+  char *handshake_buf __free(kfree);
 
   if (dev->speed != USB_SPEED_HIGH)
     dev_info(&dev->dev,
@@ -449,17 +449,15 @@ static int tascam_probe(struct usb_interface *intf,
                         handshake_buf, 1, USB_CTRL_TIMEOUT_MS);
   if (err < 0) {
     dev_err(&dev->dev, "Handshake read failed with %d\n", err);
-    kfree(handshake_buf);
     return err;
   }
 
   if (handshake_buf[0] != 0x12 && handshake_buf[0] != 0x16 &&
       handshake_buf[0] != 0x30) {
     dev_err(&dev->dev, "Unexpected handshake value: 0x%x\n", handshake_buf[0]);
-    kfree(handshake_buf);
     return -ENODEV;
   }
-  kfree(handshake_buf);
+
 
   err = usb_set_interface(dev, 0, 1);
   if (err < 0) {

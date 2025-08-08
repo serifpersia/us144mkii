@@ -259,10 +259,6 @@ int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
   int err;
   unsigned int rate = params_rate(params);
 
-  err = snd_pcm_lib_malloc_pages(substream, params_buffer_bytes(params));
-  if (err < 0)
-    return err;
-
   if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
     tascam->fpo.sample_rate_khz = rate / 1000;
     tascam->fpo.base_feedback_value = tascam->fpo.sample_rate_khz;
@@ -300,9 +296,7 @@ int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
  *
  * Return: 0 on success.
  */
-int tascam_pcm_hw_free(struct snd_pcm_substream *substream) {
-  return snd_pcm_lib_free_pages(substream);
-}
+int tascam_pcm_hw_free(struct snd_pcm_substream *substream) { return 0; }
 
 /**
  * tascam_pcm_trigger() - Triggers the start or stop of PCM streams.
@@ -318,36 +312,36 @@ int tascam_pcm_hw_free(struct snd_pcm_substream *substream) {
  */
 int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd) {
   struct tascam_card *tascam = snd_pcm_substream_chip(substream);
-  unsigned long flags;
   int err = 0;
   int i;
   bool do_start = false;
   bool do_stop = false;
 
-  spin_lock_irqsave(&tascam->lock, flags);
-  switch (cmd) {
-  case SNDRV_PCM_TRIGGER_START:
-  case SNDRV_PCM_TRIGGER_RESUME:
-    if (!atomic_read(&tascam->playback_active)) {
-      atomic_set(&tascam->playback_active, 1);
-      atomic_set(&tascam->capture_active, 1);
-      do_start = true;
+  {
+    guard(spinlock_irqsave)(&tascam->lock);
+    switch (cmd) {
+    case SNDRV_PCM_TRIGGER_START:
+    case SNDRV_PCM_TRIGGER_RESUME:
+      if (!atomic_read(&tascam->playback_active)) {
+        atomic_set(&tascam->playback_active, 1);
+        atomic_set(&tascam->capture_active, 1);
+        do_start = true;
+      }
+      break;
+    case SNDRV_PCM_TRIGGER_STOP:
+    case SNDRV_PCM_TRIGGER_SUSPEND:
+    case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
+      if (atomic_read(&tascam->playback_active)) {
+        atomic_set(&tascam->playback_active, 0);
+        atomic_set(&tascam->capture_active, 0);
+        do_stop = true;
+      }
+      break;
+    default:
+      err = -EINVAL;
+      break;
     }
-    break;
-  case SNDRV_PCM_TRIGGER_STOP:
-  case SNDRV_PCM_TRIGGER_SUSPEND:
-  case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
-    if (atomic_read(&tascam->playback_active)) {
-      atomic_set(&tascam->playback_active, 0);
-      atomic_set(&tascam->capture_active, 0);
-      do_stop = true;
-    }
-    break;
-  default:
-    err = -EINVAL;
-    break;
   }
-  spin_unlock_irqrestore(&tascam->lock, flags);
 
   if (do_start) {
     if (atomic_read(&tascam->active_urbs) > 0) {
@@ -362,7 +356,7 @@ int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd) {
       if (err < 0) {
         usb_unanchor_urb(tascam->feedback_urbs[i]);
         usb_put_urb(tascam->feedback_urbs[i]);
-        atomic_dec(&tascam->active_urbs); /* Decrement on failed submission */
+        atomic_dec(&tascam->active_urbs);
         goto start_rollback;
       }
       atomic_inc(&tascam->active_urbs);
@@ -374,7 +368,7 @@ int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd) {
       if (err < 0) {
         usb_unanchor_urb(tascam->playback_urbs[i]);
         usb_put_urb(tascam->playback_urbs[i]);
-        atomic_dec(&tascam->active_urbs); /* Decrement on failed submission */
+        atomic_dec(&tascam->active_urbs);
         goto start_rollback;
       }
       atomic_inc(&tascam->active_urbs);
@@ -386,7 +380,7 @@ int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd) {
       if (err < 0) {
         usb_unanchor_urb(tascam->capture_urbs[i]);
         usb_put_urb(tascam->capture_urbs[i]);
-        atomic_dec(&tascam->active_urbs); /* Decrement on failed submission */
+        atomic_dec(&tascam->active_urbs);
         goto start_rollback;
       }
       atomic_inc(&tascam->active_urbs);
@@ -405,26 +399,18 @@ int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd) {
   return err;
 }
 
-/**
- * tascam_init_pcm() - Initializes the ALSA PCM device.
- * @pcm: Pointer to the ALSA PCM device to initialize.
- *
- * This function sets up the PCM operations for playback and capture,
- * preallocates pages for the PCM buffer, and initializes the workqueue
- * for deferred capture processing.
- *
- * Return: 0 on success.
- */
 int tascam_init_pcm(struct snd_pcm *pcm) {
   struct tascam_card *tascam = pcm->private_data;
 
   snd_pcm_set_ops(pcm, SNDRV_PCM_STREAM_PLAYBACK, &tascam_playback_ops);
   snd_pcm_set_ops(pcm, SNDRV_PCM_STREAM_CAPTURE, &tascam_capture_ops);
-  snd_pcm_lib_preallocate_pages_for_all(pcm, SNDRV_DMA_TYPE_CONTINUOUS,
-                                        tascam->dev->dev.parent, 64 * 1024,
-                                        tascam_pcm_hw.buffer_bytes_max);
+
+  snd_pcm_set_managed_buffer_all(pcm, SNDRV_DMA_TYPE_CONTINUOUS,
+                                 tascam->dev->dev.parent, 64 * 1024,
+                                 tascam_pcm_hw.buffer_bytes_max);
 
   INIT_WORK(&tascam->capture_work, tascam_capture_work_handler);
 
   return 0;
 }
+

@@ -34,15 +34,7 @@ static const char *const capture_source_texts[] = {"Analog In", "Digital In"};
  */
 static int tascam_playback_source_info(struct snd_kcontrol *kcontrol,
                                        struct snd_ctl_elem_info *uinfo) {
-  uinfo->type = SNDRV_CTL_ELEM_TYPE_ENUMERATED;
-  uinfo->count = 1;
-  uinfo->value.enumerated.items = 2;
-  if (uinfo->value.enumerated.item >= 2)
-    uinfo->value.enumerated.item = 1;
-  strscpy(uinfo->value.enumerated.name,
-          playback_source_texts[uinfo->value.enumerated.item],
-          sizeof(uinfo->value.enumerated.name));
-  return 0;
+  return snd_ctl_enum_info(uinfo, 1, 2, playback_source_texts);
 }
 
 /**
@@ -179,15 +171,7 @@ static const struct snd_kcontrol_new tascam_digital_out_control = {
  */
 static int tascam_capture_source_info(struct snd_kcontrol *kcontrol,
                                       struct snd_ctl_elem_info *uinfo) {
-  uinfo->type = SNDRV_CTL_ELEM_TYPE_ENUMERATED;
-  uinfo->count = 1;
-  uinfo->value.enumerated.items = 2;
-  if (uinfo->value.enumerated.item >= 2)
-    uinfo->value.enumerated.item = 1;
-  strscpy(uinfo->value.enumerated.name,
-          capture_source_texts[uinfo->value.enumerated.item],
-          sizeof(uinfo->value.enumerated.name));
-  return 0;
+  return snd_ctl_enum_info(uinfo, 1, 2, capture_source_texts);
 }
 
 /**
@@ -349,7 +333,7 @@ static int tascam_samplerate_get(struct snd_kcontrol *kcontrol,
                                  struct snd_ctl_elem_value *ucontrol) {
   struct tascam_card *tascam =
       (struct tascam_card *)snd_kcontrol_chip(kcontrol);
-  u8 *buf;
+  u8 *buf __free(kfree);
   int err;
   u32 rate = 0;
 
@@ -370,7 +354,6 @@ static int tascam_samplerate_get(struct snd_kcontrol *kcontrol,
     rate = buf[0] | (buf[1] << 8) | (buf[2] << 16);
 
   ucontrol->value.integer.value[0] = rate;
-  kfree(buf);
   return 0;
 }
 
