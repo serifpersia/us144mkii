@@ -343,10 +343,7 @@ void feedback_urb_complete(struct urb *urb) {
               FEEDBACK_SYNC_LOSS_THRESHOLD) {
             dev_err(tascam->card->dev,
                     "Fatal: Feedback sync lost. Stopping stream.\n");
-            if (playback_ss)
-              snd_pcm_stop(playback_ss, SNDRV_PCM_STATE_XRUN);
-            if (capture_ss)
-              snd_pcm_stop(capture_ss, SNDRV_PCM_STATE_XRUN);
+            schedule_work(&tascam->stop_pcm_work);
             tascam->feedback_synced = false;
             goto continue_unlock;
           }
@@ -426,4 +423,21 @@ continue_unlock:
   }
 out:
   usb_put_urb(urb);
+}
+
+/**
+ * tascam_stop_pcm_work_handler() - Work handler to stop PCM streams.
+ * @work: Pointer to the work_struct.
+ *
+ * This function is scheduled to stop PCM streams (playback and capture)
+ * from a workqueue context, avoiding blocking operations in interrupt context.
+ */
+void tascam_stop_pcm_work_handler(struct work_struct *work) {
+  struct tascam_card *tascam =
+      container_of(work, struct tascam_card, stop_pcm_work);
+
+  if (tascam->playback_substream)
+    snd_pcm_stop(tascam->playback_substream, SNDRV_PCM_STATE_XRUN);
+  if (tascam->capture_substream)
+    snd_pcm_stop(tascam->capture_substream, SNDRV_PCM_STATE_XRUN);
 }

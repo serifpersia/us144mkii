@@ -258,6 +258,7 @@ struct tascam_card {
   // Work structs
   struct work_struct capture_work;
   struct work_struct stop_work;
+  struct work_struct stop_pcm_work;
   struct work_struct midi_in_work;
   struct work_struct midi_out_work;
 
@@ -309,6 +310,15 @@ int tascam_alloc_urbs(struct tascam_card *tascam);
  * streams from a workqueue context.
  */
 void tascam_stop_work_handler(struct work_struct *work);
+
+/**
+ * tascam_stop_pcm_work_handler() - Work handler to stop PCM streams.
+ * @work: Pointer to the work_struct.
+ *
+ * This function is scheduled to stop PCM streams (playback and capture)
+ * from a workqueue context, avoiding blocking operations in interrupt context.
+ */
+void tascam_stop_pcm_work_handler(struct work_struct *work);
 
 /* us144mkii_pcm.h */
 #include "us144mkii_pcm.h"

@@ -332,6 +332,7 @@ static int tascam_suspend(struct usb_interface *intf, pm_message_t message) {
   cancel_work_sync(&tascam->capture_work);
   cancel_work_sync(&tascam->midi_in_work);
   cancel_work_sync(&tascam->midi_out_work);
+  cancel_work_sync(&tascam->stop_pcm_work);
   usb_kill_anchored_urbs(&tascam->playback_anchor);
   usb_kill_anchored_urbs(&tascam->capture_anchor);
   usb_kill_anchored_urbs(&tascam->feedback_anchor);
@@ -494,6 +495,7 @@ static int tascam_probe(struct usb_interface *intf,
   timer_setup(&tascam->error_timer, tascam_error_timer, 0);
 
   INIT_WORK(&tascam->stop_work, tascam_stop_work_handler);
+  INIT_WORK(&tascam->stop_pcm_work, tascam_stop_pcm_work_handler);
 
   if (kfifo_alloc(&tascam->midi_in_fifo, MIDI_IN_FIFO_SIZE, GFP_KERNEL)) {
     snd_card_free(card);
@@ -576,6 +578,7 @@ static void tascam_disconnect(struct usb_interface *intf) {
     cancel_work_sync(&tascam->capture_work);
     cancel_work_sync(&tascam->midi_in_work);
     cancel_work_sync(&tascam->midi_out_work);
+    cancel_work_sync(&tascam->stop_pcm_work);
 
     usb_kill_anchored_urbs(&tascam->playback_anchor);
     usb_kill_anchored_urbs(&tascam->capture_anchor);
