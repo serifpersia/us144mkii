@@ -158,6 +158,7 @@ sudo dnf install cmake "Development Tools" qt6-qtbase-devel alsa-lib-devel
 #### Arch Linux
 
 sudo pacman -Syu
+
 sudo pacman -S cmake base-devel qt6-base alsa-lib
 
 #### openSUSE
