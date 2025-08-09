@@ -11,60 +11,64 @@
  * the kfifo, processes it by stripping protocol-specific padding bytes, and
  * passes the clean MIDI data to the ALSA rawmidi subsystem.
  */
-static void tascam_midi_in_work_handler(struct work_struct *work) {
-  struct tascam_card *tascam =
-      container_of(work, struct tascam_card, midi_in_work);
-  u8 buf[9];
-  u8 clean_buf[8];
-  unsigned int count, clean_count;
+static void tascam_midi_in_work_handler(struct work_struct *work)
+{
+	struct tascam_card *tascam =
+		container_of(work, struct tascam_card, midi_in_work);
+	u8 buf[9];
+	u8 clean_buf[8];
+	unsigned int count, clean_count;
 
-  if (!tascam->midi_in_substream)
-    return;
+	if (!tascam->midi_in_substream)
+		return;
 
-  while (kfifo_out_spinlocked(&tascam->midi_in_fifo, buf, sizeof(buf),
-                              &tascam->midi_in_lock) == sizeof(buf)) {
-    clean_count = 0;
-    for (count = 0; count < 8; ++count) {
-      if (buf[count] != 0xfd)
-        clean_buf[clean_count++] = buf[count];
-    }
+	while (kfifo_out_spinlocked(&tascam->midi_in_fifo, buf, sizeof(buf),
+				    &tascam->midi_in_lock) == sizeof(buf)) {
+		clean_count = 0;
+		for (count = 0; count < 8; ++count) {
+			if (buf[count] != 0xfd)
+				clean_buf[clean_count++] = buf[count];
+		}
 
-    if (clean_count > 0)
-      snd_rawmidi_receive(tascam->midi_in_substream, clean_buf, clean_count);
-  }
+		if (clean_count > 0)
+			snd_rawmidi_receive(tascam->midi_in_substream,
+					    clean_buf, clean_count);
+	}
 }
 
-void tascam_midi_in_urb_complete(struct urb *urb) {
-  struct tascam_card *tascam = urb->context;
-  int ret;
+void tascam_midi_in_urb_complete(struct urb *urb)
+{
+	struct tascam_card *tascam = urb->context;
+	int ret;
 
-  if (urb->status) {
-    if (urb->status != -ENOENT && urb->status != -ECONNRESET &&
-        urb->status != -ESHUTDOWN && urb->status != -EPROTO) {
-      dev_err_ratelimited(tascam->card->dev, "MIDI IN URB failed: status %d\n",
-                          urb->status);
-    }
-    goto out;
-  }
+	if (urb->status) {
+		if (urb->status != -ENOENT && urb->status != -ECONNRESET &&
+		    urb->status != -ESHUTDOWN && urb->status != -EPROTO) {
+			dev_err_ratelimited(tascam->card->dev,
+					    "MIDI IN URB failed: status %d\n",
+					    urb->status);
+		}
+		goto out;
+	}
 
-  if (tascam && atomic_read(&tascam->midi_in_active) &&
-      urb->actual_length > 0) {
-    kfifo_in_spinlocked(&tascam->midi_in_fifo, urb->transfer_buffer,
-                        urb->actual_length, &tascam->midi_in_lock);
-    schedule_work(&tascam->midi_in_work);
-  }
+	if (tascam && atomic_read(&tascam->midi_in_active) &&
+	    urb->actual_length > 0) {
+		kfifo_in_spinlocked(&tascam->midi_in_fifo, urb->transfer_buffer,
+				    urb->actual_length, &tascam->midi_in_lock);
+		schedule_work(&tascam->midi_in_work);
+	}
 
-  usb_get_urb(urb);
-  usb_anchor_urb(urb, &tascam->midi_in_anchor);
-  ret = usb_submit_urb(urb, GFP_ATOMIC);
-  if (ret < 0) {
-    dev_err(tascam->card->dev, "Failed to resubmit MIDI IN URB: error %d\n",
-            ret);
-    usb_unanchor_urb(urb);
-    usb_put_urb(urb);
-  }
+	usb_get_urb(urb);
+	usb_anchor_urb(urb, &tascam->midi_in_anchor);
+	ret = usb_submit_urb(urb, GFP_ATOMIC);
+	if (ret < 0) {
+		dev_err(tascam->card->dev,
+			"Failed to resubmit MIDI IN URB: error %d\n", ret);
+		usb_unanchor_urb(urb);
+		usb_put_urb(urb);
+	}
 out:
-  usb_put_urb(urb);
+	usb_put_urb(urb);
 }
 
 /**
@@ -76,11 +80,12 @@ out:
  *
  * Return: 0 on success.
  */
-static int tascam_midi_in_open(struct snd_rawmidi_substream *substream) {
-  struct tascam_card *tascam = substream->rmidi->private_data;
+static int tascam_midi_in_open(struct snd_rawmidi_substream *substream)
+{
+	struct tascam_card *tascam = substream->rmidi->private_data;
 
-  tascam->midi_in_substream = substream;
-  return 0;
+	tascam->midi_in_substream = substream;
+	return 0;
 }
 
 /**
@@ -89,8 +94,9 @@ static int tascam_midi_in_open(struct snd_rawmidi_substream *substream) {
  *
  * Return: 0 on success.
  */
-static int tascam_midi_in_close(struct snd_rawmidi_substream *substream) {
-  return 0;
+static int tascam_midi_in_close(struct snd_rawmidi_substream *substream)
+{
+	return 0;
 }
 
 /**
@@ -104,35 +110,40 @@ static int tascam_midi_in_close(struct snd_rawmidi_substream *substream) {
  * associated workqueue.
  */
 static void tascam_midi_in_trigger(struct snd_rawmidi_substream *substream,
-                                   int up) {
-  struct tascam_card *tascam = substream->rmidi->private_data;
-  int i, err;
+				   int up)
+{
+	struct tascam_card *tascam = substream->rmidi->private_data;
+	int i, err;
 
-  if (up) {
-    if (atomic_xchg(&tascam->midi_in_active, 1) == 0) {
-      {
-        guard(spinlock_irqsave)(&tascam->midi_in_lock);
-        kfifo_reset(&tascam->midi_in_fifo);
-      }
+	if (up) {
+		if (atomic_xchg(&tascam->midi_in_active, 1) == 0) {
+			{
+				guard(spinlock_irqsave)(&tascam->midi_in_lock);
+				kfifo_reset(&tascam->midi_in_fifo);
+			}
 
-      for (i = 0; i < NUM_MIDI_IN_URBS; i++) {
-        usb_get_urb(tascam->midi_in_urbs[i]);
-        usb_anchor_urb(tascam->midi_in_urbs[i], &tascam->midi_in_anchor);
-        err = usb_submit_urb(tascam->midi_in_urbs[i], GFP_KERNEL);
-        if (err < 0) {
-          dev_err(tascam->card->dev, "Failed to submit MIDI IN URB %d: %d\n", i,
-                  err);
-          usb_unanchor_urb(tascam->midi_in_urbs[i]);
-          usb_put_urb(tascam->midi_in_urbs[i]);
-        }
-      }
-    }
-  } else {
-    if (atomic_xchg(&tascam->midi_in_active, 0) == 1) {
-      usb_kill_anchored_urbs(&tascam->midi_in_anchor);
-      cancel_work_sync(&tascam->midi_in_work);
-    }
-  }
+			for (i = 0; i < NUM_MIDI_IN_URBS; i++) {
+				usb_get_urb(tascam->midi_in_urbs[i]);
+				usb_anchor_urb(tascam->midi_in_urbs[i],
+					       &tascam->midi_in_anchor);
+				err = usb_submit_urb(tascam->midi_in_urbs[i],
+						     GFP_KERNEL);
+				if (err < 0) {
+					dev_err(tascam->card->dev,
+						"Failed to submit MIDI IN URB %d: %d\n",
+						i, err);
+					usb_unanchor_urb(
+						tascam->midi_in_urbs[i]);
+					usb_put_urb(tascam->midi_in_urbs[i]);
+				}
+			}
+		}
+	} else {
+		if (atomic_xchg(&tascam->midi_in_active, 0) == 1) {
+			usb_kill_anchored_urbs(&tascam->midi_in_anchor);
+			cancel_work_sync(&tascam->midi_in_work);
+		}
+	}
 }
 
 /**
@@ -142,49 +153,52 @@ static void tascam_midi_in_trigger(struct snd_rawmidi_substream *substream,
  * operations, including open, close, and trigger.
  */
 static const struct snd_rawmidi_ops tascam_midi_in_ops = {
-    .open = tascam_midi_in_open,
-    .close = tascam_midi_in_close,
-    .trigger = tascam_midi_in_trigger,
+	.open = tascam_midi_in_open,
+	.close = tascam_midi_in_close,
+	.trigger = tascam_midi_in_trigger,
 };
 
-void tascam_midi_out_urb_complete(struct urb *urb) {
-  struct tascam_card *tascam = urb->context;
-  int i, urb_index = -1;
+void tascam_midi_out_urb_complete(struct urb *urb)
+{
+	struct tascam_card *tascam = urb->context;
+	int i, urb_index = -1;
 
-  if (urb->status) {
-    if (urb->status != -ENOENT && urb->status != -ECONNRESET &&
-        urb->status != -ESHUTDOWN) {
-      dev_err_ratelimited(tascam->card->dev, "MIDI OUT URB failed: %d\n",
-                          urb->status);
-    }
-    goto out;
-  }
+	if (urb->status) {
+		if (urb->status != -ENOENT && urb->status != -ECONNRESET &&
+		    urb->status != -ESHUTDOWN) {
+			dev_err_ratelimited(tascam->card->dev,
+					    "MIDI OUT URB failed: %d\n",
+					    urb->status);
+		}
+		goto out;
+	}
 
-  if (!tascam)
-    goto out;
+	if (!tascam)
+		goto out;
 
-  for (i = 0; i < NUM_MIDI_OUT_URBS; i++) {
-    if (tascam->midi_out_urbs[i] == urb) {
-      urb_index = i;
-      break;
-    }
-  }
+	for (i = 0; i < NUM_MIDI_OUT_URBS; i++) {
+		if (tascam->midi_out_urbs[i] == urb) {
+			urb_index = i;
+			break;
+		}
+	}
 
-  if (urb_index < 0) {
-    dev_err_ratelimited(tascam->card->dev, "Unknown MIDI OUT URB completed!\n");
-    goto out;
-  }
+	if (urb_index < 0) {
+		dev_err_ratelimited(tascam->card->dev,
+				    "Unknown MIDI OUT URB completed!\n");
+		goto out;
+	}
 
-  {
-    guard(spinlock_irqsave)(&tascam->midi_out_lock);
-    clear_bit(urb_index, &tascam->midi_out_urbs_in_flight);
-  }
+	{
+		guard(spinlock_irqsave)(&tascam->midi_out_lock);
+		clear_bit(urb_index, &tascam->midi_out_urbs_in_flight);
+	}
 
-  if (atomic_read(&tascam->midi_out_active))
-    schedule_work(&tascam->midi_out_work);
+	if (atomic_read(&tascam->midi_out_active))
+		schedule_work(&tascam->midi_out_work);
 
 out:
-  usb_put_urb(urb);
+	usb_put_urb(urb);
 }
 
 /**
@@ -197,66 +211,73 @@ out:
  * This function pulls as many bytes as will fit into one packet from the
  * ALSA buffer and sends them.
  */
-static void tascam_midi_out_work_handler(struct work_struct *work) {
-  struct tascam_card *tascam =
-      container_of(work, struct tascam_card, midi_out_work);
-  struct snd_rawmidi_substream *substream = tascam->midi_out_substream;
-  int i;
+static void tascam_midi_out_work_handler(struct work_struct *work)
+{
+	struct tascam_card *tascam =
+		container_of(work, struct tascam_card, midi_out_work);
+	struct snd_rawmidi_substream *substream = tascam->midi_out_substream;
+	int i;
 
-  if (!substream || !atomic_read(&tascam->midi_out_active))
-    return;
+	if (!substream || !atomic_read(&tascam->midi_out_active))
+		return;
 
-  while (snd_rawmidi_transmit_peek(substream, (u8[]){0}, 1) == 1) {
-    int urb_index;
-    struct urb *urb;
-    u8 *buf;
-    int bytes_to_send;
+	while (snd_rawmidi_transmit_peek(substream, (u8[]){ 0 }, 1) == 1) {
+		int urb_index;
+		struct urb *urb;
+		u8 *buf;
+		int bytes_to_send;
 
-    {
-      guard(spinlock_irqsave)(&tascam->midi_out_lock);
+		{
+			guard(spinlock_irqsave)(&tascam->midi_out_lock);
 
-      urb_index = -1;
-      for (i = 0; i < NUM_MIDI_OUT_URBS; i++) {
-        if (!test_bit(i, &tascam->midi_out_urbs_in_flight)) {
-          urb_index = i;
-          break;
-        }
-      }
+			urb_index = -1;
+			for (i = 0; i < NUM_MIDI_OUT_URBS; i++) {
+				if (!test_bit(
+					    i,
+					    &tascam->midi_out_urbs_in_flight)) {
+					urb_index = i;
+					break;
+				}
+			}
 
-      if (urb_index < 0) {
-        return; /* No free URBs, will be rescheduled by completion handler */
-      }
+			if (urb_index < 0)
+				return; /* No free URBs, will be rescheduled by
+					 * completion handler
+					 */
 
-      urb = tascam->midi_out_urbs[urb_index];
-      buf = urb->transfer_buffer;
-      bytes_to_send = snd_rawmidi_transmit(substream, buf, 8);
+			urb = tascam->midi_out_urbs[urb_index];
+			buf = urb->transfer_buffer;
+			bytes_to_send = snd_rawmidi_transmit(substream, buf, 8);
 
-      if (bytes_to_send <= 0) {
-        break; /* No more data */
-      }
+			if (bytes_to_send <= 0)
+				break; /* No more data */
 
-      if (bytes_to_send < 9)
-        memset(buf + bytes_to_send, 0xfd, 9 - bytes_to_send);
-      buf[8] = 0x00;
+			if (bytes_to_send < 9)
+				memset(buf + bytes_to_send, 0xfd,
+				       9 - bytes_to_send);
+			buf[8] = 0x00;
 
-      set_bit(urb_index, &tascam->midi_out_urbs_in_flight);
-      urb->transfer_buffer_length = 9;
-    }
+			set_bit(urb_index, &tascam->midi_out_urbs_in_flight);
+			urb->transfer_buffer_length = 9;
+		}
 
-    usb_get_urb(urb);
-    usb_anchor_urb(urb, &tascam->midi_out_anchor);
-    if (usb_submit_urb(urb, GFP_KERNEL) < 0) {
-      dev_err_ratelimited(tascam->card->dev,
-                          "Failed to submit MIDI OUT URB %d\n", urb_index);
-      {
-        guard(spinlock_irqsave)(&tascam->midi_out_lock);
-        clear_bit(urb_index, &tascam->midi_out_urbs_in_flight);
-      }
-      usb_unanchor_urb(urb);
-      usb_put_urb(urb);
-      break; /* Stop on error */
-    }
-  }
+		usb_get_urb(urb);
+		usb_anchor_urb(urb, &tascam->midi_out_anchor);
+		if (usb_submit_urb(urb, GFP_KERNEL) < 0) {
+			dev_err_ratelimited(
+				tascam->card->dev,
+				"Failed to submit MIDI OUT URB %d\n",
+				urb_index);
+			{
+				guard(spinlock_irqsave)(&tascam->midi_out_lock);
+				clear_bit(urb_index,
+					  &tascam->midi_out_urbs_in_flight);
+			}
+			usb_unanchor_urb(urb);
+			usb_put_urb(urb);
+			break; /* Stop on error */
+		}
+	}
 }
 
 /**
@@ -268,13 +289,14 @@ static void tascam_midi_out_work_handler(struct work_struct *work) {
  *
  * Return: 0 on success.
  */
-static int tascam_midi_out_open(struct snd_rawmidi_substream *substream) {
-  struct tascam_card *tascam = substream->rmidi->private_data;
+static int tascam_midi_out_open(struct snd_rawmidi_substream *substream)
+{
+	struct tascam_card *tascam = substream->rmidi->private_data;
 
-  tascam->midi_out_substream = substream;
-  /* Initialize the running status state for the packet packer. */
-  tascam->midi_running_status = 0;
-  return 0;
+	tascam->midi_out_substream = substream;
+	/* Initialize the running status state for the packet packer. */
+	tascam->midi_running_status = 0;
+	return 0;
 }
 
 /**
@@ -283,8 +305,9 @@ static int tascam_midi_out_open(struct snd_rawmidi_substream *substream) {
  *
  * Return: 0 on success.
  */
-static int tascam_midi_out_close(struct snd_rawmidi_substream *substream) {
-  return 0;
+static int tascam_midi_out_close(struct snd_rawmidi_substream *substream)
+{
+	return 0;
 }
 
 /**
@@ -294,24 +317,25 @@ static int tascam_midi_out_close(struct snd_rawmidi_substream *substream) {
  * This function cancels any pending MIDI output work and kills all
  * anchored MIDI output URBs, ensuring all data is sent or discarded.
  */
-static void tascam_midi_out_drain(struct snd_rawmidi_substream *substream) {
-  struct tascam_card *tascam = substream->rmidi->private_data;
-  bool in_flight = true;
+static void tascam_midi_out_drain(struct snd_rawmidi_substream *substream)
+{
+	struct tascam_card *tascam = substream->rmidi->private_data;
+	bool in_flight = true;
 
-  while (in_flight) {
-    in_flight = false;
-    for (int i = 0; i < NUM_MIDI_OUT_URBS; i++) {
-      if (test_bit(i, &tascam->midi_out_urbs_in_flight)) {
-        in_flight = true;
-        break;
-      }
-    }
-    if (in_flight)
-      schedule_timeout_uninterruptible(1);
-  }
+	while (in_flight) {
+		in_flight = false;
+		for (int i = 0; i < NUM_MIDI_OUT_URBS; i++) {
+			if (test_bit(i, &tascam->midi_out_urbs_in_flight)) {
+				in_flight = true;
+				break;
+			}
+		}
+		if (in_flight)
+			schedule_timeout_uninterruptible(1);
+	}
 
-  cancel_work_sync(&tascam->midi_out_work);
-  usb_kill_anchored_urbs(&tascam->midi_out_anchor);
+	cancel_work_sync(&tascam->midi_out_work);
+	usb_kill_anchored_urbs(&tascam->midi_out_anchor);
 }
 
 /**
@@ -323,15 +347,16 @@ static void tascam_midi_out_drain(struct snd_rawmidi_substream *substream) {
  * 'up' parameter.
  */
 static void tascam_midi_out_trigger(struct snd_rawmidi_substream *substream,
-                                    int up) {
-  struct tascam_card *tascam = substream->rmidi->private_data;
+				    int up)
+{
+	struct tascam_card *tascam = substream->rmidi->private_data;
 
-  if (up) {
-    atomic_set(&tascam->midi_out_active, 1);
-    schedule_work(&tascam->midi_out_work);
-  } else {
-    atomic_set(&tascam->midi_out_active, 0);
-  }
+	if (up) {
+		atomic_set(&tascam->midi_out_active, 1);
+		schedule_work(&tascam->midi_out_work);
+	} else {
+		atomic_set(&tascam->midi_out_active, 0);
+	}
 }
 
 /**
@@ -341,34 +366,36 @@ static void tascam_midi_out_trigger(struct snd_rawmidi_substream *substream,
  * operations, including open, close, trigger, and drain.
  */
 static const struct snd_rawmidi_ops tascam_midi_out_ops = {
-    .open = tascam_midi_out_open,
-    .close = tascam_midi_out_close,
-    .trigger = tascam_midi_out_trigger,
-    .drain = tascam_midi_out_drain,
+	.open = tascam_midi_out_open,
+	.close = tascam_midi_out_close,
+	.trigger = tascam_midi_out_trigger,
+	.drain = tascam_midi_out_drain,
 };
 
-int tascam_create_midi(struct tascam_card *tascam) {
-  int err;
+int tascam_create_midi(struct tascam_card *tascam)
+{
+	int err;
 
-  err =
-      snd_rawmidi_new(tascam->card, "US144MKII MIDI", 0, 1, 1, &tascam->rmidi);
-  if (err < 0)
-    return err;
+	err = snd_rawmidi_new(tascam->card, "US144MKII MIDI", 0, 1, 1,
+			      &tascam->rmidi);
+	if (err < 0)
+		return err;
 
-  strscpy(tascam->rmidi->name, "US144MKII MIDI", sizeof(tascam->rmidi->name));
-  tascam->rmidi->private_data = tascam;
+	strscpy(tascam->rmidi->name, "US144MKII MIDI",
+		sizeof(tascam->rmidi->name));
+	tascam->rmidi->private_data = tascam;
 
-  snd_rawmidi_set_ops(tascam->rmidi, SNDRV_RAWMIDI_STREAM_INPUT,
-                      &tascam_midi_in_ops);
-  snd_rawmidi_set_ops(tascam->rmidi, SNDRV_RAWMIDI_STREAM_OUTPUT,
-                      &tascam_midi_out_ops);
+	snd_rawmidi_set_ops(tascam->rmidi, SNDRV_RAWMIDI_STREAM_INPUT,
+			    &tascam_midi_in_ops);
+	snd_rawmidi_set_ops(tascam->rmidi, SNDRV_RAWMIDI_STREAM_OUTPUT,
+			    &tascam_midi_out_ops);
 
-  tascam->rmidi->info_flags |= SNDRV_RAWMIDI_INFO_INPUT |
-                               SNDRV_RAWMIDI_INFO_OUTPUT |
-                               SNDRV_RAWMIDI_INFO_DUPLEX;
+	tascam->rmidi->info_flags |= SNDRV_RAWMIDI_INFO_INPUT |
+				     SNDRV_RAWMIDI_INFO_OUTPUT |
+				     SNDRV_RAWMIDI_INFO_DUPLEX;
 
-  INIT_WORK(&tascam->midi_in_work, tascam_midi_in_work_handler);
-  INIT_WORK(&tascam->midi_out_work, tascam_midi_out_work_handler);
+	INIT_WORK(&tascam->midi_in_work, tascam_midi_in_work_handler);
+	INIT_WORK(&tascam->midi_out_work, tascam_midi_out_work_handler);
 
-  return 0;
+	return 0;
 }
