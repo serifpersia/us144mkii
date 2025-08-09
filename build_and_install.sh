@@ -11,7 +11,7 @@ make
 
 echo "--- Installing the driver ---"
 SUDO_CMD="sudo"
-KERNEL_MODULE_DIR="/lib/modules/$(uname -r)/extra"
+KERNEL_MODULE_DIR="/lib/modules/$(uname -r)/extra/us144mkii"
 
 echo "Creating directory if it doesn't exist: $KERNEL_MODULE_DIR"
 $SUDO_CMD mkdir -p "$KERNEL_MODULE_DIR"
