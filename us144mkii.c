@@ -386,7 +386,7 @@ static int tascam_resume(struct usb_interface *intf) {
 }
 
 static void tascam_error_timer(struct timer_list *t) {
-  struct tascam_card *tascam = from_timer(tascam, t, error_timer);
+  struct tascam_card *tascam = container_of(t, struct tascam_card, error_timer);
 
   if (atomic_read(&tascam->midi_in_active))
     schedule_work(&tascam->midi_in_work);
