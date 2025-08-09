@@ -62,7 +62,7 @@ static void tascam_card_private_free(struct snd_card *card) {
  * - Checking for the second interface (MIDI) and associating it.
  * - Performing a vendor-specific handshake with the device.
  * - Setting alternate settings for USB interfaces.
- * - Creating and registering the ALSA sound card.
+ * - Creating and registering the ALSA sound card and PCM device.
  *
  * Return: 0 on success, or a negative error code on failure.
  */
@@ -142,6 +142,18 @@ static int tascam_probe(struct usb_interface *intf,
   tascam->dev = usb_get_dev(dev);
   tascam->card = card;
   tascam->iface0 = intf;
+
+  spin_lock_init(&tascam->lock);
+
+  err = snd_pcm_new(card, "US144MKII PCM", 0, 1, 1, &tascam->pcm);
+  if (err < 0)
+    goto free_card;
+  tascam->pcm->private_data = tascam;
+  strscpy(tascam->pcm->name, "US144MKII PCM", sizeof(tascam->pcm->name));
+
+  err = tascam_init_pcm(tascam->pcm);
+  if (err < 0)
+    goto free_card;
 
   strscpy(card->driver, DRIVER_NAME, sizeof(card->driver));
   if (dev->descriptor.idProduct == USB_PID_TASCAM_US144) {
