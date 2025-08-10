@@ -119,7 +119,7 @@ void MainWindow::initUi() {
     auto *infoGrid = new QGridLayout();
     infoGrid->setSpacing(5);
     const QMap<QString, QString> infoData = {
-        {"Driver Version:", "driver_version"}, {"Device:", "device"},
+        {"Device:", "device"},
         {"Sample Width:", "sample_width"}, {"Sample Rate:", "sample_rate"}
     };
     int row = 0;
@@ -178,11 +178,7 @@ void MainWindow::initUi() {
     auto *aboutButton = new QPushButton("About");
     aboutButton->setFixedSize(100, 30);
     connect(aboutButton, &QPushButton::clicked, this, &MainWindow::showAboutDialog);
-    auto *exitButton = new QPushButton("Exit");
-    exitButton->setFixedSize(100, 30);
-    connect(exitButton, &QPushButton::clicked, this, &QWidget::close);
     buttonLayout->addWidget(aboutButton);
-    buttonLayout->addWidget(exitButton);
     middlePanel->addLayout(buttonLayout);
 
     topLevelLayout->addLayout(leftPanel, 1);
@@ -195,7 +191,6 @@ void MainWindow::initUi() {
 }
 
 void MainWindow::loadDynamicSettings() {
-    m_infoLabels["driver_version"]->setText(QString::fromStdString(m_alsa.readSysfsAttr("driver_version")));
     m_infoLabels["device"]->setText("US-144 MKII");
     m_infoLabels["sample_width"]->setText("24 bits");
 
@@ -261,20 +256,15 @@ void MainWindow::showAboutDialog() {
         auto *textLabel = new QLabel(m_aboutDialog);
         textLabel->setTextFormat(Qt::RichText);
         textLabel->setOpenExternalLinks(true);
-        textLabel->setText(QString("<b>TASCAM US-144MKII Control Panel</b><br>" 
-                             "Driver Version: %1<br><br>" 
-                             "Copyright @serifpersia 2025<br><br>" 
-                             "This application provides a graphical interface to control the TASCAM US-144MKII audio interface on Linux. " 
-                             "It utilizes the 'us144mkii' ALSA driver.<br><br>" 
-                             "For more information, bug reports, and contributions, please visit the GitHub repository:<br>" 
-                             "<a href='https://github.com/serifpersia/us144mkii'>https://github.com/serifpersia/us144mkii</a>").arg(m_infoLabels["driver_version"]->text()));
+        textLabel->setText(QString("<b>TASCAM US-144MKII Control Panel</b><br>"
+                             "Copyright @serifpersia 2025<br><br>"
+                             "This application provides a graphical interface to control the TASCAM US-144MKII audio interface on Linux. "
+                             "It utilizes the 'us144mkii' ALSA driver.<br><br>"
+                             "For more information, bug reports, and contributions, please visit the GitHub repository:<br>"
+                             "<a href='https://github.com/serifpersia/us144mkii'>https://github.com/serifpersia/us144mkii</a>"));
         textLabel->setWordWrap(true);
 
-        auto *buttonBox = new QDialogButtonBox(QDialogButtonBox::Close);
-        connect(buttonBox, &QDialogButtonBox::rejected, m_aboutDialog, &QDialog::close);
-
         layout->addWidget(textLabel);
-        layout->addWidget(buttonBox);
     }
 
     m_aboutDialog->show();

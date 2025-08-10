@@ -36,36 +36,37 @@
 #define RT_D2H_VENDOR_DEV (USB_DIR_IN | USB_TYPE_VENDOR | USB_RECIP_DEVICE)
 
 enum uac_request {
-  UAC_SET_CUR = 0x01,
-  UAC_GET_CUR = 0x81,
+	UAC_SET_CUR = 0x01,
+	UAC_GET_CUR = 0x81,
 };
 
 enum uac_control_selector {
-  UAC_SAMPLING_FREQ_CONTROL = 0x0100,
+	UAC_SAMPLING_FREQ_CONTROL = 0x0100,
 };
 
 enum tascam_vendor_request {
-  VENDOR_REQ_REGISTER_WRITE = 0x41,
-  VENDOR_REQ_MODE_CONTROL = 0x49,
+	VENDOR_REQ_REGISTER_WRITE = 0x41,
+	VENDOR_REQ_DEEP_SLEEP = 0x44,
+	VENDOR_REQ_MODE_CONTROL = 0x49,
 };
 
 enum tascam_mode_value {
-  MODE_VAL_HANDSHAKE_READ = 0x0000,
-  MODE_VAL_CONFIG = 0x0010,
-  MODE_VAL_STREAM_START = 0x0030,
+	MODE_VAL_HANDSHAKE_READ = 0x0000,
+	MODE_VAL_CONFIG = 0x0010,
+	MODE_VAL_STREAM_START = 0x0030,
 };
 
 #define HANDSHAKE_SUCCESS_VAL 0x12
 
 enum tascam_register {
-  REG_ADDR_UNKNOWN_0D = 0x0d04,
-  REG_ADDR_UNKNOWN_0E = 0x0e00,
-  REG_ADDR_UNKNOWN_0F = 0x0f00,
-  REG_ADDR_RATE_44100 = 0x1000,
-  REG_ADDR_RATE_48000 = 0x1002,
-  REG_ADDR_RATE_88200 = 0x1008,
-  REG_ADDR_RATE_96000 = 0x100a,
-  REG_ADDR_UNKNOWN_11 = 0x110b,
+	REG_ADDR_UNKNOWN_0D = 0x0d04,
+	REG_ADDR_UNKNOWN_0E = 0x0e00,
+	REG_ADDR_UNKNOWN_0F = 0x0f00,
+	REG_ADDR_RATE_44100 = 0x1000,
+	REG_ADDR_RATE_48000 = 0x1002,
+	REG_ADDR_RATE_88200 = 0x1008,
+	REG_ADDR_RATE_96000 = 0x100a,
+	REG_ADDR_UNKNOWN_11 = 0x110b,
 };
 
 #define REG_VAL_ENABLE 0x0101
@@ -100,6 +101,27 @@ enum tascam_register {
 #define RAW_BYTES_PER_DECODE_BLOCK 512
 
 /**
+ * struct us144mkii_frame_pattern_observer - State for dynamic feedback
+ * patterns.
+ * @sample_rate_khz: The current sample rate in kHz.
+ * @base_feedback_value: The nominal feedback value for the current rate.
+ * @feedback_offset: An offset to align the feedback value range.
+ * @full_frame_patterns: A 2D array of pre-calculated packet size patterns.
+ * @current_index: The current index into the pattern array.
+ * @previous_index: The previous index, used for state tracking.
+ * @sync_locked: A flag indicating if the pattern has locked to the stream.
+ */
+struct us144mkii_frame_pattern_observer {
+	unsigned int sample_rate_khz;
+	unsigned int base_feedback_value;
+	int feedback_offset;
+	unsigned int full_frame_patterns[5][8];
+	unsigned int current_index;
+	unsigned int previous_index;
+	bool sync_locked;
+};
+
+/**
  * struct tascam_card - Main driver data structure for the TASCAM US-144MKII.
  * @dev: Pointer to the USB device.
  * @iface0: Pointer to USB interface 0 (audio).
@@ -117,7 +139,6 @@ enum tascam_register {
  * @playback_frames_consumed: Total frames consumed by playback.
  * @driver_playback_pos: Current position in the ALSA playback buffer (frames).
  * @last_period_pos: Last reported period position for playback.
- * @playback_routing_buffer: Intermediate buffer for playback routing.
  *
  * @capture_substream: Pointer to the active capture PCM substream.
  * @capture_urbs: Array of URBs for capture.
@@ -134,20 +155,23 @@ enum tascam_register {
  * @capture_routing_buffer: Intermediate buffer for capture routing.
  * @capture_work: Work struct for deferred capture processing.
  * @stop_work: Work struct for deferred stream stopping.
+ * @stop_pcm_work: Work struct for stopping PCM due to a fatal error (e.g.
+ * xrun).
  *
  * @midi_in_substream: Pointer to the active MIDI input substream.
  * @midi_out_substream: Pointer to the active MIDI output substream.
  * @midi_in_urbs: Array of URBs for MIDI input.
+ * @midi_out_urbs: Array of URBs for MIDI output.
  * @midi_in_active: Atomic flag indicating if MIDI input is active.
+ * @midi_out_active: Atomic flag indicating if MIDI output is active.
  * @midi_in_fifo: FIFO for raw MIDI input data.
  * @midi_in_work: Work struct for deferred MIDI input processing.
- * @midi_in_lock: Spinlock for MIDI input FIFO.
- * @midi_out_urbs: Array of URBs for MIDI output.
- * @midi_out_active: Atomic flag indicating if MIDI output is active.
  * @midi_out_work: Work struct for deferred MIDI output processing.
- * @midi_out_urbs_in_flight: Bitmap of MIDI output URBs currently in flight.
+ * @midi_in_lock: Spinlock for MIDI input FIFO.
  * @midi_out_lock: Spinlock for MIDI output.
+ * @midi_out_urbs_in_flight: Bitmap of MIDI output URBs currently in flight.
  * @midi_running_status: Stores the last MIDI status byte for running status.
+ * @error_timer: Timer for MIDI error retry logic.
  *
  * @lock: Main spinlock for protecting shared driver state.
  * @active_urbs: Atomic counter for active URBs.
@@ -177,109 +201,93 @@ enum tascam_register {
  * @midi_out_anchor: USB anchor for MIDI output URBs.
  */
 struct tascam_card {
-  /* --- Hot Path Data (frequently accessed, especially in IRQ/workqueue) --- */
-  spinlock_t lock; // Main lock, highly contended
-  atomic_t playback_active;
-  atomic_t capture_active;
-  atomic_t active_urbs; // Also frequently updated
+	/* --- Core device pointers --- */
+	struct usb_device *dev;
+	struct usb_interface *iface0;
+	struct usb_interface *iface1;
+	struct snd_card *card;
+	struct snd_pcm *pcm;
+	struct snd_rawmidi *rmidi;
 
-  // Playback state (updated by feedback_urb_complete and playback_urb_complete)
-  u64 playback_frames_consumed;
-  snd_pcm_uframes_t driver_playback_pos;
-  u64 last_period_pos;
+	/* --- PCM Substreams --- */
+	struct snd_pcm_substream *playback_substream;
+	struct snd_pcm_substream *capture_substream;
 
-  // Capture state (updated by feedback_urb_complete and capture_urb_complete)
-  snd_pcm_uframes_t driver_capture_pos;
-  u64 capture_frames_processed;
-  u64 last_capture_period_pos;
+	/* --- URBs and Anchors --- */
+	struct urb *playback_urbs[NUM_PLAYBACK_URBS];
+	size_t playback_urb_alloc_size;
+	struct urb *feedback_urbs[NUM_FEEDBACK_URBS];
+	size_t feedback_urb_alloc_size;
+	struct urb *capture_urbs[NUM_CAPTURE_URBS];
+	size_t capture_urb_alloc_size;
+	struct urb *midi_in_urbs[NUM_MIDI_IN_URBS];
+	struct urb *midi_out_urbs[NUM_MIDI_OUT_URBS];
+	struct usb_anchor playback_anchor;
+	struct usb_anchor capture_anchor;
+	struct usb_anchor feedback_anchor;
+	struct usb_anchor midi_in_anchor;
+	struct usb_anchor midi_out_anchor;
 
-  // Feedback related (critical for audio sync)
-  unsigned int feedback_accumulator_pattern[FEEDBACK_ACCUMULATOR_SIZE];
-  unsigned int feedback_pattern_out_idx;
-  unsigned int feedback_pattern_in_idx;
-  bool feedback_synced;
-  unsigned int feedback_consecutive_errors;
-  unsigned int feedback_urb_skip_count;
+	/* --- Stream State --- */
+	spinlock_t lock;
+	atomic_t playback_active;
+	atomic_t capture_active;
+	atomic_t active_urbs;
+	int current_rate;
 
-  struct us144mkii_frame_pattern_observer {
-    unsigned int sample_rate_khz;
-    unsigned int base_feedback_value;
-    int feedback_offset;
-    unsigned int full_frame_patterns[5][8];
-    unsigned int current_index;
-    unsigned int previous_index;
-    bool sync_locked;
-  } fpo;
+	/* --- Playback State --- */
+	u64 playback_frames_consumed;
+	snd_pcm_uframes_t driver_playback_pos;
+	u64 last_period_pos;
 
-  // MIDI state (frequently accessed in MIDI handlers)
-  atomic_t midi_in_active;
-  atomic_t midi_out_active;
-  spinlock_t midi_in_lock;
-  spinlock_t midi_out_lock;
-  unsigned long midi_out_urbs_in_flight;
-  u8 midi_running_status;
-  bool in_sysex;
-  struct timer_list error_timer; // Timer for MIDI error retry
+	/* --- Capture State --- */
+	u64 capture_frames_processed;
+	snd_pcm_uframes_t driver_capture_pos;
+	u64 last_capture_period_pos;
+	u8 *capture_ring_buffer;
+	size_t capture_ring_buffer_read_ptr;
+	size_t capture_ring_buffer_write_ptr;
+	u8 *capture_decode_raw_block;
+	s32 *capture_decode_dst_block;
+	s32 *capture_routing_buffer;
 
-  int current_rate; // Also accessed frequently, moved up
+	/* --- MIDI State --- */
+	struct snd_rawmidi_substream *midi_in_substream;
+	struct snd_rawmidi_substream *midi_out_substream;
+	atomic_t midi_in_active;
+	atomic_t midi_out_active;
+	struct kfifo midi_in_fifo;
+	spinlock_t midi_in_lock;
+	spinlock_t midi_out_lock;
+	unsigned long midi_out_urbs_in_flight;
+	u8 midi_running_status;
+	struct timer_list error_timer;
+	struct completion midi_out_drain_completion;
 
-  /* --- Less Hot Data (pointers, configuration, work structs) --- */
-  struct usb_device *dev;
-  struct usb_interface *iface0;
-  struct usb_interface *iface1;
-  struct snd_card *card;
-  struct snd_pcm *pcm;
-  struct snd_rawmidi *rmidi;
+	/* --- Feedback Sync State --- */
+	unsigned int feedback_accumulator_pattern[FEEDBACK_ACCUMULATOR_SIZE];
+	unsigned int feedback_pattern_out_idx;
+	unsigned int feedback_pattern_in_idx;
+	bool feedback_synced;
+	unsigned int feedback_consecutive_errors;
+	unsigned int feedback_urb_skip_count;
+	struct us144mkii_frame_pattern_observer fpo;
 
-  // Substream pointers
-  struct snd_pcm_substream *playback_substream;
-  struct snd_pcm_substream *capture_substream;
-  struct snd_rawmidi_substream *midi_in_substream;
-  struct snd_rawmidi_substream *midi_out_substream;
+	/* --- Workqueues --- */
+	struct work_struct stop_work;
+	struct work_struct stop_pcm_work;
+	struct work_struct capture_work;
+	struct work_struct midi_in_work;
+	struct work_struct midi_out_work;
 
-  // URB arrays and sizes
-  struct urb *playback_urbs[NUM_PLAYBACK_URBS];
-  size_t playback_urb_alloc_size;
-  struct urb *feedback_urbs[NUM_FEEDBACK_URBS];
-  size_t feedback_urb_alloc_size;
-  struct urb *capture_urbs[NUM_CAPTURE_URBS];
-  size_t capture_urb_alloc_size;
-  struct urb *midi_in_urbs[NUM_MIDI_IN_URBS];
-  struct urb *midi_out_urbs[NUM_MIDI_OUT_URBS];
-
-  // Buffers (pointers to external allocations)
-  u8 *capture_ring_buffer;
-  size_t capture_ring_buffer_read_ptr;
-  size_t capture_ring_buffer_write_ptr;
-  u8 *capture_decode_raw_block;
-  s32 *capture_decode_dst_block;
-  s32 *capture_routing_buffer;
-
-  // Work structs
-  struct work_struct capture_work;
-  struct work_struct stop_work;
-  struct work_struct stop_pcm_work;
-  struct work_struct midi_in_work;
-  struct work_struct midi_out_work;
-
-  // FIFOs
-  struct kfifo midi_in_fifo;
-
-  // Routing Matrix settings
-  unsigned int line_out_source;
-  unsigned int digital_out_source;
-  unsigned int capture_12_source;
-  unsigned int capture_34_source;
-
-  // USB anchors
-  struct usb_anchor playback_anchor;
-  struct usb_anchor capture_anchor;
-  struct usb_anchor feedback_anchor;
-  struct usb_anchor midi_in_anchor;
-  struct usb_anchor midi_out_anchor;
+	/* --- Mixer/Routing State --- */
+	unsigned int line_out_source;
+	unsigned int digital_out_source;
+	unsigned int capture_12_source;
+	unsigned int capture_34_source;
 };
 
-/* main */
+/* main.c */
 /**
  * tascam_free_urbs() - Free all allocated URBs and associated buffers.
  * @tascam: the tascam_card instance
@@ -306,19 +314,9 @@ int tascam_alloc_urbs(struct tascam_card *tascam);
  * @work: Pointer to the work_struct.
  *
  * This function is scheduled to stop all active URBs (playback, feedback,
- * capture) and reset the active_urbs counter. It is used to gracefully stop
- * streams from a workqueue context.
+ * capture) and reset the active_urbs counter.
  */
 void tascam_stop_work_handler(struct work_struct *work);
-
-/**
- * tascam_stop_pcm_work_handler() - Work handler to stop PCM streams.
- * @work: Pointer to the work_struct.
- *
- * This function is scheduled to stop PCM streams (playback and capture)
- * from a workqueue context, avoiding blocking operations in interrupt context.
- */
-void tascam_stop_pcm_work_handler(struct work_struct *work);
 
 /* us144mkii_pcm.h */
 #include "us144mkii_pcm.h"
