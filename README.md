@@ -20,8 +20,48 @@ This driver is under active development.
 
 This is an out-of-tree kernel module, meaning you must compile it against the headers for your specific kernel version.
 
-### Step 1: Install Prerequisites (Kernel Headers & Build Tools)
+### Step 1: Blacklist the Stock `snd-usb-us122l` Driver
+The standard kernel includes a driver that will conflict with our custom module. You must prevent it from loading.
+
+Follow the steps to blacklist it if `lsmod | grep snd_usb_us122l` returns results.
+
+1.  **Create a blacklist file.** This tells the system *not* to load the `snd-usb-us122l` module.
+    ```bash
+    echo "blacklist snd_usb_us122l" | sudo tee /etc/modprobe.d/blacklist-us122l.conf
+    ```
+2.  **Rebuild your initramfs.** This is a critical step that ensures the blacklist is applied at the very start of the boot process, before the stock driver has a chance to load. Run the command corresponding to your distribution:
+    *   **Debian / Ubuntu / Pop!_OS / Mint:**
+        ```bash
+        sudo update-initramfs -u
+        ```
+    *   **Fedora / RHEL / CentOS Stream:**
+        ```bash
+        sudo dracut --force
+        ```
+    *   **Arch Linux / Manjaro:**
+        ```bash
+        sudo mkinitcpio -P
+        ```
+    *   **openSUSE:**
+        ```bash
+        sudo mkinitrd
+        ```
+3.  **Reboot your computer.**
+    Reboot the system and check with `lsmod | grep snd_usb_us122l` again if there is no output the blacklisting is complete.
+
+> **Note on a More Aggressive Method:** If the method above does not work, some systems (like Arch) may load the conflicting module before the blacklist is processed. A more forceful method is to use a `udev` rule to de-authorize the device for the kernel entirely, preventing any driver from binding to it automatically.
+>
+> Create the file `/etc/udev/rules.d/99-tascam-blacklist.rules` and add the following line. This targets the Tascam US-122L/144MKII series product ID (`8007`).
+> ```
+> ATTR{idVendor}=="0644", ATTR{idProduct}=="8007", ATTR{authorized}="0"
+> ```
+> After saving, run `sudo udevadm control --reload` and reboot. Note that with this rule in place, you will likely need to load the `us144mkii` driver manually with `sudo insmod snd-usb-us144mkii.ko` each time. The `modprobe` method is preferred for automatic loading.
+
+
+### Step 2: Install Prerequisites (Kernel Headers & Build Tools)
 You need the necessary tools to compile kernel modules and the headers for your currently running kernel. Open a terminal and run the command for your Linux distribution:
+
+*You can attempt build without installing linux headers package first, if you are unable to build then you would need to!
 
 *   **Debian / Ubuntu / Pop!_OS / Mint:**
     ```bash
@@ -45,49 +85,16 @@ You need the necessary tools to compile kernel modules and the headers for your 
     sudo zypper install kernel-devel
     ```
 
-### Step 2: Blacklist the Stock `snd-usb-us122l` Driver
-The standard kernel includes a driver that will conflict with our custom module. You must prevent it from loading.
-
-1.  **Create a blacklist file.** This tells the system *not* to load the `snd-usb-us122l` module.
-    ```bash
-    echo "blacklist snd_usb_us122l" | sudo tee /etc/modprobe.d/blacklist-us122l.conf
-    ```
-
-2.  **Rebuild your initramfs.** This is a critical step that ensures the blacklist is applied at the very start of the boot process, before the stock driver has a chance to load. Run the command corresponding to your distribution:
-    *   **Debian / Ubuntu / Pop!_OS / Mint:**
-        ```bash
-        sudo update-initramfs -u
-        ```
-    *   **Fedora / RHEL / CentOS Stream:**
-        ```bash
-        sudo dracut --force
-        ```
-    *   **Arch Linux / Manjaro:**
-        ```bash
-        sudo mkinitcpio -P
-        ```
-    *   **openSUSE:**
-        ```bash
-        sudo mkinitrd
-        ```
-
-3.  **Reboot your computer.**
-
-4.  After rebooting, verify the stock driver is not loaded by running `lsmod | grep snd_usb_us122l`. This command should produce no output.
-
-> **Note on a More Aggressive Method:** If the method above does not work, some systems (like Arch) may load the conflicting module before the blacklist is processed. A more forceful method is to use a `udev` rule to de-authorize the device for the kernel entirely, preventing any driver from binding to it automatically.
->
-> Create the file `/etc/udev/rules.d/99-tascam-blacklist.rules` and add the following line. This targets the Tascam US-122L/144MKII series product ID (`8007`).
-> ```
-> ATTR{idVendor}=="0644", ATTR{idProduct}=="8007", ATTR{authorized}="0"
-> ```
-> After saving, run `sudo udevadm control --reload` and reboot. Note that with this rule in place, you will likely need to load the `us144mkii` driver manually with `sudo insmod snd-usb-us144mkii.ko` each time. The `modprobe` method is preferred for automatic loading.
-
 
 ### Step 3: Compile and Load the Driver
 This process will build the module from source and load it for your current session. This is the best way to test it.
 
 1.  Clone this repository and navigate into the source directory.
+
+```bash
+git clone https://github.com/serifpersia/us144mkii.git
+cd us144mkii/
+```
 
 2.  Compile the module:
     ```bash
@@ -112,6 +119,9 @@ This process will build the module from source and load it for your current sess
 ### Step 4: Install for Automatic Loading on Boot
 To make the driver load automatically every time you start your computer, follow these steps after you have successfully compiled it in Step 3.
 
+You can use build_install script to do automate this process just `sudo chmod +x build_install.sh` before you run it with `./build_install.sh` or just do it
+the manual way.
+
 1.  **Copy the compiled module to the kernel's extra modules directory.** This makes it available to system tools.
     ```bash
     sudo mkdir -p /lib/modules/$(uname -r)/extra/us144mkii
@@ -127,7 +137,7 @@ Now, after a reboot, the `us144mkii` driver should load automatically.
 
 ### Tascam Control Panel
 
-<img width="552" height="469" alt="Screenshot_20250720_231914" src="https://github.com/user-attachments/assets/960f58dc-a072-492e-9cf8-189d2801af29" />
+<img width="543" height="480" alt="image" src="https://github.com/user-attachments/assets/43981c8d-c59e-4d43-b1c8-33e512085219" />
 
 
 A control panel app built with Qt6 and ALSA.
