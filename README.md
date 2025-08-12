@@ -215,6 +215,23 @@ To remove all compiled files and intermediate artifacts, simply delete the `buil
 cd ..
 rm -rf build
 
+
+## Reporting Issues & Feedback
+
+If you test this driver, please share your feedback to help improve it. Include:
+
+- Linux distro and version  
+- Kernel version (`uname -r`)  
+- Exact TASCAM model  
+- How you installed and loaded the driver  
+- Any errors or problems (logs help)  
+- Which features worked (playback, capture, MIDI)  
+- Your setup details (e.g., DAW, ALSA/JACK version, buffer/periods used)
+
+All feedback is welcome—whether it’s a bug, a success, or a suggestion!
+
+Please report your findings via the GitHub Issues page.
+
 ## License
 
 This project is licensed under the **GPL-2.0** see the [LICENSE](LICENSE) file for details.
