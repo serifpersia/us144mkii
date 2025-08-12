@@ -184,10 +184,10 @@ void MainWindow::initUi() {
     topLevelLayout->addLayout(leftPanel, 1);
     topLevelLayout->addLayout(middlePanel, 1);
 
-    connect(m_lineOutCombo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Line OUTPUTS Source", index, m_lineOutCombo); });
-    connect(m_digitalOutCombo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Digital OUTPUTS Source", index, m_digitalOutCombo); });
-    connect(m_capture12Combo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("ch1 and ch2 Source", index, m_capture12Combo); });
-    connect(m_capture34Combo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("ch3 and ch4 Source", index, m_capture34Combo); });
+    connect(m_lineOutCombo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Line Playback Source", index, m_lineOutCombo); });
+    connect(m_digitalOutCombo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Digital Playback Source", index, m_digitalOutCombo); });
+    connect(m_capture12Combo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Ch1/2 Capture Source", index, m_capture12Combo); });
+    connect(m_capture34Combo, &QComboBox::currentIndexChanged, this, [this](int index){ onControlChanged("Ch3/4 Capture Source", index, m_capture34Combo); });
 }
 
 void MainWindow::loadDynamicSettings() {
@@ -197,10 +197,10 @@ void MainWindow::loadDynamicSettings() {
     long rate_val = m_alsa.getControlValue("Sample Rate");
     m_infoLabels["sample_rate"]->setText(rate_val > 0 ? QString("%1 kHz").arg(rate_val / 1000.0, 0, 'f', 1) : "N/A (inactive)");
 
-    updateCombo(m_lineOutCombo, "Line OUTPUTS Source");
-    updateCombo(m_digitalOutCombo, "Digital OUTPUTS Source");
-    updateCombo(m_capture12Combo, "ch1 and ch2 Source");
-    updateCombo(m_capture34Combo, "ch3 and ch4 Source");
+    updateCombo(m_lineOutCombo, "Line Playback Source");
+    updateCombo(m_digitalOutCombo, "Digital Playback Source");
+    updateCombo(m_capture12Combo, "Ch1/2 Capture Source");
+    updateCombo(m_capture34Combo, "Ch3/4 Capture Source");
 }
 
 void MainWindow::updateCombo(QComboBox* combo, const std::string& controlName) {

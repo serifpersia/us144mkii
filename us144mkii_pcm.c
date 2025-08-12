@@ -14,7 +14,7 @@
  * adjusts the elements to match a target sum, distributing the difference
  * as evenly as possible.
  */
-static void fpoInitPattern(unsigned int size, unsigned int *pattern_array,
+static void fpo_init_pattern(unsigned int size, unsigned int *pattern_array,
 			   unsigned int initial_value, int target_sum)
 {
 	int diff, i;
@@ -115,11 +115,11 @@ void process_capture_routing_us144mkii(struct tascam_card *tascam,
 int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate)
 {
 	struct usb_device *dev = tascam->dev;
+
+	u8 *rate_payload_buf __free(kfree) = NULL;
 	u16 rate_vendor_wValue;
 	int err = 0;
 	const u8 *current_payload_src;
-
-	u8 *rate_payload_buf __free(kfree);
 
 	static const u8 payload_44100[] = { 0x44, 0xac, 0x00 };
 	static const u8 payload_48000[] = { 0x80, 0xbb, 0x00 };
@@ -239,7 +239,7 @@ int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
 		for (int i = 0; i < 5; i++) {
 			int target_sum = tascam->fpo.sample_rate_khz -
 					 tascam->fpo.feedback_offset + i;
-			fpoInitPattern(8, tascam->fpo.full_frame_patterns[i],
+			fpo_init_pattern(8, tascam->fpo.full_frame_patterns[i],
 				       initial_value, target_sum);
 		}
 	}
@@ -269,8 +269,7 @@ int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 	bool do_start = false;
 	bool do_stop = false;
 
-	{
-		guard(spinlock_irqsave)(&tascam->lock);
+	scoped_guard(spinlock_irqsave, &tascam->lock) {
 		switch (cmd) {
 		case SNDRV_PCM_TRIGGER_START:
 		case SNDRV_PCM_TRIGGER_RESUME:

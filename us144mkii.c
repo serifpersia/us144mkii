@@ -412,21 +412,21 @@ static int tascam_probe(struct usb_interface *intf,
 	struct snd_card *card;
 	struct tascam_card *tascam;
 	int err;
-
-	char *handshake_buf __free(kfree);
+	char *handshake_buf __free(kfree) = NULL;
 
 	if (dev->speed != USB_SPEED_HIGH)
 		dev_info(
 			&dev->dev,
 			"Device is connected to a USB 1.1 port, this is not supported.\n");
 
+	/* The device has two interfaces; we drive both from this driver. */
 	if (intf->cur_altsetting->desc.bInterfaceNumber == 1) {
 		tascam = usb_get_intfdata(usb_ifnum_to_if(dev, 0));
 		if (tascam) {
 			usb_set_intfdata(intf, tascam);
 			tascam->iface1 = intf;
 		}
-		return 0;
+		return 0; /* Let the core handle this interface */
 	}
 
 	if (dev_idx >= SNDRV_CARDS) {
@@ -443,6 +443,7 @@ static int tascam_probe(struct usb_interface *intf,
 	if (!handshake_buf)
 		return -ENOMEM;
 
+	/* Perform vendor-specific handshake */
 	err = usb_control_msg(dev, usb_rcvctrlpipe(dev, 0),
 			      VENDOR_REQ_MODE_CONTROL, RT_D2H_VENDOR_DEV,
 			      MODE_VAL_HANDSHAKE_READ, 0x0000, handshake_buf, 1,
@@ -459,6 +460,7 @@ static int tascam_probe(struct usb_interface *intf,
 		return -ENODEV;
 	}
 
+	/* Set alternate settings to enable audio/MIDI endpoints */
 	err = usb_set_interface(dev, 0, 1);
 	if (err < 0) {
 		dev_err(&dev->dev,

@@ -100,7 +100,7 @@ static int tascam_line_out_put(struct snd_kcontrol *kcontrol,
  */
 static const struct snd_kcontrol_new tascam_line_out_control = {
 	.iface = SNDRV_CTL_ELEM_IFACE_MIXER,
-	.name = "Line OUTPUTS Source",
+	.name = "Line Playback Source",
 	.info = tascam_playback_source_info,
 	.get = tascam_line_out_get,
 	.put = tascam_line_out_put,
@@ -171,7 +171,7 @@ static int tascam_digital_out_put(struct snd_kcontrol *kcontrol,
  */
 static const struct snd_kcontrol_new tascam_digital_out_control = {
 	.iface = SNDRV_CTL_ELEM_IFACE_MIXER,
-	.name = "Digital OUTPUTS Source",
+	.name = "Digital Playback Source",
 	.info = tascam_playback_source_info,
 	.get = tascam_digital_out_get,
 	.put = tascam_digital_out_put,
@@ -259,7 +259,7 @@ static int tascam_capture_12_put(struct snd_kcontrol *kcontrol,
  */
 static const struct snd_kcontrol_new tascam_capture_12_control = {
 	.iface = SNDRV_CTL_ELEM_IFACE_MIXER,
-	.name = "ch1 and ch2 Source",
+	.name = "Ch1/2 Capture Source",
 	.info = tascam_capture_source_info,
 	.get = tascam_capture_12_get,
 	.put = tascam_capture_12_put,
@@ -330,7 +330,7 @@ static int tascam_capture_34_put(struct snd_kcontrol *kcontrol,
  */
 static const struct snd_kcontrol_new tascam_capture_34_control = {
 	.iface = SNDRV_CTL_ELEM_IFACE_MIXER,
-	.name = "ch3 and ch4 Source",
+	.name = "Ch3/4 Capture Source",
 	.info = tascam_capture_source_info,
 	.get = tascam_capture_34_get,
 	.put = tascam_capture_34_put,
@@ -373,7 +373,7 @@ static int tascam_samplerate_get(struct snd_kcontrol *kcontrol,
 {
 	struct tascam_card *tascam =
 		(struct tascam_card *)snd_kcontrol_chip(kcontrol);
-	u8 *buf __free(kfree);
+	u8 *buf __free(kfree) = NULL;
 	int err;
 	u32 rate = 0;
 
