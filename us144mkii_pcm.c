@@ -4,7 +4,7 @@
 #include "us144mkii.h"
 
 /**
- * fpoInitPattern() - Generates a packet distribution pattern.
+ * fpo_init_pattern() - Generates a packet distribution pattern.
  * @size: The number of elements in the pattern array (e.g., 8).
  * @pattern_array: Pointer to the array to be populated.
  * @initial_value: The base value to initialize each element with.
@@ -115,7 +115,6 @@ void process_capture_routing_us144mkii(struct tascam_card *tascam,
 int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate)
 {
 	struct usb_device *dev = tascam->dev;
-
 	u8 *rate_payload_buf __free(kfree) = NULL;
 	u16 rate_vendor_wValue;
 	int err = 0;
@@ -209,7 +208,6 @@ int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate)
 			      USB_CTRL_TIMEOUT_MS);
 	if (err < 0)
 		goto fail;
-
 	return 0;
 
 fail:

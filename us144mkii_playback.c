@@ -182,9 +182,7 @@ void playback_urb_complete(struct urb *urb)
 		goto out;
 	runtime = substream->runtime;
 
-	{
-		guard(spinlock_irqsave)(&tascam->lock);
-
+	scoped_guard(spinlock_irqsave, &tascam->lock) {
 		for (i = 0; i < urb->number_of_packets; i++) {
 			unsigned int frames_for_packet;
 			size_t bytes_for_packet;
@@ -290,12 +288,11 @@ void feedback_urb_complete(struct urb *urb)
 	capture_ss = tascam->capture_substream;
 	capture_rt = capture_ss ? capture_ss->runtime : NULL;
 
+	scoped_guard(spinlock_irqsave, &tascam->lock)
 	{
-		guard(spinlock_irqsave)(&tascam->lock);
-
 		if (tascam->feedback_urb_skip_count > 0) {
 			tascam->feedback_urb_skip_count--;
-			goto continue_unlock;
+			break;
 		}
 
 		old_in_idx = tascam->feedback_pattern_in_idx;
@@ -314,8 +311,8 @@ void feedback_urb_complete(struct urb *urb)
 
 			if (packet_ok) {
 				int delta = feedback_value -
-					    tascam->fpo.base_feedback_value +
-					    tascam->fpo.feedback_offset;
+						    tascam->fpo.base_feedback_value +
+						    tascam->fpo.feedback_offset;
 				int pattern_idx;
 
 				if (delta < 0) {
@@ -356,9 +353,9 @@ void feedback_urb_complete(struct urb *urb)
 						dev_err(tascam->card->dev,
 							"Fatal: Feedback sync lost. Stopping stream.\n");
 						schedule_work(
-							&tascam->stop_pcm_work);
+								&tascam->stop_pcm_work);
 						tascam->feedback_synced = false;
-						goto continue_unlock;
+						break;
 					}
 				}
 				for (i = 0; i < 8; i++) {
@@ -385,8 +382,8 @@ void feedback_urb_complete(struct urb *urb)
 						FEEDBACK_ACCUMULATOR_SIZE <
 					(FEEDBACK_ACCUMULATOR_SIZE / 2);
 			bool was_behind = (old_in_idx - out_idx) %
-						  FEEDBACK_ACCUMULATOR_SIZE >=
-					  (FEEDBACK_ACCUMULATOR_SIZE / 2);
+						FEEDBACK_ACCUMULATOR_SIZE >=
+					(FEEDBACK_ACCUMULATOR_SIZE / 2);
 
 			if (is_ahead && was_behind) {
 				dev_dbg(tascam->card->dev,
@@ -407,7 +404,7 @@ void feedback_urb_complete(struct urb *urb)
 		if (playback_rt->period_size > 0) {
 			u64 current_period =
 				div_u64(tascam->playback_frames_consumed,
-					playback_rt->period_size);
+						playback_rt->period_size);
 
 			if (current_period > tascam->last_period_pos) {
 				tascam->last_period_pos = current_period;
@@ -419,7 +416,7 @@ void feedback_urb_complete(struct urb *urb)
 		    capture_rt->period_size > 0) {
 			u64 current_capture_period =
 				div_u64(tascam->capture_frames_processed,
-					capture_rt->period_size);
+						capture_rt->period_size);
 
 			if (current_capture_period >
 			    tascam->last_capture_period_pos) {
@@ -429,8 +426,6 @@ void feedback_urb_complete(struct urb *urb)
 			}
 		}
 	}
-
-continue_unlock:
 	if (playback_period_elapsed)
 		snd_pcm_period_elapsed(playback_ss);
 	if (capture_period_elapsed)
