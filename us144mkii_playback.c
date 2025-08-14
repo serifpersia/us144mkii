@@ -127,8 +127,7 @@ tascam_playback_pointer(struct snd_pcm_substream *substream)
 	if (!atomic_read(&tascam->playback_active))
 		return 0;
 
-	scoped_guard(spinlock_irqsave, &tascam->lock)
-	{
+	scoped_guard(spinlock_irqsave, &tascam->lock) {
 		pos = tascam->playback_frames_consumed;
 	}
 
@@ -288,8 +287,7 @@ void feedback_urb_complete(struct urb *urb)
 	capture_ss = tascam->capture_substream;
 	capture_rt = capture_ss ? capture_ss->runtime : NULL;
 
-	scoped_guard(spinlock_irqsave, &tascam->lock)
-	{
+	scoped_guard(spinlock_irqsave, &tascam->lock) {
 		if (tascam->feedback_urb_skip_count > 0) {
 			tascam->feedback_urb_skip_count--;
 			break;

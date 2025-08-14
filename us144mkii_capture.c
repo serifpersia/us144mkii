@@ -81,8 +81,7 @@ tascam_capture_pointer(struct snd_pcm_substream *substream)
 	if (!atomic_read(&tascam->capture_active))
 		return 0;
 
-	scoped_guard(spinlock_irqsave, &tascam->lock)
-	{
+	scoped_guard(spinlock_irqsave, &tascam->lock) {
 		pos = tascam->capture_frames_processed;
 	}
 
@@ -179,8 +178,7 @@ void tascam_capture_work_handler(struct work_struct *work)
 		size_t write_ptr, read_ptr, available_data;
 		bool can_process;
 
-		scoped_guard(spinlock_irqsave, &tascam->lock)
-		{
+		scoped_guard(spinlock_irqsave, &tascam->lock) {
 			write_ptr = tascam->capture_ring_buffer_write_ptr;
 			read_ptr = tascam->capture_ring_buffer_read_ptr;
 			available_data = (write_ptr >= read_ptr) ?
@@ -223,8 +221,7 @@ void tascam_capture_work_handler(struct work_struct *work)
 		process_capture_routing_us144mkii(tascam, decoded_block,
 						  routed_block);
 
-		scoped_guard(spinlock_irqsave, &tascam->lock)
-		{
+		scoped_guard(spinlock_irqsave, &tascam->lock) {
 			if (atomic_read(&tascam->capture_active)) {
 				int f;
 
@@ -280,8 +277,7 @@ void capture_urb_complete(struct urb *urb)
 		goto out;
 
 	if (urb->actual_length > 0) {
-		scoped_guard(spinlock_irqsave, &tascam->lock)
-		{
+		scoped_guard(spinlock_irqsave, &tascam->lock) {
 			size_t write_ptr = tascam->capture_ring_buffer_write_ptr;
 			size_t bytes_to_end = CAPTURE_RING_BUFFER_SIZE - write_ptr;
 

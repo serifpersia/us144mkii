@@ -227,8 +227,7 @@ static void tascam_midi_out_work_handler(struct work_struct *work)
 		u8 *buf;
 		int bytes_to_send;
 
-		scoped_guard(spinlock_irqsave, &tascam->midi_out_lock)
-		{
+		scoped_guard(spinlock_irqsave, &tascam->midi_out_lock) {
 			urb_index = -1;
 			for (i = 0; i < NUM_MIDI_OUT_URBS; i++) {
 				if (!test_bit(
