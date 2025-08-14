@@ -15,7 +15,7 @@
  * as evenly as possible.
  */
 static void fpo_init_pattern(unsigned int size, unsigned int *pattern_array,
-			   unsigned int initial_value, int target_sum)
+	unsigned int initial_value, int target_sum)
 {
 	int diff, i;
 
@@ -218,7 +218,7 @@ fail:
 }
 
 int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
-			 struct snd_pcm_hw_params *params)
+					 struct snd_pcm_hw_params *params)
 {
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
 	int err;
@@ -238,7 +238,7 @@ int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
 			int target_sum = tascam->fpo.sample_rate_khz -
 					 tascam->fpo.feedback_offset + i;
 			fpo_init_pattern(8, tascam->fpo.full_frame_patterns[i],
-				       initial_value, target_sum);
+					       initial_value, target_sum);
 		}
 	}
 
@@ -294,7 +294,7 @@ int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 
 	if (do_start) {
 		if (atomic_read(&tascam->active_urbs) > 0) {
-			dev_WARN(tascam->card->dev,
+			dev_warn(tascam->card->dev,
 				 "Cannot start, URBs still active.\n");
 			return -EAGAIN;
 		}
@@ -302,9 +302,9 @@ int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 		for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
 			usb_get_urb(tascam->feedback_urbs[i]);
 			usb_anchor_urb(tascam->feedback_urbs[i],
-				       &tascam->feedback_anchor);
+					       &tascam->feedback_anchor);
 			err = usb_submit_urb(tascam->feedback_urbs[i],
-					     GFP_ATOMIC);
+						     GFP_ATOMIC);
 			if (err < 0) {
 				usb_unanchor_urb(tascam->feedback_urbs[i]);
 				usb_put_urb(tascam->feedback_urbs[i]);
@@ -316,9 +316,9 @@ int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 		for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
 			usb_get_urb(tascam->playback_urbs[i]);
 			usb_anchor_urb(tascam->playback_urbs[i],
-				       &tascam->playback_anchor);
+					       &tascam->playback_anchor);
 			err = usb_submit_urb(tascam->playback_urbs[i],
-					     GFP_ATOMIC);
+						     GFP_ATOMIC);
 			if (err < 0) {
 				usb_unanchor_urb(tascam->playback_urbs[i]);
 				usb_put_urb(tascam->playback_urbs[i]);

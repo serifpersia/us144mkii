@@ -117,23 +117,23 @@ static void tascam_midi_in_trigger(struct snd_rawmidi_substream *substream,
 
 	if (up) {
 		if (atomic_xchg(&tascam->midi_in_active, 1) == 0) {
+			scoped_guard(spinlock_irqsave, &tascam->midi_in_lock)
 			{
-				guard(spinlock_irqsave)(&tascam->midi_in_lock);
 				kfifo_reset(&tascam->midi_in_fifo);
 			}
 
 			for (i = 0; i < NUM_MIDI_IN_URBS; i++) {
 				usb_get_urb(tascam->midi_in_urbs[i]);
 				usb_anchor_urb(tascam->midi_in_urbs[i],
-					       &tascam->midi_in_anchor);
+						       &tascam->midi_in_anchor);
 				err = usb_submit_urb(tascam->midi_in_urbs[i],
-						     GFP_KERNEL);
+							     GFP_KERNEL);
 				if (err < 0) {
 					dev_err(tascam->card->dev,
 						"Failed to submit MIDI IN URB %d: %d\n",
 						i, err);
 					usb_unanchor_urb(
-						tascam->midi_in_urbs[i]);
+							tascam->midi_in_urbs[i]);
 					usb_put_urb(tascam->midi_in_urbs[i]);
 				}
 			}
@@ -189,8 +189,8 @@ void tascam_midi_out_urb_complete(struct urb *urb)
 		goto out;
 	}
 
+	scoped_guard(spinlock_irqsave, &tascam->midi_out_lock)
 	{
-		guard(spinlock_irqsave)(&tascam->midi_out_lock);
 		clear_bit(urb_index, &tascam->midi_out_urbs_in_flight);
 	}
 
@@ -227,9 +227,8 @@ static void tascam_midi_out_work_handler(struct work_struct *work)
 		u8 *buf;
 		int bytes_to_send;
 
+		scoped_guard(spinlock_irqsave, &tascam->midi_out_lock)
 		{
-			guard(spinlock_irqsave)(&tascam->midi_out_lock);
-
 			urb_index = -1;
 			for (i = 0; i < NUM_MIDI_OUT_URBS; i++) {
 				if (!test_bit(
@@ -265,11 +264,11 @@ static void tascam_midi_out_work_handler(struct work_struct *work)
 		usb_anchor_urb(urb, &tascam->midi_out_anchor);
 		if (usb_submit_urb(urb, GFP_KERNEL) < 0) {
 			dev_err_ratelimited(
-				tascam->card->dev,
-				"Failed to submit MIDI OUT URB %d\n",
-				urb_index);
+					tascam->card->dev,
+					"Failed to submit MIDI OUT URB %d\n",
+										urb_index);
+			scoped_guard(spinlock_irqsave, &tascam->midi_out_lock)
 			{
-				guard(spinlock_irqsave)(&tascam->midi_out_lock);
 				clear_bit(urb_index,
 					  &tascam->midi_out_urbs_in_flight);
 			}
