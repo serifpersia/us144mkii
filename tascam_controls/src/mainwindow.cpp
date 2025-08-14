@@ -153,21 +153,21 @@ void MainWindow::initUi() {
         middlePanel->addWidget(widget);
     };
 
-    auto capture12Pair = createControlWidget("ch1 and ch2", {"analog inputs", "digital inputs"});
+    auto capture12Pair = createControlWidget("Ch1/2 Capture Source", {"Analog In", "Digital In"});
     m_capture12Combo = capture12Pair.second;
     m_capture12Combo->setToolTip("Select the source for capture channels 1 and 2.");
-    auto capture34Pair = createControlWidget("ch3 and ch4", {"analog inputs", "digital inputs"});
+    auto capture34Pair = createControlWidget("Ch3/4 Capture Source", {"Analog In", "Digital In"});
     m_capture34Combo = capture34Pair.second;
     m_capture34Combo->setToolTip("Select the source for capture channels 3 and 4.");
     addSection("INPUTS", capture12Pair.first);
     middlePanel->addWidget(capture34Pair.first);
 
-    auto lineOutPair = createControlWidget("ch1 and ch2", {"ch1 and ch2", "ch3 and ch4"});
+    auto lineOutPair = createControlWidget("Line Playback Source", {"Playback 1-2", "Playback 3-4"});
     m_lineOutCombo = lineOutPair.second;
     m_lineOutCombo->setToolTip("Select the source for the line outputs.");
     addSection("LINE OUTPUTS", lineOutPair.first);
 
-    auto digitalOutPair = createControlWidget("ch3 and ch4", {"ch1 and ch2", "ch3 and ch4"});
+    auto digitalOutPair = createControlWidget("Digital Playback Source", {"Playback 1-2", "Playback 3-4"});
     m_digitalOutCombo = digitalOutPair.second;
     m_digitalOutCombo->setToolTip("Select the source for the digital outputs.");
     addSection("DIGITAL OUTPUTS", digitalOutPair.first);

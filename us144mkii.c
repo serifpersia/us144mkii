@@ -489,6 +489,8 @@ static int tascam_probe(struct usb_interface *intf,
 	tascam->dev = usb_get_dev(dev);
 	tascam->card = card;
 	tascam->iface0 = intf;
+	tascam->digital_out_source = 1;
+	tascam->capture_34_source = 1;
 
 	spin_lock_init(&tascam->lock);
 	spin_lock_init(&tascam->midi_in_lock);
