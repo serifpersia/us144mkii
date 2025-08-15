@@ -2,6 +2,12 @@
 
 An unofficial ALSA kernel module for the TASCAM US-144MKII USB audio interface.
 
+## 📢 Project Status
+
+✅ **Upstreamed** — This driver has been merged into the [`sound/for-next`](https://git.kernel.org/pub/scm/linux/kernel/git/tiwai/sound.git/log/?h=for-next) branch for inclusion in an upcoming Linux kernel release.
+
+📦 This repository will be **archived** once the driver appears in the official kernel. Until then, the out-of-tree version here can still be built and tested.
+
 ## ❗ Current Status: Work in Progress
 
 This driver is under active development.
