@@ -54,3 +54,4 @@ dkms.conf
 /tascam_controls/AppDir
 *.cmake
 /tascam_controls/build
+/tascam_controls/.tools
