@@ -447,7 +447,7 @@ Normal	128 smp (2.7ms)		2 ms (2 packets/URB)
 High	256 smp (5.3ms)		5 ms (5 packets/URB)
 Highest	512 smp (10.7ms)	5 ms (5 packets/URB)
 
-Table 3: 88.2kHz Latency Settings (Placeholder)
+Table 3: 88.2kHz Latency Settings
 
 Latency Profile	ASIO Buffer (Reported)	Hardware Feedback (Observed)
 
