@@ -358,7 +358,6 @@ Generated code
       
 *   **Note:** The pattern tables provided are specifically for 48kHz. To support other sample rates (44.1kHz, 88.2kHz, 96kHz), the corresponding `fpoInitPattern` calls from the macOS driver's `PGFramePatternObserver::init` would need to be analyzed to derive their specific pattern tables. The `mExpectedFramesPerMicroframe` (`a1 + 24`) and `mExpectedFeedbackValue` (`a1 + 36`) would change based on the sample rate.
 
-    
 
 IGNORE_WHEN_COPYING_START
 Use code with caution.
