@@ -20,6 +20,15 @@ An unofficial ALSA kernel module for the TASCAM US-144MKII USB audio interface.
 
 This is an out-of-tree kernel module, meaning you must compile it against the headers for your specific kernel version.
 
+For Arch users, a community-maintained DKMS package is available in AUR.
+Install it via:
+```bash
+paru -S us144mkii-dkms-git
+```
+or if you are using yay: 
+```bash
+yay -S us144mkii-dkms-git
+```
 ### Step 1: Blacklist the Stock `snd-usb-us122l` Driver
 The standard kernel includes a driver that will conflict with our custom module. You must prevent it from loading.
 
