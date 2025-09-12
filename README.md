@@ -143,7 +143,15 @@ Now, after a reboot, the `us144mkii` driver should load automatically.
 A control panel app built with Qt6 and ALSA.
 
 Get it from releases or build it.
+If you are on Arch Linux or an Arch-based distribution, you can install the package directly from the AUR:
 
+```bash
+paru -S tascam-control-panel-git
+```
+or if you are using yay:
+```bash
+yay -S tascam-control-panel-git
+```
 ## Prerequisites
 
 Before building the application, ensure you have the following installed on your system:
