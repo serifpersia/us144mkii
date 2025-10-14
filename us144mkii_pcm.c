@@ -57,26 +57,44 @@ void process_playback_routing_us144mkii(struct tascam_card *tascam,
 					size_t frames)
 {
 	size_t f;
-	const u8 *src_12, *src_34;
-	u8 *dst_line, *dst_digital;
+
+	/*
+	 * If no routing is needed and the operation is in-place, we can
+	 * skip everything.
+	 */
+	if (tascam->line_out_source == 0 && tascam->digital_out_source == 1 &&
+	    src_buffer == dst_buffer)
+		return;
 
 	for (f = 0; f < frames; ++f) {
-		src_12 = src_buffer + f * BYTES_PER_FRAME;
-		src_34 = src_12 + (2 * BYTES_PER_SAMPLE);
-		dst_line = dst_buffer + f * BYTES_PER_FRAME;
-		dst_digital = dst_line + (2 * BYTES_PER_SAMPLE);
+		const u8 *frame_base = src_buffer + f * BYTES_PER_FRAME;
+		u8 *dst_frame_base = dst_buffer + f * BYTES_PER_FRAME;
+
+		/*
+		 * Use a temporary buffer for the source frame to prevent data
+		 * corruption during in-place routing operations.
+		 */
+		u8 temp_src_frame[BYTES_PER_FRAME];
+		const u8 *src_12;
+		const u8 *src_34;
+
+		memcpy(temp_src_frame, frame_base, BYTES_PER_FRAME);
+		src_12 = temp_src_frame;
+		src_34 = temp_src_frame + (2 * BYTES_PER_SAMPLE);
 
 		/* LINE OUTPUTS (ch1/2 on device) */
-		if (tascam->line_out_source == 0) /* "ch1 and ch2" */
-			memcpy(dst_line, src_12, 2 * BYTES_PER_SAMPLE);
-		else /* "ch3 and ch4" */
-			memcpy(dst_line, src_34, 2 * BYTES_PER_SAMPLE);
+		if (tascam->line_out_source == 0) /* "Playback 1-2" */
+			memcpy(dst_frame_base, src_12, 2 * BYTES_PER_SAMPLE);
+		else /* "Playback 3-4" */
+			memcpy(dst_frame_base, src_34, 2 * BYTES_PER_SAMPLE);
 
 		/* DIGITAL OUTPUTS (ch3/4 on device) */
-		if (tascam->digital_out_source == 0) /* "ch1 and ch2" */
-			memcpy(dst_digital, src_12, 2 * BYTES_PER_SAMPLE);
-		else /* "ch3 and ch4" */
-			memcpy(dst_digital, src_34, 2 * BYTES_PER_SAMPLE);
+		if (tascam->digital_out_source == 0) /* "Playback 1-2" */
+			memcpy(dst_frame_base + (2 * BYTES_PER_SAMPLE), src_12,
+			       2 * BYTES_PER_SAMPLE);
+		else /* "Playback 3-4" */
+			memcpy(dst_frame_base + (2 * BYTES_PER_SAMPLE), src_34,
+			       2 * BYTES_PER_SAMPLE);
 	}
 }
 

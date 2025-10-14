@@ -122,22 +122,20 @@ static void decode_tascam_capture_block(const u8 *src_block, s32 *dst_block)
 {
 	int frame, bit;
 
-	memset(dst_block, 0,
-	       FRAMES_PER_DECODE_BLOCK * DECODED_CHANNELS_PER_FRAME *
-		       DECODED_SAMPLE_SIZE);
-
 	for (frame = 0; frame < FRAMES_PER_DECODE_BLOCK; ++frame) {
 		const u8 *p_src_frame_base = src_block + frame * 64;
 		s32 *p_dst_frame = dst_block + frame * 4;
-
 		s32 ch[4] = { 0 };
 
 		for (bit = 0; bit < 24; ++bit) {
 			u8 byte1 = p_src_frame_base[bit];
-			u8 byte2 = p_src_frame_base[bit + 32];
 
 			ch[0] = (ch[0] << 1) | (byte1 & 1);
 			ch[2] = (ch[2] << 1) | ((byte1 >> 1) & 1);
+		}
+
+		for (bit = 0; bit < 24; ++bit) {
+			u8 byte2 = p_src_frame_base[bit + 32];
 
 			ch[1] = (ch[1] << 1) | (byte2 & 1);
 			ch[3] = (ch[3] << 1) | ((byte2 >> 1) & 1);
