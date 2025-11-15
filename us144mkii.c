@@ -263,10 +263,15 @@ void tascam_stop_work_handler(struct work_struct *work)
 	struct tascam_card *tascam =
 		container_of(work, struct tascam_card, stop_work);
 
-	usb_kill_anchored_urbs(&tascam->playback_anchor);
-	usb_kill_anchored_urbs(&tascam->feedback_anchor);
-	usb_kill_anchored_urbs(&tascam->capture_anchor);
-	atomic_set(&tascam->active_urbs, 0);
+	if (!atomic_read(&tascam->playback_active)) {
+		usb_kill_anchored_urbs(&tascam->playback_anchor);
+		usb_kill_anchored_urbs(&tascam->feedback_anchor);
+	}
+	if (!atomic_read(&tascam->capture_active))
+		usb_kill_anchored_urbs(&tascam->capture_anchor);
+
+	if (!atomic_read(&tascam->playback_active) && !atomic_read(&tascam->capture_active))
+		atomic_set(&tascam->active_urbs, 0);
 }
 
 /**
