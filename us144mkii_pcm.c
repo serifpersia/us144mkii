@@ -282,12 +282,30 @@ int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
 	int err = 0;
 	int i;
+	unsigned long flags;
+
+	spin_lock_irqsave(&tascam->trigger_lock, flags);
 
 	switch (cmd) {
 	case SNDRV_PCM_TRIGGER_START:
 	case SNDRV_PCM_TRIGGER_RESUME:
 		if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
 			if (atomic_xchg(&tascam->playback_active, 1) == 0) {
+				if (atomic_fetch_inc(&tascam->stream_active) == 0) {
+					for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
+						usb_get_urb(tascam->feedback_urbs[i]);
+						usb_anchor_urb(tascam->feedback_urbs[i], &tascam->feedback_anchor);
+						err = usb_submit_urb(tascam->feedback_urbs[i], GFP_ATOMIC);
+						if (err < 0) {
+							usb_unanchor_urb(tascam->feedback_urbs[i]);
+							usb_put_urb(tascam->feedback_urbs[i]);
+							atomic_dec(&tascam->active_urbs);
+							break;
+						}
+						atomic_inc(&tascam->active_urbs);
+					}
+				}
+
 				for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
 					usb_get_urb(tascam->playback_urbs[i]);
 					usb_anchor_urb(tascam->playback_urbs[i], &tascam->playback_anchor);
@@ -299,23 +317,24 @@ int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 					}
 					atomic_inc(&tascam->active_urbs);
 				}
-				for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
-					usb_get_urb(tascam->feedback_urbs[i]);
-					usb_anchor_urb(tascam->feedback_urbs[i],
-							&tascam->feedback_anchor);
-					err = usb_submit_urb(tascam->feedback_urbs[i],
-								GFP_ATOMIC);
-					if (err < 0) {
-						usb_unanchor_urb(tascam->feedback_urbs[i]);
-						usb_put_urb(tascam->feedback_urbs[i]);
-						atomic_dec(&tascam->active_urbs);
-						break;
-					}
-					atomic_inc(&tascam->active_urbs);
-				}
 			}
 		} else {
 			if (atomic_xchg(&tascam->capture_active, 1) == 0) {
+				if (atomic_fetch_inc(&tascam->stream_active) == 0) {
+					for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
+						usb_get_urb(tascam->feedback_urbs[i]);
+						usb_anchor_urb(tascam->feedback_urbs[i], &tascam->feedback_anchor);
+						err = usb_submit_urb(tascam->feedback_urbs[i], GFP_ATOMIC);
+						if (err < 0) {
+							usb_unanchor_urb(tascam->feedback_urbs[i]);
+							usb_put_urb(tascam->feedback_urbs[i]);
+							atomic_dec(&tascam->active_urbs);
+							break;
+						}
+						atomic_inc(&tascam->active_urbs);
+					}
+				}
+
 				for (i = 0; i < NUM_CAPTURE_URBS; i++) {
 					usb_get_urb(tascam->capture_urbs[i]);
 					usb_anchor_urb(tascam->capture_urbs[i], &tascam->capture_anchor);
@@ -335,14 +354,19 @@ int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
 		if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
 			if (atomic_xchg(&tascam->playback_active, 0) == 1) {
-				usb_kill_anchored_urbs(&tascam->playback_anchor);
-				usb_kill_anchored_urbs(&tascam->feedback_anchor);
-				schedule_work(&tascam->stop_work);
+				if (atomic_dec_and_test(&tascam->stream_active))
+					usb_unlink_anchored_urbs(&tascam->feedback_anchor);
+
+				usb_unlink_anchored_urbs(&tascam->playback_anchor);
+
 			}
 		} else {
 			if (atomic_xchg(&tascam->capture_active, 0) == 1) {
-				usb_kill_anchored_urbs(&tascam->capture_anchor);
-				schedule_work(&tascam->stop_work);
+				if (atomic_dec_and_test(&tascam->stream_active))
+					usb_unlink_anchored_urbs(&tascam->feedback_anchor);
+
+				usb_unlink_anchored_urbs(&tascam->capture_anchor);
+
 			}
 		}
 		break;
@@ -350,6 +374,8 @@ int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 		err = -EINVAL;
 		break;
 	}
+
+	spin_unlock_irqrestore(&tascam->trigger_lock, flags);
 
 	return err;
 }

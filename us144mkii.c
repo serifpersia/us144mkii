@@ -258,21 +258,7 @@ error:
 	return -ENOMEM;
 }
 
-void tascam_stop_work_handler(struct work_struct *work)
-{
-	struct tascam_card *tascam =
-		container_of(work, struct tascam_card, stop_work);
 
-	if (!atomic_read(&tascam->playback_active)) {
-		usb_kill_anchored_urbs(&tascam->playback_anchor);
-		usb_kill_anchored_urbs(&tascam->feedback_anchor);
-	}
-	if (!atomic_read(&tascam->capture_active))
-		usb_kill_anchored_urbs(&tascam->capture_anchor);
-
-	if (!atomic_read(&tascam->playback_active) && !atomic_read(&tascam->capture_active))
-		atomic_set(&tascam->active_urbs, 0);
-}
 
 /**
  * tascam_card_private_free() - Frees private data associated with the sound
@@ -316,7 +302,6 @@ static int tascam_suspend(struct usb_interface *intf, pm_message_t message)
 
 	snd_pcm_suspend_all(tascam->pcm);
 
-	cancel_work_sync(&tascam->stop_work);
 	cancel_work_sync(&tascam->capture_work);
 	cancel_work_sync(&tascam->midi_in_work);
 	cancel_work_sync(&tascam->midi_out_work);
@@ -498,8 +483,10 @@ static int tascam_probe(struct usb_interface *intf,
 	tascam->capture_34_source = 1;
 
 	spin_lock_init(&tascam->lock);
+	spin_lock_init(&tascam->trigger_lock);
 	spin_lock_init(&tascam->midi_in_lock);
 	spin_lock_init(&tascam->midi_out_lock);
+	atomic_set(&tascam->stream_active, 0);
 	init_usb_anchor(&tascam->playback_anchor);
 	init_usb_anchor(&tascam->capture_anchor);
 	init_usb_anchor(&tascam->feedback_anchor);
@@ -508,7 +495,6 @@ static int tascam_probe(struct usb_interface *intf,
 
 	timer_setup(&tascam->error_timer, tascam_error_timer, 0);
 
-	INIT_WORK(&tascam->stop_work, tascam_stop_work_handler);
 	INIT_WORK(&tascam->stop_pcm_work, tascam_stop_pcm_work_handler);
 	INIT_WORK(&tascam->capture_work, tascam_capture_work_handler);
 	init_completion(&tascam->midi_out_drain_completion);
@@ -588,7 +574,6 @@ static void tascam_disconnect(struct usb_interface *intf)
 	if (intf->cur_altsetting->desc.bInterfaceNumber == 0) {
 		/* Ensure all deferred work is complete before freeing resources */
 		snd_card_disconnect(tascam->card);
-		cancel_work_sync(&tascam->stop_work);
 		cancel_work_sync(&tascam->capture_work);
 		cancel_work_sync(&tascam->midi_in_work);
 		cancel_work_sync(&tascam->midi_out_work);

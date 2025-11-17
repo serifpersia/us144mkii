@@ -276,7 +276,7 @@ void feedback_urb_complete(struct urb *urb)
 		}
 		goto out;
 	}
-	if (!tascam || !atomic_read(&tascam->playback_active))
+	if (!tascam || !atomic_read(&tascam->stream_active))
 		goto out;
 
 	playback_ss = tascam->playback_substream;
