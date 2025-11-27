@@ -355,17 +355,17 @@ int tascam_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 		if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
 			if (atomic_xchg(&tascam->playback_active, 0) == 1) {
 				if (atomic_dec_and_test(&tascam->stream_active))
-					usb_unlink_anchored_urbs(&tascam->feedback_anchor);
+					usb_kill_anchored_urbs(&tascam->feedback_anchor);
 
-				usb_unlink_anchored_urbs(&tascam->playback_anchor);
+				usb_kill_anchored_urbs(&tascam->playback_anchor);
 
 			}
 		} else {
 			if (atomic_xchg(&tascam->capture_active, 0) == 1) {
 				if (atomic_dec_and_test(&tascam->stream_active))
-					usb_unlink_anchored_urbs(&tascam->feedback_anchor);
+					usb_kill_anchored_urbs(&tascam->feedback_anchor);
 
-				usb_unlink_anchored_urbs(&tascam->capture_anchor);
+				usb_kill_anchored_urbs(&tascam->capture_anchor);
 
 			}
 		}
