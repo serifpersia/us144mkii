@@ -229,10 +229,8 @@ struct tascam_card {
 
 	/* --- Stream State --- */
 	spinlock_t lock;
-	spinlock_t trigger_lock;
 	atomic_t playback_active;
 	atomic_t capture_active;
-	atomic_t stream_active;
 	atomic_t active_urbs;
 	int current_rate;
 
@@ -275,6 +273,7 @@ struct tascam_card {
 	struct us144mkii_frame_pattern_observer fpo;
 
 	/* --- Workqueues --- */
+	struct work_struct stop_work;
 	struct work_struct stop_pcm_work;
 	struct work_struct capture_work;
 	struct work_struct midi_in_work;
@@ -309,7 +308,14 @@ void tascam_free_urbs(struct tascam_card *tascam);
  */
 int tascam_alloc_urbs(struct tascam_card *tascam);
 
-
+/**
+ * tascam_stop_work_handler() - Work handler to stop all active streams.
+ * @work: Pointer to the work_struct.
+ *
+ * This function is scheduled to stop all active URBs (playback, feedback,
+ * capture) and reset the active_urbs counter.
+ */
+void tascam_stop_work_handler(struct work_struct *work);
 
 /* us144mkii_pcm.h */
 #include "us144mkii_pcm.h"
