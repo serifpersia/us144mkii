@@ -4,7 +4,7 @@ An unofficial ALSA kernel module for the TASCAM US-144MKII USB audio interface.
 
 ## 📢 Project Status
 
-✅ **Upstreamed** — This driver has been merged into the [`sound/for-next`](https://git.kernel.org/pub/scm/linux/kernel/git/tiwai/sound.git/log/?h=for-next) branch for inclusion in an upcoming Linux kernel release.
+*--- OLD VERSION --- ✅ **Upstreamed** — This driver has been merged into the [`sound/for-next`](https://git.kernel.org/pub/scm/linux/kernel/git/tiwai/sound.git/log/?h=for-next) branch for inclusion in an upcoming Linux kernel release.
 
 ### ✅ Implemented Features
 *   **Audio Playback:**
@@ -12,7 +12,6 @@ An unofficial ALSA kernel module for the TASCAM US-144MKII USB audio interface.
 *   **MIDI IN/OUT:**
 
 ### 📝 To-Do & Known Limitations
-*   Find Bugs, if possible improve performance/stablity
 *   *MIDI IN/OUT works only in active audio streaming(DAW ALSA/JACK or browser audio)
 *   Non MKII US-144 needs testing to see if the driver will work with it.
 
@@ -118,17 +117,17 @@ cd us144mkii/
 4.  Connect your TASCAM US-144MKII. Verify that the driver loaded and the audio card is recognized by the system:
     ```bash
     # Check if the kernel module is loaded
-    lsmod | grep us144mkii
+    lsmod | grep snd_usb_us144mkii
 
     # Check if ALSA sees the new sound card
     aplay -l
     ```
-    The first command should show `us144mkii`. The second command should list your "TASCAM US-144MKII" as an available playback device. You should now be able to select it in your audio settings and play sound.
+    The first command should show `snd_usb_us144mkii`. The second command should list your "TASCAM US-144MKII" as an available playback device. You should now be able to select it in your audio settings and play sound.
 
 ### Step 4: Install for Automatic Loading on Boot
 To make the driver load automatically every time you start your computer, follow these steps after you have successfully compiled it in Step 3.
 
-You can use build_install script to do automate this process just `sudo chmod +x build_install.sh` before you run it with `./build_install.sh` or just do it
+You can use build_and_install script to do automate this process just `sudo chmod +x build_and_install.sh` before you run it with `./build_and_install.sh` or just do it
 the manual way.
 
 1.  **Copy the compiled module to the kernel's extra modules directory.** This makes it available to system tools.
@@ -143,95 +142,6 @@ the manual way.
     ```
 
 Now, after a reboot, the `us144mkii` driver should load automatically.
-
-### Tascam Control Panel
-
-<img width="543" height="480" alt="image" src="https://github.com/user-attachments/assets/43981c8d-c59e-4d43-b1c8-33e512085219" />
-
-
-A control panel app built with Qt6 and ALSA.
-
-Get it from releases or build it.
-If you are on Arch Linux or an Arch-based distribution, you can install the package directly from the AUR:
-
-```bash
-paru -S tascam-control-panel-git
-```
-or if you are using yay:
-```bash
-yay -S tascam-control-panel-git
-```
-## Prerequisites
-
-Before building the application, ensure you have the following installed on your system:
-
-*   **CMake** (version 3.16 or higher)
-*   **C++ Compiler** (supporting C++17, e.g., GCC/G++)
-*   **Qt6 Development Libraries** (specifically the `Widgets` module)
-*   **ALSA Development Libraries**
-*   **Make** (or Ninja)
-
-### Installation of Prerequisites by Distribution
-
-#### Debian/Ubuntu
-
-sudo apt update
-sudo apt install cmake build-essential qt6-base-dev qt6-base-dev-tools libasound2-dev
-
-#### Fedora/RHEL/CentOS
-
-sudo dnf install cmake "Development Tools" qt6-qtbase-devel alsa-lib-devel
-
-#### Arch Linux
-
-sudo pacman -Syu
-
-sudo pacman -S cmake base-devel qt6-base alsa-lib
-
-#### openSUSE
-
-sudo zypper install cmake gcc-c++ libqt6-qtbase-devel alsa-devel
-
-## Building the Application
-
-Follow these steps to build the `TascamControlPanel` application from source:
-
-1.  **Clone the repository** (if you haven't already):
-
-    ```git clone https://github.com/serifpersia/us144mkii.git```
-
-    ```cd tascam_controls/```
-
-2.  **Create a build directory** and navigate into it:
-
-    ```mkdir build```
-    ```cd build```
-
-4.  **Configure the project** with CMake:
-
-    ```cmake ..```
-
-    This step will check for all necessary dependencies and generate the build files.
-
-5.  **Build the application**:
-
-    ```make -j$(nproc)```
-
-    This command compiles the source code. The -j$(nproc) option uses all available CPU cores to speed up the compilation process.
-
-## Running the Application
-
-After a successful build, the executable will be located in the `build` directory.
-
-```./TascamControlPanel```
-
-## Cleaning the Build
-
-To remove all compiled files and intermediate artifacts, simply delete the `build` directory:
-
-cd ..
-rm -rf build
-
 
 ## Reporting Issues & Feedback
 
