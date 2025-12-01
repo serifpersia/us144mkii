@@ -55,3 +55,4 @@ dkms.conf
 *.cmake
 /tascam_controls/build
 /tascam_controls/.tools
+raw_jack_us144mkii/jack_tascam
