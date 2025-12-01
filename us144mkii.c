@@ -10,7 +10,7 @@ MODULE_LICENSE("GPL");
 static int index[SNDRV_CARDS] = SNDRV_DEFAULT_IDX;
 static char *id[SNDRV_CARDS] = SNDRV_DEFAULT_STR;
 static bool enable[SNDRV_CARDS] = { 1, [1 ...(SNDRV_CARDS - 1)] = 0 };
-static int dev_idx;
+static atomic_t dev_idx = ATOMIC_INIT(0);
 
 static int tascam_probe(struct usb_interface *intf,
 						const struct usb_device_id *usb_id);
@@ -195,16 +195,27 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	struct snd_card *card;
 	struct tascam_card *tascam;
 	int err;
+	int idx;
 	char *handshake_buf __free(kfree) = NULL;
 
 	if (intf->cur_altsetting->desc.bInterfaceNumber == 1)
 		return 0;
 
-	if (dev_idx >= SNDRV_CARDS) return -ENODEV;
-	if (!enable[dev_idx]) return -ENOENT;
+	idx = atomic_fetch_inc(&dev_idx);
+	if (idx >= SNDRV_CARDS) {
+		atomic_dec(&dev_idx);
+		return -ENODEV;
+	}
+	if (!enable[idx]) {
+		atomic_dec(&dev_idx);
+		return -ENOENT;
+	}
 
 	handshake_buf = kmalloc(1, GFP_KERNEL);
-	if (!handshake_buf) return -ENOMEM;
+	if (!handshake_buf) {
+		atomic_dec(&dev_idx);
+		return -ENOMEM;
+	}
 
 	err = usb_control_msg(dev, usb_rcvctrlpipe(dev, 0),
 						  VENDOR_REQ_MODE_CONTROL, RT_D2H_VENDOR_DEV,
@@ -212,15 +223,19 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 					   USB_CTRL_TIMEOUT_MS);
 	if (err < 0) {
 		dev_err(&dev->dev, "Handshake failed: %d\n", err);
+		atomic_dec(&dev_idx);
 		return err;
 	}
 
 	usb_set_interface(dev, 0, 1);
 	usb_set_interface(dev, 1, 1);
 
-	err = snd_card_new(&dev->dev, index[dev_idx], id[dev_idx], THIS_MODULE,
+	err = snd_card_new(&dev->dev, index[idx], id[idx], THIS_MODULE,
 					   sizeof(struct tascam_card), &card);
-	if (err < 0) return err;
+	if (err < 0) {
+		atomic_dec(&dev_idx);
+		return err;
+	}
 
 	tascam = card->private_data;
 	card->private_free = tascam_card_private_free;
@@ -272,11 +287,11 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	if (err < 0) goto free_card;
 
 	usb_set_intfdata(intf, tascam);
-	dev_idx++;
 	return 0;
 
 	free_card:
 	snd_card_free(card);
+	atomic_dec(&dev_idx);
 	return err;
 }
 
@@ -286,11 +301,21 @@ static void tascam_disconnect(struct usb_interface *intf)
 	if (!tascam) return;
 
 	if (intf->cur_altsetting->desc.bInterfaceNumber == 0) {
+		atomic_set(&tascam->playback_active, 0);
+		atomic_set(&tascam->capture_active, 0);
+
+		usb_kill_anchored_urbs(&tascam->playback_anchor);
+		usb_kill_anchored_urbs(&tascam->feedback_anchor);
+		usb_kill_anchored_urbs(&tascam->capture_anchor);
+		usb_kill_anchored_urbs(&tascam->midi_anchor);
+
 		snd_card_disconnect(tascam->card);
 		cancel_work_sync(&tascam->stop_work);
 		cancel_work_sync(&tascam->stop_pcm_work);
+
+		usb_set_intfdata(intf, NULL);
 		snd_card_free(tascam->card);
-		dev_idx--;
+		atomic_dec(&dev_idx);
 	}
 }
 

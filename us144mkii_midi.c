@@ -9,6 +9,7 @@ static void tascam_midi_out_complete(struct urb *urb)
 	unsigned long flags;
 	int count;
 	bool submit = false;
+	bool active;
 
 	spin_lock_irqsave(&tascam->midi_lock, flags);
 
@@ -18,10 +19,14 @@ static void tascam_midi_out_complete(struct urb *urb)
 		return;
 	}
 
+	active = tascam->midi_out_active;
+	spin_unlock_irqrestore(&tascam->midi_lock, flags);
+
+	if (!active)
+		return;
+
 	count = snd_rawmidi_transmit(tascam->midi_output, tascam->midi_out_buf, MIDI_PAYLOAD_SIZE);
 	if (count > 0) {
-		spin_unlock_irqrestore(&tascam->midi_lock, flags);
-
 		if (count < MIDI_PAYLOAD_SIZE)
 			memset(tascam->midi_out_buf + count, 0xFD, MIDI_PAYLOAD_SIZE - count);
 
@@ -29,6 +34,7 @@ static void tascam_midi_out_complete(struct urb *urb)
 		urb->transfer_buffer_length = MIDI_PACKET_SIZE;
 		submit = true;
 	} else {
+		spin_lock_irqsave(&tascam->midi_lock, flags);
 		tascam->midi_out_active = false;
 		spin_unlock_irqrestore(&tascam->midi_lock, flags);
 	}
@@ -47,22 +53,24 @@ static void tascam_midi_output_trigger(struct snd_rawmidi_substream *substream, 
 	struct tascam_card *tascam = substream->rmidi->private_data;
 	unsigned long flags;
 	int count;
+	bool do_submit = false;
 
-	spin_lock_irqsave(&tascam->midi_lock, flags);
 	if (up) {
+		spin_lock_irqsave(&tascam->midi_lock, flags);
 		tascam->midi_output = substream;
-
 		if (!tascam->midi_out_active) {
+			tascam->midi_out_active = true;
+			do_submit = true;
+		}
+		spin_unlock_irqrestore(&tascam->midi_lock, flags);
+
+		if (do_submit) {
 			count = snd_rawmidi_transmit(substream, tascam->midi_out_buf, MIDI_PAYLOAD_SIZE);
 			if (count > 0) {
-				tascam->midi_out_active = true;
-				spin_unlock_irqrestore(&tascam->midi_lock, flags);
-
 				if (count < MIDI_PAYLOAD_SIZE)
 					memset(tascam->midi_out_buf + count, 0xFD, MIDI_PAYLOAD_SIZE - count);
 
 				tascam->midi_out_buf[8] = 0xE0;
-
 				tascam->midi_out_urb->transfer_buffer_length = MIDI_PACKET_SIZE;
 
 				usb_anchor_urb(tascam->midi_out_urb, &tascam->midi_anchor);
@@ -73,12 +81,13 @@ static void tascam_midi_output_trigger(struct snd_rawmidi_substream *substream, 
 					spin_unlock_irqrestore(&tascam->midi_lock, flags);
 				}
 			} else {
+				spin_lock_irqsave(&tascam->midi_lock, flags);
+				tascam->midi_out_active = false;
 				spin_unlock_irqrestore(&tascam->midi_lock, flags);
 			}
-		} else {
-			spin_unlock_irqrestore(&tascam->midi_lock, flags);
 		}
 	} else {
+		spin_lock_irqsave(&tascam->midi_lock, flags);
 		tascam->midi_output = NULL;
 		spin_unlock_irqrestore(&tascam->midi_lock, flags);
 	}
@@ -175,14 +184,30 @@ int tascam_create_midi(struct tascam_card *tascam)
 	tascam->rmidi = rmidi;
 
 	tascam->midi_out_urb = usb_alloc_urb(0, GFP_KERNEL);
+	if (!tascam->midi_out_urb) {
+		err = -ENOMEM;
+		goto err_out_urb;
+	}
+
 	tascam->midi_in_urb = usb_alloc_urb(0, GFP_KERNEL);
-	if (!tascam->midi_out_urb || !tascam->midi_in_urb) return -ENOMEM;
+	if (!tascam->midi_in_urb) {
+		err = -ENOMEM;
+		goto err_in_urb;
+	}
 
 	tascam->midi_out_buf = usb_alloc_coherent(tascam->dev, MIDI_PACKET_SIZE,
 											  GFP_KERNEL, &tascam->midi_out_urb->transfer_dma);
+	if (!tascam->midi_out_buf) {
+		err = -ENOMEM;
+		goto err_out_buf;
+	}
+
 	tascam->midi_in_buf = usb_alloc_coherent(tascam->dev, MIDI_PACKET_SIZE,
 											 GFP_KERNEL, &tascam->midi_in_urb->transfer_dma);
-	if (!tascam->midi_out_buf || !tascam->midi_in_buf) return -ENOMEM;
+	if (!tascam->midi_in_buf) {
+		err = -ENOMEM;
+		goto err_in_buf;
+	}
 
 	usb_fill_bulk_urb(tascam->midi_out_urb, tascam->dev,
 					  usb_sndbulkpipe(tascam->dev, EP_MIDI_OUT),
@@ -200,4 +225,16 @@ int tascam_create_midi(struct tascam_card *tascam)
 	init_usb_anchor(&tascam->midi_anchor);
 
 	return 0;
+
+	err_in_buf:
+	usb_free_coherent(tascam->dev, MIDI_PACKET_SIZE,
+					  tascam->midi_out_buf, tascam->midi_out_urb->transfer_dma);
+	err_out_buf:
+	usb_free_urb(tascam->midi_in_urb);
+	tascam->midi_in_urb = NULL;
+	err_in_urb:
+	usb_free_urb(tascam->midi_out_urb);
+	tascam->midi_out_urb = NULL;
+	err_out_urb:
+	return err;
 }
