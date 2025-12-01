@@ -116,7 +116,7 @@ int tascam_alloc_urbs(struct tascam_card *tascam)
 		tascam->feedback_urbs[i] = urb;
 		urb->transfer_buffer = usb_alloc_coherent(tascam->dev,
 												  tascam->feedback_urb_alloc_size,
-												  GFP_KERNEL, &urb->transfer_dma);
+											GFP_KERNEL, &urb->transfer_dma);
 		if (!urb->transfer_buffer)
 			return -ENOMEM;
 		urb->dev = tascam->dev;
@@ -226,9 +226,6 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	int err;
 	int idx;
 
-	char *handshake_buf __free(kfree) = NULL;
-
-
 	if (intf->cur_altsetting->desc.bInterfaceNumber == 1)
 		return 0;
 
@@ -241,25 +238,6 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 		atomic_dec(&dev_idx);
 		return -ENOENT;
 	}
-
-	handshake_buf = kmalloc(1, GFP_KERNEL);
-	if (!handshake_buf) {
-		atomic_dec(&dev_idx);
-		return -ENOMEM;
-	}
-
-	err = usb_control_msg(dev, usb_rcvctrlpipe(dev, 0),
-						  VENDOR_REQ_MODE_CONTROL, RT_D2H_VENDOR_DEV,
-					   MODE_VAL_HANDSHAKE_READ, 0x0000, handshake_buf, 1,
-					   USB_CTRL_TIMEOUT_MS);
-	if (err < 0) {
-		dev_err(&dev->dev, "Handshake failed: %d\n", err);
-		atomic_dec(&dev_idx);
-		return err;
-	}
-
-	usb_set_interface(dev, 0, 1);
-	usb_set_interface(dev, 1, 1);
 
 	err = snd_card_new(&dev->dev, index[idx], id[idx], THIS_MODULE,
 					   sizeof(struct tascam_card), &card);
@@ -311,6 +289,33 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	err = tascam_alloc_urbs(tascam);
 	if (err < 0)
 		goto free_card;
+
+	tascam->scratch_buf = devm_kzalloc(&dev->dev, 4, GFP_KERNEL);
+	if (!tascam->scratch_buf) {
+		err = -ENOMEM;
+		goto free_card;
+	}
+
+	err = usb_control_msg(dev, usb_rcvctrlpipe(dev, 0),
+						  VENDOR_REQ_MODE_CONTROL, RT_D2H_VENDOR_DEV,
+					   MODE_VAL_HANDSHAKE_READ, 0x0000, tascam->scratch_buf, 1,
+					   USB_CTRL_TIMEOUT_MS);
+	if (err < 0) {
+		dev_err(&dev->dev, "Handshake failed: %d\n", err);
+		goto free_card;
+	}
+
+	err = usb_set_interface(dev, 0, 1);
+	if (err < 0) {
+		dev_err(&dev->dev, "Failed to set interface 0: %d\n", err);
+		goto free_card;
+	}
+
+	err = usb_set_interface(dev, 1, 1);
+	if (err < 0) {
+		dev_err(&dev->dev, "Failed to set interface 1: %d\n", err);
+		goto free_card;
+	}
 
 	if (us144mkii_configure_device_for_rate(tascam, 48000) < 0)
 		dev_warn(&dev->dev, "Failed to initialize device at 48khz\n");

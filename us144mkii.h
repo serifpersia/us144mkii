@@ -64,12 +64,12 @@ enum tascam_register {
 
 #define REG_VAL_ENABLE 0x0101
 
-#define NUM_PLAYBACK_URBS 8
-#define PLAYBACK_URB_PACKETS 2
+#define NUM_PLAYBACK_URBS 4
+#define PLAYBACK_URB_PACKETS 4
 #define NUM_FEEDBACK_URBS 2
 #define FEEDBACK_URB_PACKETS 1
 #define FEEDBACK_PACKET_SIZE 3
-#define NUM_CAPTURE_URBS 4
+#define NUM_CAPTURE_URBS 8
 #define CAPTURE_PACKET_SIZE 512
 
 #define MIDI_PACKET_SIZE 9
@@ -92,6 +92,7 @@ enum tascam_register {
  * @card: pointer to the ALSA sound card
  * @pcm: pointer to the ALSA PCM device
  * @rmidi: pointer to the ALSA raw MIDI device
+ * @scratch_buf: temporary buffer for control messages
  * @playback_substream: pointer to the PCM playback substream
  * @capture_substream: pointer to the PCM capture substream
  * @playback_urbs: array of URBs for PCM playback
@@ -135,6 +136,8 @@ struct tascam_card {
 	struct snd_card *card;
 	struct snd_pcm *pcm;
 	struct snd_rawmidi *rmidi;
+
+	u8 *scratch_buf;
 
 	struct snd_pcm_substream *playback_substream;
 	struct snd_pcm_substream *capture_substream;

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 // Copyright (c) 2025 Šerif Rami <ramiserifpersia@gmail.com>
 
+#include <linux/unaligned.h>
 #include "us144mkii_pcm.h"
 
 const struct snd_pcm_hardware tascam_capture_hw = {
@@ -35,6 +36,8 @@ static int tascam_capture_close(struct snd_pcm_substream *substream)
 {
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
 
+	atomic_set(&tascam->capture_active, 0);
+	usb_kill_anchored_urbs(&tascam->capture_anchor);
 	tascam->capture_substream = NULL;
 	return 0;
 }
@@ -97,7 +100,7 @@ static int tascam_capture_trigger(struct snd_pcm_substream *substream, int cmd)
 	spin_unlock_irqrestore(&tascam->lock, flags);
 
 	if (stop) {
-		/* Ensure capture_active is updated before unlinking URBs */
+		/* Ensure capture_active is updated before unlinking URBs. */
 		smp_mb();
 		for (i = 0; i < NUM_CAPTURE_URBS; i++) {
 			if (tascam->capture_urbs[i])
@@ -111,7 +114,7 @@ static int tascam_capture_trigger(struct snd_pcm_substream *substream, int cmd)
 			if (usb_submit_urb(tascam->capture_urbs[i], GFP_ATOMIC) < 0) {
 				usb_unanchor_urb(tascam->capture_urbs[i]);
 				atomic_set(&tascam->capture_active, 0);
-				/* Ensure capture_active is cleared before unlinking URBs */
+				/* Ensure capture_active is updated before unlinking URBs due to submission error. */
 				smp_mb();
 				for (int j = 0; j < i; j++)
 					usb_unlink_urb(tascam->capture_urbs[j]);
@@ -124,46 +127,44 @@ static int tascam_capture_trigger(struct snd_pcm_substream *substream, int cmd)
 	return ret;
 }
 
-static inline u8 tascam_pack_byte(const u8 *src, int bit_offset)
+static inline void tascam_unpack_8bytes(const u8 *src, u8 *out_bit0, u8 *out_bit1)
 {
-	return (((src[0] >> bit_offset) & 1) << 7) |
-	(((src[1] >> bit_offset) & 1) << 6) |
-	(((src[2] >> bit_offset) & 1) << 5) |
-	(((src[3] >> bit_offset) & 1) << 4) |
-	(((src[4] >> bit_offset) & 1) << 3) |
-	(((src[5] >> bit_offset) & 1) << 2) |
-	(((src[6] >> bit_offset) & 1) << 1) |
-	(((src[7] >> bit_offset) & 1));
+	u64 val = get_unaligned_le64(src);
+	u8 b0 = 0, b1 = 0;
+	int i;
+
+	for (i = 0; i < 8; i++) {
+		b0 |= ((val >> (i * 8)) & 1) << (7 - i);
+		b1 |= ((val >> (i * 8 + 1)) & 1) << (7 - i);
+	}
+
+	*out_bit0 = b0;
+	*out_bit1 = b1;
 }
 
 static void tascam_decode_capture_chunk(const u8 *src, u32 *dst, int frames_to_decode)
 {
-	int frame;
-	u8 h, m, l;
+	int i;
+	u8 h[4], m[4], l[4];
 
-	for (frame = 0; frame < frames_to_decode; frame++) {
-		const u8 *p_src_a = src + (frame * 64);
-		const u8 *p_src_b = src + (frame * 64) + 32;
+	for (i = 0; i < frames_to_decode; i++) {
+		const u8 *p_src_a = src + (i * 64);
+		const u8 *p_src_b = src + (i * 64) + 32;
 
-		h = tascam_pack_byte(p_src_a, 0);
-		m = tascam_pack_byte(p_src_a + 8, 0);
-		l = tascam_pack_byte(p_src_a + 16, 0);
-		*dst++ = (h << 24) | (m << 16) | (l << 8);
+		/* Channel 1 (h0) and Channel 3 (h2) */
+		tascam_unpack_8bytes(p_src_a, &h[0], &h[2]);
+		tascam_unpack_8bytes(p_src_a + 8, &m[0], &m[2]);
+		tascam_unpack_8bytes(p_src_a + 16, &l[0], &l[2]);
 
-		h = tascam_pack_byte(p_src_b, 0);
-		m = tascam_pack_byte(p_src_b + 8, 0);
-		l = tascam_pack_byte(p_src_b + 16, 0);
-		*dst++ = (h << 24) | (m << 16) | (l << 8);
+		/* Channel 2 (h1) and Channel 4 (h3) */
+		tascam_unpack_8bytes(p_src_b, &h[1], &h[3]);
+		tascam_unpack_8bytes(p_src_b + 8, &m[1], &m[3]);
+		tascam_unpack_8bytes(p_src_b + 16, &l[1], &l[3]);
 
-		h = tascam_pack_byte(p_src_a, 1);
-		m = tascam_pack_byte(p_src_a + 8, 1);
-		l = tascam_pack_byte(p_src_a + 16, 1);
-		*dst++ = (h << 24) | (m << 16) | (l << 8);
-
-		h = tascam_pack_byte(p_src_b, 1);
-		m = tascam_pack_byte(p_src_b + 8, 1);
-		l = tascam_pack_byte(p_src_b + 16, 1);
-		*dst++ = (h << 24) | (m << 16) | (l << 8);
+		*dst++ = (h[0] << 24) | (m[0] << 16) | (l[0] << 8);
+		*dst++ = (h[1] << 24) | (m[1] << 16) | (l[1] << 8);
+		*dst++ = (h[2] << 24) | (m[2] << 16) | (l[2] << 8);
+		*dst++ = (h[3] << 24) | (m[3] << 16) | (l[3] << 8);
 	}
 }
 
@@ -200,18 +201,21 @@ void capture_urb_complete(struct urb *urb)
 	}
 
 	substream = tascam->capture_substream;
-	if (!substream) {
+	if (!substream || !substream->runtime) {
 		atomic_dec(&tascam->active_urbs);
 		return;
 	}
 	runtime = substream->runtime;
-	if (!runtime) {
+	if (!runtime->dma_area) {
 		atomic_dec(&tascam->active_urbs);
 		return;
 	}
 
 	buffer_size = runtime->buffer_size;
 	period_size = runtime->period_size;
+
+	if (urb->actual_length % 64 != 0)
+		dev_warn_ratelimited(&tascam->dev->dev, "Unaligned capture packet size: %d\n", urb->actual_length);
 	frames_received = urb->actual_length / 64;
 
 	if (frames_received > 0) {
@@ -252,8 +256,11 @@ void capture_urb_complete(struct urb *urb)
 			snd_pcm_period_elapsed(substream);
 	}
 
-	if (usb_submit_urb(urb, GFP_ATOMIC) < 0)
+	usb_anchor_urb(urb, &tascam->capture_anchor);
+	if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
+		usb_unanchor_urb(urb);
 		atomic_dec(&tascam->active_urbs);
+	}
 }
 
 const struct snd_pcm_ops tascam_capture_ops = {

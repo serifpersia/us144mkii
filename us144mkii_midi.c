@@ -40,7 +40,9 @@ static void tascam_midi_out_complete(struct urb *urb)
 	}
 
 	if (submit) {
+		usb_anchor_urb(urb, &tascam->midi_anchor);
 		if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
+			usb_unanchor_urb(urb);
 			spin_lock_irqsave(&tascam->midi_lock, flags);
 			tascam->midi_out_active = false;
 			spin_unlock_irqrestore(&tascam->midi_lock, flags);
@@ -111,6 +113,7 @@ static void tascam_midi_in_complete(struct urb *urb)
 		}
 	}
 
+	usb_anchor_urb(urb, &tascam->midi_anchor);
 	if (usb_submit_urb(urb, GFP_ATOMIC) < 0)
 		usb_unanchor_urb(urb);
 }
