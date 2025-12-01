@@ -12,14 +12,9 @@ extern const struct snd_pcm_hardware tascam_capture_hw;
 extern const struct snd_pcm_ops tascam_playback_ops;
 extern const struct snd_pcm_ops tascam_capture_ops;
 
-/* Playback */
 void playback_urb_complete(struct urb *urb);
 void feedback_urb_complete(struct urb *urb);
-
-/* Capture */
 void capture_urb_complete(struct urb *urb);
-
-/* Setup */
 int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate);
 void tascam_stop_pcm_work_handler(struct work_struct *work);
 int tascam_pcm_hw_params(struct snd_pcm_substream *substream,

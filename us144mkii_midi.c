@@ -98,19 +98,21 @@ static void tascam_midi_in_complete(struct urb *urb)
 	struct tascam_card *tascam = urb->context;
 	int i;
 
-	if (urb->status) return;
+	if (urb->status)
+		return;
 
 	if (urb->actual_length == MIDI_PACKET_SIZE && tascam->midi_input) {
 		u8 *data = urb->transfer_buffer;
+
 		for (i = 0; i < MIDI_PAYLOAD_SIZE; i++) {
-			if (data[i] == 0xFD) break;
+			if (data[i] == 0xFD)
+				break;
 			snd_rawmidi_receive(tascam->midi_input, &data[i], 1);
 		}
 	}
 
-	if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
+	if (usb_submit_urb(urb, GFP_ATOMIC) < 0)
 		usb_unanchor_urb(urb);
-	}
 }
 
 static void tascam_midi_input_trigger(struct snd_rawmidi_substream *substream, int up)
@@ -129,6 +131,7 @@ static int tascam_midi_open(struct snd_rawmidi_substream *substream)
 
 	if (substream->stream == SNDRV_RAWMIDI_STREAM_OUTPUT) {
 		unsigned long flags;
+
 		spin_lock_irqsave(&tascam->midi_lock, flags);
 		tascam->midi_out_active = false;
 		spin_unlock_irqrestore(&tascam->midi_lock, flags);
@@ -146,9 +149,8 @@ static int tascam_midi_close(struct snd_rawmidi_substream *substream)
 {
 	struct tascam_card *tascam = substream->rmidi->private_data;
 
-	if (substream->stream == SNDRV_RAWMIDI_STREAM_INPUT) {
+	if (substream->stream == SNDRV_RAWMIDI_STREAM_INPUT)
 		usb_kill_urb(tascam->midi_in_urb);
-	}
 	return 0;
 }
 
@@ -164,13 +166,20 @@ static const struct snd_rawmidi_ops midi_input_ops = {
 	.trigger = tascam_midi_input_trigger,
 };
 
+/**
+ * tascam_create_midi - create and initialize the MIDI device
+ * @tascam: the tascam_card instance
+ *
+ * Return: 0 on success, or a negative error code on failure.
+ */
 int tascam_create_midi(struct tascam_card *tascam)
 {
 	int err;
 	struct snd_rawmidi *rmidi;
 
 	err = snd_rawmidi_new(tascam->card, "TASCAM MIDI", 0, 1, 1, &rmidi);
-	if (err < 0) return err;
+	if (err < 0)
+		return err;
 
 	rmidi->private_data = tascam;
 	strscpy(rmidi->name, "TASCAM US-144MKII MIDI", sizeof(rmidi->name));
@@ -226,15 +235,15 @@ int tascam_create_midi(struct tascam_card *tascam)
 
 	return 0;
 
-	err_in_buf:
+err_in_buf:
 	usb_free_coherent(tascam->dev, MIDI_PACKET_SIZE,
 					  tascam->midi_out_buf, tascam->midi_out_urb->transfer_dma);
-	err_out_buf:
+err_out_buf:
 	usb_free_urb(tascam->midi_in_urb);
 	tascam->midi_in_urb = NULL;
-	err_in_urb:
+err_in_urb:
 	usb_free_urb(tascam->midi_out_urb);
 	tascam->midi_out_urb = NULL;
-	err_out_urb:
+err_out_urb:
 	return err;
 }

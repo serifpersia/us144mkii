@@ -7,15 +7,27 @@ static int tascam_write_regs(struct tascam_card *tascam, const u16 *regs, size_t
 {
 	int i, err = 0;
 	struct usb_device *dev = tascam->dev;
+
 	for (i = 0; i < count; i++) {
 		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
 							  VENDOR_REQ_REGISTER_WRITE, RT_H2D_VENDOR_DEV,
 							  regs[i], REG_VAL_ENABLE, NULL, 0, USB_CTRL_TIMEOUT_MS);
-		if (err < 0) return err;
+		if (err < 0)
+			return err;
 	}
 	return 0;
 }
 
+/**
+ * us144mkii_configure_device_for_rate() - set sample rate via USB control msgs
+ * @tascam: the tascam_card instance
+ * @rate: the target sample rate (e.g., 44100, 96000)
+ *
+ * This function sends a sequence of vendor-specific and UAC control messages
+ * to configure the device hardware for the specified sample rate.
+ *
+ * Return: 0 on success, or a negative error code on failure.
+ */
 int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate)
 {
 	struct usb_device *dev = tascam->dev;
@@ -30,20 +42,35 @@ int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate)
 	static const u8 payload_96000[] = { 0x00, 0x77, 0x01 };
 
 	switch (rate) {
-		case 44100: current_payload_src = payload_44100; rate_reg = REG_ADDR_RATE_44100; break;
-		case 48000: current_payload_src = payload_48000; rate_reg = REG_ADDR_RATE_48000; break;
-		case 88200: current_payload_src = payload_88200; rate_reg = REG_ADDR_RATE_88200; break;
-		case 96000: current_payload_src = payload_96000; rate_reg = REG_ADDR_RATE_96000; break;
-		default: return -EINVAL;
+	case 44100:
+		current_payload_src = payload_44100;
+		rate_reg = REG_ADDR_RATE_44100;
+		break;
+	case 48000:
+		current_payload_src = payload_48000;
+		rate_reg = REG_ADDR_RATE_48000;
+		break;
+	case 88200:
+		current_payload_src = payload_88200;
+		rate_reg = REG_ADDR_RATE_88200;
+		break;
+	case 96000:
+		current_payload_src = payload_96000;
+		rate_reg = REG_ADDR_RATE_96000;
+		break;
+	default:
+		return -EINVAL;
 	}
 
 	rate_payload_buf = kmemdup(current_payload_src, 3, GFP_KERNEL);
-	if (!rate_payload_buf) return -ENOMEM;
+	if (!rate_payload_buf)
+		return -ENOMEM;
 
 	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
 						  VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV,
 					   MODE_VAL_CONFIG, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
-	if (err < 0) goto fail;
+	if (err < 0)
+		goto fail;
 
 	usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR,
 					RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL,
@@ -58,21 +85,35 @@ int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate)
 			REG_ADDR_UNKNOWN_0F, rate_reg, REG_ADDR_UNKNOWN_11
 		};
 		err = tascam_write_regs(tascam, regs_to_write, ARRAY_SIZE(regs_to_write));
-		if (err < 0) goto fail;
+		if (err < 0)
+			goto fail;
 	}
 
 	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
 						  VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV,
 					   MODE_VAL_STREAM_START, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
-	if (err < 0) goto fail;
+	if (err < 0)
+		goto fail;
 
 	kfree(rate_payload_buf);
 	return 0;
-	fail:
+fail:
 	kfree(rate_payload_buf);
 	return err;
 }
 
+/**
+ * tascam_pcm_hw_params() - configure hardware parameters for PCM streams
+ * @substream: the ALSA PCM substream
+ * @params: the hardware parameters to apply
+ *
+ * This function allocates pages for the PCM buffer and, for playback streams,
+ * selects the appropriate feedback patterns based on the requested sample rate.
+ * It also configures the device hardware for the selected sample rate if it
+ * has changed.
+ *
+ * Return: 0 on success, or a negative error code on failure.
+ */
 int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
 						 struct snd_pcm_hw_params *params)
 {
@@ -98,9 +139,14 @@ int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
 	return 0;
 }
 
+/**
+ * tascam_stop_pcm_work_handler() - work handler to stop PCM streams
+ * @work: pointer to the work_struct
+ */
 void tascam_stop_pcm_work_handler(struct work_struct *work)
 {
 	struct tascam_card *tascam = container_of(work, struct tascam_card, stop_pcm_work);
+
 	if (tascam->playback_substream)
 		snd_pcm_stop(tascam->playback_substream, SNDRV_PCM_STATE_XRUN);
 }
