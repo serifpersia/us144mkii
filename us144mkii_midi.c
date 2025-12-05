@@ -6,6 +6,7 @@
 static void tascam_midi_out_complete(struct urb *urb)
 {
 	struct tascam_card *tascam = urb->context;
+	struct snd_rawmidi_substream *substream;
 	unsigned long flags;
 	int count;
 	bool submit = false;
@@ -13,19 +14,20 @@ static void tascam_midi_out_complete(struct urb *urb)
 
 	spin_lock_irqsave(&tascam->midi_lock, flags);
 
-	if (urb->status || !tascam->midi_output) {
+	substream = tascam->midi_output;
+	active = tascam->midi_out_active;
+
+	if (urb->status || !substream) {
 		tascam->midi_out_active = false;
 		spin_unlock_irqrestore(&tascam->midi_lock, flags);
 		return;
 	}
-
-	active = tascam->midi_out_active;
 	spin_unlock_irqrestore(&tascam->midi_lock, flags);
 
 	if (!active)
 		return;
 
-	count = snd_rawmidi_transmit(tascam->midi_output, tascam->midi_out_buf, MIDI_PAYLOAD_SIZE);
+	count = snd_rawmidi_transmit(substream, tascam->midi_out_buf, MIDI_PAYLOAD_SIZE);
 	if (count > 0) {
 		if (count < MIDI_PAYLOAD_SIZE)
 			memset(tascam->midi_out_buf + count, 0xFD, MIDI_PAYLOAD_SIZE - count);
@@ -98,18 +100,24 @@ static void tascam_midi_output_trigger(struct snd_rawmidi_substream *substream, 
 static void tascam_midi_in_complete(struct urb *urb)
 {
 	struct tascam_card *tascam = urb->context;
+	struct snd_rawmidi_substream *substream;
+	unsigned long flags;
 	int i;
 
 	if (urb->status)
 		return;
 
-	if (urb->actual_length == MIDI_PACKET_SIZE && tascam->midi_input) {
+	spin_lock_irqsave(&tascam->midi_lock, flags);
+	substream = tascam->midi_input;
+	spin_unlock_irqrestore(&tascam->midi_lock, flags);
+
+	if (urb->actual_length == MIDI_PACKET_SIZE && substream) {
 		u8 *data = urb->transfer_buffer;
 
 		for (i = 0; i < MIDI_PAYLOAD_SIZE; i++) {
 			if (data[i] == 0xFD)
 				break;
-			snd_rawmidi_receive(tascam->midi_input, &data[i], 1);
+			snd_rawmidi_receive(substream, &data[i], 1);
 		}
 	}
 
@@ -121,11 +129,14 @@ static void tascam_midi_in_complete(struct urb *urb)
 static void tascam_midi_input_trigger(struct snd_rawmidi_substream *substream, int up)
 {
 	struct tascam_card *tascam = substream->rmidi->private_data;
+	unsigned long flags;
 
+	spin_lock_irqsave(&tascam->midi_lock, flags);
 	if (up)
 		tascam->midi_input = substream;
 	else
 		tascam->midi_input = NULL;
+	spin_unlock_irqrestore(&tascam->midi_lock, flags);
 }
 
 static int tascam_midi_open(struct snd_rawmidi_substream *substream)
@@ -238,15 +249,15 @@ int tascam_create_midi(struct tascam_card *tascam)
 
 	return 0;
 
-err_in_buf:
+	err_in_buf:
 	usb_free_coherent(tascam->dev, MIDI_PACKET_SIZE,
 					  tascam->midi_out_buf, tascam->midi_out_urb->transfer_dma);
-err_out_buf:
+	err_out_buf:
 	usb_free_urb(tascam->midi_in_urb);
 	tascam->midi_in_urb = NULL;
-err_in_urb:
+	err_in_urb:
 	usb_free_urb(tascam->midi_out_urb);
 	tascam->midi_out_urb = NULL;
-err_out_urb:
+	err_out_urb:
 	return err;
 }

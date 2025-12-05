@@ -214,10 +214,6 @@ void playback_urb_complete(struct urb *urb)
 		atomic_dec(&tascam->active_urbs);
 		return;
 	}
-	if (!atomic_read(&tascam->playback_active)) {
-		atomic_dec(&tascam->active_urbs);
-		return;
-	}
 
 	substream = tascam->playback_substream;
 	if (!substream || !substream->runtime) {
@@ -234,6 +230,13 @@ void playback_urb_complete(struct urb *urb)
 	period_size = runtime->period_size;
 
 	spin_lock_irqsave(&tascam->lock, flags);
+
+	if (!atomic_read(&tascam->playback_active)) {
+		spin_unlock_irqrestore(&tascam->lock, flags);
+		atomic_dec(&tascam->active_urbs);
+		return;
+	}
+
 	for (i = 0; i < urb->number_of_packets; i++) {
 		unsigned int frames_for_packet;
 
@@ -249,7 +252,6 @@ void playback_urb_complete(struct urb *urb)
 	offset_frames = tascam->driver_playback_pos;
 	frames_to_copy = bytes_to_frames(runtime, total_bytes_for_urb);
 	tascam->driver_playback_pos = (offset_frames + frames_to_copy) % buffer_size;
-	spin_unlock_irqrestore(&tascam->lock, flags);
 
 	if (total_bytes_for_urb > 0) {
 		u8 *dst_buf = urb->transfer_buffer;
@@ -265,7 +267,6 @@ void playback_urb_complete(struct urb *urb)
 		}
 	}
 
-	spin_lock_irqsave(&tascam->lock, flags);
 	tascam->playback_frames_consumed += frames_to_copy;
 
 	if (period_size > 0) {

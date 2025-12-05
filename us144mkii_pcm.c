@@ -122,6 +122,10 @@ int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
 	int err;
 
 	if (tascam->current_rate != rate) {
+		if (atomic_read(&tascam->playback_active) ||
+			atomic_read(&tascam->capture_active)) {
+			return -EBUSY;
+			}
 
 		usb_kill_anchored_urbs(&tascam->playback_anchor);
 		usb_kill_anchored_urbs(&tascam->feedback_anchor);

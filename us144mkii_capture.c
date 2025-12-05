@@ -195,11 +195,6 @@ void capture_urb_complete(struct urb *urb)
 		return;
 	}
 
-	if (!atomic_read(&tascam->capture_active)) {
-		atomic_dec(&tascam->active_urbs);
-		return;
-	}
-
 	substream = tascam->capture_substream;
 	if (!substream || !substream->runtime) {
 		atomic_dec(&tascam->active_urbs);
@@ -220,8 +215,14 @@ void capture_urb_complete(struct urb *urb)
 
 	if (frames_received > 0) {
 		spin_lock_irqsave(&tascam->lock, flags);
+
+		if (!atomic_read(&tascam->capture_active)) {
+			spin_unlock_irqrestore(&tascam->lock, flags);
+			atomic_dec(&tascam->active_urbs);
+			return;
+		}
+
 		write_pos = tascam->driver_capture_pos;
-		spin_unlock_irqrestore(&tascam->lock, flags);
 
 		u32 *dma_ptr = (u32 *)(runtime->dma_area + frames_to_bytes(runtime, write_pos));
 
@@ -235,7 +236,6 @@ void capture_urb_complete(struct urb *urb)
 			tascam_decode_capture_chunk(urb->transfer_buffer + (part1 * 64), (u32 *)runtime->dma_area, part2);
 		}
 
-		spin_lock_irqsave(&tascam->lock, flags);
 		tascam->driver_capture_pos += frames_received;
 		if (tascam->driver_capture_pos >= buffer_size)
 			tascam->driver_capture_pos -= buffer_size;
