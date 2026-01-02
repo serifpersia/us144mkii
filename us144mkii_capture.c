@@ -27,6 +27,12 @@ static int tascam_capture_open(struct snd_pcm_substream *substream)
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
 
 	substream->runtime->hw = tascam_capture_hw;
+
+	if (tascam->dev_id == USB_PID_TASCAM_US122MKII) {
+		substream->runtime->hw.channels_min = 2;
+		substream->runtime->hw.channels_max = 2;
+	}
+
 	tascam->capture_substream = substream;
 	atomic_set(&tascam->capture_active, 0);
 	return 0;
@@ -51,6 +57,7 @@ static int tascam_capture_prepare(struct snd_pcm_substream *substream)
 	tascam->driver_capture_pos = 0;
 	tascam->capture_frames_processed = 0;
 	tascam->last_cap_period_pos = 0;
+	atomic_set(&tascam->implicit_fb_frames, 0);
 	return 0;
 }
 
@@ -80,27 +87,26 @@ static int tascam_capture_trigger(struct snd_pcm_substream *substream, int cmd)
 
 	spin_lock_irqsave(&tascam->lock, flags);
 	switch (cmd) {
-	case SNDRV_PCM_TRIGGER_START:
-	case SNDRV_PCM_TRIGGER_RESUME:
-		if (!atomic_read(&tascam->capture_active)) {
-			atomic_set(&tascam->capture_active, 1);
-			start = true;
-		}
-		break;
-	case SNDRV_PCM_TRIGGER_STOP:
-	case SNDRV_PCM_TRIGGER_SUSPEND:
-	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
-		atomic_set(&tascam->capture_active, 0);
-		stop = true;
-		break;
-	default:
-		ret = -EINVAL;
-		break;
+		case SNDRV_PCM_TRIGGER_START:
+		case SNDRV_PCM_TRIGGER_RESUME:
+			if (!atomic_read(&tascam->capture_active)) {
+				atomic_set(&tascam->capture_active, 1);
+				start = true;
+			}
+			break;
+		case SNDRV_PCM_TRIGGER_STOP:
+		case SNDRV_PCM_TRIGGER_SUSPEND:
+		case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
+			atomic_set(&tascam->capture_active, 0);
+			stop = true;
+			break;
+		default:
+			ret = -EINVAL;
+			break;
 	}
 	spin_unlock_irqrestore(&tascam->lock, flags);
 
 	if (stop) {
-		/* Ensure capture_active is updated before unlinking URBs. */
 		smp_mb();
 		for (i = 0; i < NUM_CAPTURE_URBS; i++) {
 			if (tascam->capture_urbs[i])
@@ -114,7 +120,6 @@ static int tascam_capture_trigger(struct snd_pcm_substream *substream, int cmd)
 			if (usb_submit_urb(tascam->capture_urbs[i], GFP_ATOMIC) < 0) {
 				usb_unanchor_urb(tascam->capture_urbs[i]);
 				atomic_set(&tascam->capture_active, 0);
-				/* Ensure capture_active is updated before unlinking URBs due to submission error. */
 				smp_mb();
 				for (int j = 0; j < i; j++)
 					usb_unlink_urb(tascam->capture_urbs[j]);
@@ -151,12 +156,10 @@ static void tascam_decode_capture_chunk(const u8 *src, u32 *dst, int frames_to_d
 		const u8 *p_src_a = src + (i * 64);
 		const u8 *p_src_b = src + (i * 64) + 32;
 
-		/* Channel 1 (h0) and Channel 3 (h2) */
 		tascam_unpack_8bytes(p_src_a, &h[0], &h[2]);
 		tascam_unpack_8bytes(p_src_a + 8, &m[0], &m[2]);
 		tascam_unpack_8bytes(p_src_a + 16, &l[0], &l[2]);
 
-		/* Channel 2 (h1) and Channel 4 (h3) */
 		tascam_unpack_8bytes(p_src_b, &h[1], &h[3]);
 		tascam_unpack_8bytes(p_src_b + 8, &m[1], &m[3]);
 		tascam_unpack_8bytes(p_src_b + 16, &l[1], &l[3]);
@@ -168,14 +171,17 @@ static void tascam_decode_capture_chunk(const u8 *src, u32 *dst, int frames_to_d
 	}
 }
 
-/**
- * capture_urb_complete() - completion handler for capture bulk URBs
- * @urb: the completed URB
- *
- * This function runs in interrupt context. It copies the received raw data
- * into an intermediate ring buffer and then schedules the workqueue to process
- * it. It then resubmits the URB to receive more data.
- */
+static void tascam_decode_capture_chunk_122(const u8 *src, u32 *dst, int frames_to_decode)
+{
+	int i;
+
+	for (i = 0; i < frames_to_decode; i++) {
+		*dst++ = (src[0] << 24) | (src[1] << 16) | (src[2] << 8);
+		*dst++ = (src[3] << 24) | (src[4] << 16) | (src[5] << 8);
+		src += 6;
+	}
+}
+
 void capture_urb_complete(struct urb *urb)
 {
 	struct tascam_card *tascam = urb->context;
@@ -255,6 +261,93 @@ void capture_urb_complete(struct urb *urb)
 		if (need_period_elapsed)
 			snd_pcm_period_elapsed(substream);
 	}
+
+	usb_anchor_urb(urb, &tascam->capture_anchor);
+	if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
+		usb_unanchor_urb(urb);
+		atomic_dec(&tascam->active_urbs);
+	}
+}
+
+void capture_urb_complete_122(struct urb *urb)
+{
+	struct tascam_card *tascam = urb->context;
+	struct snd_pcm_substream *substream;
+	struct snd_pcm_runtime *runtime;
+	unsigned long flags;
+	int i, frames_in_urb = 0;
+	snd_pcm_uframes_t write_pos;
+	snd_pcm_uframes_t buffer_size, period_size;
+	bool need_period_elapsed = false;
+
+	if (!tascam)
+		return;
+
+	if (urb->status) {
+		atomic_dec(&tascam->active_urbs);
+		return;
+	}
+
+	substream = tascam->capture_substream;
+	if (!substream || !substream->runtime) {
+		atomic_dec(&tascam->active_urbs);
+		return;
+	}
+	runtime = substream->runtime;
+	buffer_size = runtime->buffer_size;
+	period_size = runtime->period_size;
+
+	spin_lock_irqsave(&tascam->lock, flags);
+
+	if (!atomic_read(&tascam->capture_active)) {
+		spin_unlock_irqrestore(&tascam->lock, flags);
+		atomic_dec(&tascam->active_urbs);
+		return;
+	}
+
+	write_pos = tascam->driver_capture_pos;
+
+	for (i = 0; i < urb->number_of_packets; i++) {
+		int len = urb->iso_frame_desc[i].actual_length;
+		int frames = len / US122_BYTES_PER_FRAME;
+		u8 *src = urb->transfer_buffer + urb->iso_frame_desc[i].offset;
+
+		if (frames > 0) {
+			u32 *dst = (u32 *)(runtime->dma_area + frames_to_bytes(runtime, write_pos));
+
+			if (write_pos + frames <= buffer_size) {
+				tascam_decode_capture_chunk_122(src, dst, frames);
+			} else {
+				int part1 = buffer_size - write_pos;
+				int part2 = frames - part1;
+				tascam_decode_capture_chunk_122(src, dst, part1);
+				tascam_decode_capture_chunk_122(src + (part1 * US122_BYTES_PER_FRAME),
+												(u32 *)runtime->dma_area, part2);
+			}
+
+			write_pos = (write_pos + frames) % buffer_size;
+			frames_in_urb += frames;
+		}
+
+		urb->iso_frame_desc[i].length = US122_URB_ALLOC_SIZE;
+	}
+
+	tascam->driver_capture_pos = write_pos;
+	tascam->capture_frames_processed += frames_in_urb;
+
+	atomic_add(frames_in_urb, &tascam->implicit_fb_frames);
+
+	if (period_size > 0) {
+		u64 current_period = div_u64(tascam->capture_frames_processed, period_size);
+		if (current_period > tascam->last_cap_period_pos) {
+			tascam->last_cap_period_pos = current_period;
+			need_period_elapsed = true;
+		}
+	}
+	spin_unlock_irqrestore(&tascam->lock, flags);
+
+	if (need_period_elapsed)
+		snd_pcm_period_elapsed(substream);
 
 	usb_anchor_urb(urb, &tascam->capture_anchor);
 	if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {

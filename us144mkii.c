@@ -18,10 +18,6 @@ static void tascam_disconnect(struct usb_interface *intf);
 static int tascam_suspend(struct usb_interface *intf, pm_message_t message);
 static int tascam_resume(struct usb_interface *intf);
 
-/**
- * tascam_free_urbs - free all URBs
- * @tascam: the tascam_card instance
- */
 void tascam_free_urbs(struct tascam_card *tascam)
 {
 	int i;
@@ -53,7 +49,13 @@ void tascam_free_urbs(struct tascam_card *tascam)
 
 	for (i = 0; i < NUM_CAPTURE_URBS; i++) {
 		if (tascam->capture_urbs[i]) {
-			usb_free_coherent(tascam->dev, CAPTURE_PACKET_SIZE,
+			size_t size;
+			if (tascam->dev_id == USB_PID_TASCAM_US122MKII)
+				size = US122_ISO_PACKETS * US122_URB_ALLOC_SIZE;
+			else
+				size = CAPTURE_PACKET_SIZE;
+
+			usb_free_coherent(tascam->dev, size,
 							  tascam->capture_urbs[i]->transfer_buffer,
 					 tascam->capture_urbs[i]->transfer_dma);
 			usb_free_urb(tascam->capture_urbs[i]);
@@ -77,19 +79,20 @@ void tascam_free_urbs(struct tascam_card *tascam)
 	}
 }
 
-/**
- * tascam_alloc_urbs - allocate all URBs
- * @tascam: the tascam_card instance
- *
- * Return: 0 on success, or a negative error code on failure.
- */
 int tascam_alloc_urbs(struct tascam_card *tascam)
 {
 	int i;
 
-	tascam->playback_urb_alloc_size = PLAYBACK_URB_PACKETS * (12 + 2) * BYTES_PER_FRAME;
+	if (tascam->dev_id == USB_PID_TASCAM_US122MKII)
+		tascam->playback_urb_alloc_size = US122_ISO_PACKETS * US122_URB_ALLOC_SIZE;
+	else
+		tascam->playback_urb_alloc_size = PLAYBACK_URB_PACKETS * (12 + 2) * BYTES_PER_FRAME;
+
 	for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
-		struct urb *urb = usb_alloc_urb(PLAYBACK_URB_PACKETS, GFP_KERNEL);
+		int num_packets = (tascam->dev_id == USB_PID_TASCAM_US122MKII) ?
+		US122_ISO_PACKETS : PLAYBACK_URB_PACKETS;
+
+		struct urb *urb = usb_alloc_urb(num_packets, GFP_KERNEL);
 
 		if (!urb)
 			return -ENOMEM;
@@ -107,50 +110,77 @@ int tascam_alloc_urbs(struct tascam_card *tascam)
 		urb->complete = playback_urb_complete;
 	}
 
-	tascam->feedback_urb_alloc_size = FEEDBACK_URB_PACKETS * FEEDBACK_PACKET_SIZE;
-	for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
-		struct urb *urb = usb_alloc_urb(FEEDBACK_URB_PACKETS, GFP_KERNEL);
+	if (tascam->dev_id != USB_PID_TASCAM_US122MKII) {
+		tascam->feedback_urb_alloc_size = FEEDBACK_URB_PACKETS * FEEDBACK_PACKET_SIZE;
+		for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
+			struct urb *urb = usb_alloc_urb(FEEDBACK_URB_PACKETS, GFP_KERNEL);
 
-		if (!urb)
-			return -ENOMEM;
-		tascam->feedback_urbs[i] = urb;
-		urb->transfer_buffer = usb_alloc_coherent(tascam->dev,
-												  tascam->feedback_urb_alloc_size,
-											GFP_KERNEL, &urb->transfer_dma);
-		if (!urb->transfer_buffer)
-			return -ENOMEM;
-		urb->dev = tascam->dev;
-		urb->pipe = usb_rcvisocpipe(tascam->dev, EP_PLAYBACK_FEEDBACK);
-		urb->transfer_flags = URB_ISO_ASAP | URB_NO_TRANSFER_DMA_MAP;
-		urb->interval = 4;
-		urb->context = tascam;
-		urb->complete = feedback_urb_complete;
+			if (!urb)
+				return -ENOMEM;
+			tascam->feedback_urbs[i] = urb;
+			urb->transfer_buffer = usb_alloc_coherent(tascam->dev,
+													  tascam->feedback_urb_alloc_size,
+											 GFP_KERNEL, &urb->transfer_dma);
+			if (!urb->transfer_buffer)
+				return -ENOMEM;
+			urb->dev = tascam->dev;
+			urb->pipe = usb_rcvisocpipe(tascam->dev, EP_PLAYBACK_FEEDBACK);
+			urb->transfer_flags = URB_ISO_ASAP | URB_NO_TRANSFER_DMA_MAP;
+			urb->interval = 4;
+			urb->context = tascam;
+			urb->complete = feedback_urb_complete;
+		}
 	}
 
-	for (i = 0; i < NUM_CAPTURE_URBS; i++) {
-		struct urb *urb = usb_alloc_urb(0, GFP_KERNEL);
+	if (tascam->dev_id == USB_PID_TASCAM_US122MKII) {
+		for (i = 0; i < NUM_CAPTURE_URBS; i++) {
+			struct urb *urb = usb_alloc_urb(US122_ISO_PACKETS, GFP_KERNEL);
+			if (!urb)
+				return -ENOMEM;
+			tascam->capture_urbs[i] = urb;
 
-		if (!urb)
-			return -ENOMEM;
-		tascam->capture_urbs[i] = urb;
-		void *buf = usb_alloc_coherent(tascam->dev, CAPTURE_PACKET_SIZE,
-									   GFP_KERNEL, &urb->transfer_dma);
-		if (!buf)
-			return -ENOMEM;
-		usb_fill_bulk_urb(urb, tascam->dev,
-						  usb_rcvbulkpipe(tascam->dev, EP_AUDIO_IN),
-						  buf, CAPTURE_PACKET_SIZE,
-					capture_urb_complete, tascam);
-		urb->transfer_flags |= URB_NO_TRANSFER_DMA_MAP;
+			int alloc_size = US122_ISO_PACKETS * US122_URB_ALLOC_SIZE;
+			void *buf = usb_alloc_coherent(tascam->dev, alloc_size,
+										   GFP_KERNEL, &urb->transfer_dma);
+			if (!buf)
+				return -ENOMEM;
+
+			urb->dev = tascam->dev;
+			urb->pipe = usb_rcvisocpipe(tascam->dev, EP_AUDIO_IN_122);
+			urb->transfer_flags = URB_ISO_ASAP | URB_NO_TRANSFER_DMA_MAP;
+			urb->interval = 1;
+			urb->transfer_buffer = buf;
+			urb->transfer_buffer_length = alloc_size;
+			urb->context = tascam;
+			urb->complete = capture_urb_complete_122;
+
+			for(int j=0; j < US122_ISO_PACKETS; j++) {
+				urb->iso_frame_desc[j].offset = j * US122_URB_ALLOC_SIZE;
+				urb->iso_frame_desc[j].length = US122_URB_ALLOC_SIZE;
+			}
+		}
+	} else {
+		for (i = 0; i < NUM_CAPTURE_URBS; i++) {
+			struct urb *urb = usb_alloc_urb(0, GFP_KERNEL);
+
+			if (!urb)
+				return -ENOMEM;
+			tascam->capture_urbs[i] = urb;
+			void *buf = usb_alloc_coherent(tascam->dev, CAPTURE_PACKET_SIZE,
+										   GFP_KERNEL, &urb->transfer_dma);
+			if (!buf)
+				return -ENOMEM;
+			usb_fill_bulk_urb(urb, tascam->dev,
+							  usb_rcvbulkpipe(tascam->dev, EP_AUDIO_IN),
+							  buf, CAPTURE_PACKET_SIZE,
+					 capture_urb_complete, tascam);
+			urb->transfer_flags |= URB_NO_TRANSFER_DMA_MAP;
+		}
 	}
 
 	return 0;
 }
 
-/**
- * tascam_stop_work_handler - work handler to stop all streams
- * @work: pointer to the work_struct
- */
 void tascam_stop_work_handler(struct work_struct *work)
 {
 	struct tascam_card *tascam = container_of(work, struct tascam_card, stop_work);
@@ -249,6 +279,8 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	tascam->card = card;
 	tascam->iface0 = intf;
 
+	tascam->dev_id = le16_to_cpu(dev->descriptor.idProduct);
+
 	spin_lock_init(&tascam->lock);
 	init_usb_anchor(&tascam->playback_anchor);
 	init_usb_anchor(&tascam->feedback_anchor);
@@ -259,8 +291,10 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	INIT_WORK(&tascam->stop_pcm_work, tascam_stop_pcm_work_handler);
 
 	strscpy(card->driver, DRIVER_NAME, sizeof(card->driver));
-	if (le16_to_cpu(dev->descriptor.idProduct) == USB_PID_TASCAM_US144)
+	if (tascam->dev_id == USB_PID_TASCAM_US144)
 		strscpy(card->shortname, "US-144", sizeof(card->shortname));
+	else if (tascam->dev_id == USB_PID_TASCAM_US122MKII)
+		strscpy(card->shortname, "US-122MKII", sizeof(card->shortname));
 	else
 		strscpy(card->shortname, "US-144MKII", sizeof(card->shortname));
 
@@ -326,7 +360,7 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	usb_set_intfdata(intf, tascam);
 	return 0;
 
-free_card:
+	free_card:
 	snd_card_free(card);
 	atomic_dec(&dev_idx);
 	return err;
@@ -361,6 +395,7 @@ static void tascam_disconnect(struct usb_interface *intf)
 static const struct usb_device_id tascam_usb_ids[] = {
 	{ USB_DEVICE(USB_VID_TASCAM, USB_PID_TASCAM_US144) },
 	{ USB_DEVICE(USB_VID_TASCAM, USB_PID_TASCAM_US144MKII) },
+	{ USB_DEVICE(USB_VID_TASCAM, USB_PID_TASCAM_US122MKII) },
 	{ }
 };
 MODULE_DEVICE_TABLE(usb, tascam_usb_ids);
