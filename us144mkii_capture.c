@@ -176,10 +176,6 @@ static void tascam_decode_capture_chunk_122(const u8 *src, u32 *dst, int frames_
 	int i;
 
 	for (i = 0; i < frames_to_decode; i++) {
-		/*
-		 * Standard 24-bit Little Endian -> 32-bit S32_LE
-		 * [LSB, Mid, MSB] -> [0, LSB, Mid, MSB]
-		 */
 		*dst++ = (src[2] << 24) | (src[1] << 16) | (src[0] << 8);
 		*dst++ = (src[5] << 24) | (src[4] << 16) | (src[3] << 8);
 		src += 6;
@@ -313,7 +309,7 @@ void capture_urb_complete_122(struct urb *urb)
 
 	for (i = 0; i < urb->number_of_packets; i++) {
 		int len = urb->iso_frame_desc[i].actual_length;
-		int frames = len / US122_BYTES_PER_FRAME;
+		int frames = len / 6;
 		u8 *src = urb->transfer_buffer + urb->iso_frame_desc[i].offset;
 
 		if (frames > 0) {
@@ -325,7 +321,7 @@ void capture_urb_complete_122(struct urb *urb)
 				int part1 = buffer_size - write_pos;
 				int part2 = frames - part1;
 				tascam_decode_capture_chunk_122(src, dst, part1);
-				tascam_decode_capture_chunk_122(src + (part1 * US122_BYTES_PER_FRAME),
+				tascam_decode_capture_chunk_122(src + (part1 * 6),
 												(u32 *)runtime->dma_area, part2);
 			}
 
@@ -333,7 +329,7 @@ void capture_urb_complete_122(struct urb *urb)
 			frames_in_urb += frames;
 		}
 
-		urb->iso_frame_desc[i].length = US122_MAX_PACKET_SIZE_CAPTURE;
+		urb->iso_frame_desc[i].length = US122_URB_ALLOC_SIZE;
 	}
 
 	tascam->driver_capture_pos = write_pos;

@@ -25,7 +25,6 @@ int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate)
 	int err = 0;
 	const u8 *current_payload_src;
 	u16 rate_reg;
-	u8 ep_in;
 
 	static const u8 payload_44100[] = { 0x44, 0xac, 0x00 };
 	static const u8 payload_48000[] = { 0x80, 0xbb, 0x00 };
@@ -57,36 +56,66 @@ int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate)
 	if (!rate_payload_buf)
 		return -ENOMEM;
 
-	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
-						  VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV,
-					   MODE_VAL_CONFIG, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
-	if (err < 0)
-		goto fail;
+	// =================================================================
+	// US-122MKII Specific Initialization (Mirrors snd-usb-us122l)
+	// =================================================================
+	if (tascam->dev_id == USB_PID_TASCAM_US122MKII) {
+		// 1. Send System Init (0x11)
+		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
+							  VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV,
+						MODE_VAL_SYSTEM_INIT, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
+		if (err < 0) goto fail;
 
-	ep_in = (tascam->dev_id == USB_PID_TASCAM_US122MKII) ? EP_AUDIO_IN_122 : EP_AUDIO_IN;
+		// 2. Send Config Mode (0x10)
+		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
+							  VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV,
+						MODE_VAL_CONFIG, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
+		if (err < 0) goto fail;
 
-	usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR,
-					RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL,
-				 ep_in, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
-	usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR,
-					RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL,
-				 EP_AUDIO_OUT, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
+		// 3. Set Sample Rate on Endpoint 0x81 (Capture) ONLY.
+		// us122l driver only sets it here.
+		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR,
+							  RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL,
+						EP_AUDIO_IN_122, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
+		if (err < 0) goto fail;
 
-	{
-		const u16 regs_to_write[] = {
-			REG_ADDR_UNKNOWN_0D, REG_ADDR_UNKNOWN_0E,
-			REG_ADDR_UNKNOWN_0F, rate_reg, REG_ADDR_UNKNOWN_11
-		};
-		err = tascam_write_regs(tascam, regs_to_write, ARRAY_SIZE(regs_to_write));
+		// Note: We skip 0x41 Register Writes and 0x30 Stream Start.
+		// us122l does not use them, suggesting the device defaults are sufficient
+		// or 0x11 handles the reset.
+	}
+	// =================================================================
+	// US-144MKII Specific Initialization (Advanced Routing)
+	// =================================================================
+	else {
+		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
+							  VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV,
+						MODE_VAL_CONFIG, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
+		if (err < 0)
+			goto fail;
+
+		usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR,
+						RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL,
+				  EP_AUDIO_IN, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
+		usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR,
+						RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL,
+				  EP_AUDIO_OUT, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
+
+		{
+			const u16 regs_to_write[] = {
+				REG_ADDR_UNKNOWN_0D, REG_ADDR_UNKNOWN_0E,
+				REG_ADDR_UNKNOWN_0F, rate_reg, REG_ADDR_UNKNOWN_11
+			};
+			err = tascam_write_regs(tascam, regs_to_write, ARRAY_SIZE(regs_to_write));
+			if (err < 0)
+				goto fail;
+		}
+
+		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
+							  VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV,
+							  MODE_VAL_STREAM_START, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
 		if (err < 0)
 			goto fail;
 	}
-
-	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
-						  VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV,
-					   MODE_VAL_STREAM_START, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
-	if (err < 0)
-		goto fail;
 
 	kfree(rate_payload_buf);
 	return 0;
