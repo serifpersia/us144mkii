@@ -176,10 +176,12 @@ static void tascam_decode_capture_chunk_122(const u8 *src, u32 *dst, int frames_
 	int i;
 
 	for (i = 0; i < frames_to_decode; i++) {
-		// Big Endian (Device) -> Little Endian (ALSA)
-		// src[0]=MSB, src[1]=Mid, src[2]=LSB
-		*dst++ = (src[0] << 24) | (src[1] << 16) | (src[2] << 8);
-		*dst++ = (src[3] << 24) | (src[4] << 16) | (src[5] << 8);
+		/*
+		 * Standard 24-bit Little Endian -> 32-bit S32_LE
+		 * [LSB, Mid, MSB] -> [0, LSB, Mid, MSB]
+		 */
+		*dst++ = (src[2] << 24) | (src[1] << 16) | (src[0] << 8);
+		*dst++ = (src[5] << 24) | (src[4] << 16) | (src[3] << 8);
 		src += 6;
 	}
 }

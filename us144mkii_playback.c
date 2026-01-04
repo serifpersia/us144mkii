@@ -203,20 +203,7 @@ static int tascam_playback_trigger(struct snd_pcm_substream *substream, int cmd)
 
 static void tascam_encode_playback_122(const u8 *src, u8 *dst, int frames)
 {
-	int i;
-
-	for (i = 0; i < frames; i++) {
-		dst[0] = src[2];
-		dst[1] = src[1];
-		dst[2] = src[0];
-
-		dst[3] = src[5];
-		dst[4] = src[4];
-		dst[5] = src[3];
-
-		src += 6;
-		dst += 6;
-	}
+	memcpy(dst, src, frames * US122_BYTES_PER_FRAME);
 }
 
 void playback_urb_complete(struct urb *urb)
