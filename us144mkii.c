@@ -51,7 +51,7 @@ void tascam_free_urbs(struct tascam_card *tascam)
 		if (tascam->capture_urbs[i]) {
 			size_t size;
 			if (tascam->dev_id == USB_PID_TASCAM_US122MKII)
-				size = US122_ISO_PACKETS * US122_URB_ALLOC_SIZE;
+				size = US122_ISO_PACKETS * US122_MAX_PACKET_SIZE_CAPTURE;
 			else
 				size = CAPTURE_PACKET_SIZE;
 
@@ -84,7 +84,7 @@ int tascam_alloc_urbs(struct tascam_card *tascam)
 	int i;
 
 	if (tascam->dev_id == USB_PID_TASCAM_US122MKII)
-		tascam->playback_urb_alloc_size = US122_ISO_PACKETS * US122_URB_ALLOC_SIZE;
+		tascam->playback_urb_alloc_size = US122_ISO_PACKETS * US122_MAX_PACKET_SIZE_CAPTURE;
 	else
 		tascam->playback_urb_alloc_size = PLAYBACK_URB_PACKETS * (12 + 2) * BYTES_PER_FRAME;
 
@@ -139,7 +139,7 @@ int tascam_alloc_urbs(struct tascam_card *tascam)
 				return -ENOMEM;
 			tascam->capture_urbs[i] = urb;
 
-			int alloc_size = US122_ISO_PACKETS * US122_URB_ALLOC_SIZE;
+			int alloc_size = US122_ISO_PACKETS * US122_MAX_PACKET_SIZE_CAPTURE;
 			void *buf = usb_alloc_coherent(tascam->dev, alloc_size,
 										   GFP_KERNEL, &urb->transfer_dma);
 			if (!buf)
@@ -155,8 +155,8 @@ int tascam_alloc_urbs(struct tascam_card *tascam)
 			urb->complete = capture_urb_complete_122;
 
 			for(int j=0; j < US122_ISO_PACKETS; j++) {
-				urb->iso_frame_desc[j].offset = j * US122_URB_ALLOC_SIZE;
-				urb->iso_frame_desc[j].length = US122_URB_ALLOC_SIZE;
+				urb->iso_frame_desc[j].offset = j * US122_MAX_PACKET_SIZE_CAPTURE;
+				urb->iso_frame_desc[j].length = US122_MAX_PACKET_SIZE_CAPTURE;
 			}
 		}
 	} else {
@@ -218,9 +218,6 @@ static int tascam_suspend(struct usb_interface *intf, pm_message_t message)
 	usb_kill_anchored_urbs(&tascam->capture_anchor);
 	usb_kill_anchored_urbs(&tascam->midi_anchor);
 
-	usb_control_msg(tascam->dev, usb_sndctrlpipe(tascam->dev, 0),
-					VENDOR_REQ_DEEP_SLEEP, RT_H2D_VENDOR_DEV,
-				 0x0000, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
 	return 0;
 }
 
@@ -232,9 +229,13 @@ static int tascam_resume(struct usb_interface *intf)
 	if (!tascam)
 		return 0;
 
-	err = usb_set_interface(tascam->dev, 0, 1);
-	if (err < 0)
-		return err;
+	// Only set Interface 0 for non-122MKII devices
+	if (tascam->dev_id != USB_PID_TASCAM_US122MKII) {
+		err = usb_set_interface(tascam->dev, 0, 1);
+		if (err < 0)
+			return err;
+	}
+
 	err = usb_set_interface(tascam->dev, 1, 1);
 	if (err < 0)
 		return err;
@@ -336,10 +337,13 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 		goto free_card;
 	}
 
-	err = usb_set_interface(dev, 0, 1);
-	if (err < 0) {
-		dev_err(&dev->dev, "Failed to set interface 0: %d\n", err);
-		goto free_card;
+	// 122MKII has no Interface 0 Alt 1. Skip setting it to avoid error.
+	if (tascam->dev_id != USB_PID_TASCAM_US122MKII) {
+		err = usb_set_interface(dev, 0, 1);
+		if (err < 0) {
+			dev_err(&dev->dev, "Failed to set interface 0: %d\n", err);
+			goto free_card;
+		}
 	}
 
 	err = usb_set_interface(dev, 1, 1);

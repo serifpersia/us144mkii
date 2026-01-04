@@ -176,6 +176,8 @@ static void tascam_decode_capture_chunk_122(const u8 *src, u32 *dst, int frames_
 	int i;
 
 	for (i = 0; i < frames_to_decode; i++) {
+		// Big Endian (Device) -> Little Endian (ALSA)
+		// src[0]=MSB, src[1]=Mid, src[2]=LSB
 		*dst++ = (src[0] << 24) | (src[1] << 16) | (src[2] << 8);
 		*dst++ = (src[3] << 24) | (src[4] << 16) | (src[5] << 8);
 		src += 6;
@@ -329,7 +331,7 @@ void capture_urb_complete_122(struct urb *urb)
 			frames_in_urb += frames;
 		}
 
-		urb->iso_frame_desc[i].length = US122_URB_ALLOC_SIZE;
+		urb->iso_frame_desc[i].length = US122_MAX_PACKET_SIZE_CAPTURE;
 	}
 
 	tascam->driver_capture_pos = write_pos;
