@@ -218,9 +218,6 @@ static int tascam_suspend(struct usb_interface *intf, pm_message_t message)
 	usb_kill_anchored_urbs(&tascam->capture_anchor);
 	usb_kill_anchored_urbs(&tascam->midi_anchor);
 
-	usb_control_msg(tascam->dev, usb_sndctrlpipe(tascam->dev, 0),
-					VENDOR_REQ_DEEP_SLEEP, RT_H2D_VENDOR_DEV,
-				 0x0000, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
 	return 0;
 }
 
@@ -331,13 +328,15 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 		goto free_card;
 	}
 
-	err = usb_control_msg(dev, usb_rcvctrlpipe(dev, 0),
-						  VENDOR_REQ_MODE_CONTROL, RT_D2H_VENDOR_DEV,
-					   MODE_VAL_HANDSHAKE_READ, 0x0000, tascam->scratch_buf, 1,
-					   USB_CTRL_TIMEOUT_MS);
-	if (err < 0) {
-		dev_err(&dev->dev, "Handshake failed: %d\n", err);
-		goto free_card;
+	if (tascam->dev_id != USB_PID_TASCAM_US122MKII) {
+		err = usb_control_msg(dev, usb_rcvctrlpipe(dev, 0),
+							  VENDOR_REQ_MODE_CONTROL, RT_D2H_VENDOR_DEV,
+						MODE_VAL_HANDSHAKE_READ, 0x0000, tascam->scratch_buf, 1,
+						USB_CTRL_TIMEOUT_MS);
+		if (err < 0) {
+			dev_err(&dev->dev, "Handshake failed: %d\n", err);
+			goto free_card;
+		}
 	}
 
 	// 122MKII has no Interface 0 Alt 1. Skip setting it to avoid error.

@@ -43,14 +43,12 @@ enum uac_control_selector {
 
 enum tascam_vendor_request {
 	VENDOR_REQ_REGISTER_WRITE = 0x41,
-	VENDOR_REQ_DEEP_SLEEP = 0x44,
 	VENDOR_REQ_MODE_CONTROL = 0x49,
 };
 
 enum tascam_mode_value {
 	MODE_VAL_HANDSHAKE_READ = 0x0000,
 	MODE_VAL_CONFIG = 0x0010,
-	MODE_VAL_SYSTEM_INIT = 0x0011, // Added for US-122MKII (from us122l)
 	MODE_VAL_STREAM_START = 0x0030,
 };
 
@@ -75,10 +73,9 @@ enum tascam_register {
 #define NUM_CAPTURE_URBS 8
 #define CAPTURE_PACKET_SIZE 512
 
-#define US122_CAPTURE_BYTES_PER_FRAME 64
-#define US122_PLAYBACK_BYTES_PER_FRAME 6
+#define US122_BYTES_PER_FRAME 6
 #define US122_ISO_PACKETS 8
-#define US122_URB_ALLOC_SIZE 1024
+#define US122_URB_ALLOC_SIZE 128
 
 #define MIDI_PACKET_SIZE 9
 #define MIDI_PAYLOAD_SIZE 8

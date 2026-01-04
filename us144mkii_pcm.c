@@ -56,37 +56,17 @@ int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate)
 	if (!rate_payload_buf)
 		return -ENOMEM;
 
-	// =================================================================
-	// US-122MKII Specific Initialization (Mirrors snd-usb-us122l)
-	// =================================================================
 	if (tascam->dev_id == USB_PID_TASCAM_US122MKII) {
-		// 1. Send System Init (0x11)
-		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
-							  VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV,
-						MODE_VAL_SYSTEM_INIT, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
-		if (err < 0) goto fail;
-
-		// 2. Send Config Mode (0x10)
-		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
-							  VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV,
-						MODE_VAL_CONFIG, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
-		if (err < 0) goto fail;
-
-		// 3. Set Sample Rate on Endpoint 0x81 (Capture) ONLY.
-		// us122l driver only sets it here.
 		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR,
 							  RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL,
 						EP_AUDIO_IN_122, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
 		if (err < 0) goto fail;
 
-		// Note: We skip 0x41 Register Writes and 0x30 Stream Start.
-		// us122l does not use them, suggesting the device defaults are sufficient
-		// or 0x11 handles the reset.
-	}
-	// =================================================================
-	// US-144MKII Specific Initialization (Advanced Routing)
-	// =================================================================
-	else {
+		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR,
+							  RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL,
+						EP_AUDIO_OUT, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
+		if (err < 0) goto fail;
+	} else {
 		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
 							  VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV,
 						MODE_VAL_CONFIG, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
@@ -112,7 +92,7 @@ int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate)
 
 		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
 							  VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV,
-							  MODE_VAL_STREAM_START, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
+						MODE_VAL_STREAM_START, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
 		if (err < 0)
 			goto fail;
 	}

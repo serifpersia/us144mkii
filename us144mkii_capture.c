@@ -309,7 +309,7 @@ void capture_urb_complete_122(struct urb *urb)
 
 	for (i = 0; i < urb->number_of_packets; i++) {
 		int len = urb->iso_frame_desc[i].actual_length;
-		int frames = len / 6;
+		int frames = len / US122_BYTES_PER_FRAME;
 		u8 *src = urb->transfer_buffer + urb->iso_frame_desc[i].offset;
 
 		if (frames > 0) {
@@ -321,7 +321,7 @@ void capture_urb_complete_122(struct urb *urb)
 				int part1 = buffer_size - write_pos;
 				int part2 = frames - part1;
 				tascam_decode_capture_chunk_122(src, dst, part1);
-				tascam_decode_capture_chunk_122(src + (part1 * 6),
+				tascam_decode_capture_chunk_122(src + (part1 * US122_BYTES_PER_FRAME),
 												(u32 *)runtime->dma_area, part2);
 			}
 
