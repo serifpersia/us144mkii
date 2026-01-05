@@ -144,6 +144,12 @@ int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
 	tascam->current_rate = rate;
 	spin_unlock_irqrestore(&tascam->lock, flags);
 
+	return 0;
+}
+
+void tascam_stop_pcm_work_handler(struct work_struct *work)
+{
+	struct tascam_card *tascam = container_of(work, struct tascam_card, stop_pcm_work);
 
 	if (tascam->playback_substream)
 		snd_pcm_stop(tascam->playback_substream, SNDRV_PCM_STATE_XRUN);
