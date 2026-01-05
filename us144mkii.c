@@ -85,8 +85,12 @@ int tascam_alloc_urbs(struct tascam_card *tascam)
 
 	if (is_us122mkii(tascam))
 		tascam->playback_urb_alloc_size = US122_ISO_PACKETS * US122_URB_ALLOC_SIZE;
-	else
-		tascam->playback_urb_alloc_size = PLAYBACK_URB_PACKETS * (12 + 2) * BYTES_PER_FRAME;
+	else {
+		/* US-144MKII: EP 0x02 isochronous, max 156 bytes per microframe packet
+		 * At 96kHz: 156 bytes / 12 bytes-per-frame = 13 frames max per packet
+		 * With 4 packets: need sufficient buffer for all rates without underrun */
+		tascam->playback_urb_alloc_size = PLAYBACK_URB_PACKETS * 156;
+	}
 
 	for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
 		int num_packets = (is_us122mkii(tascam)) ?

@@ -215,6 +215,8 @@ void capture_urb_complete(struct urb *urb)
 	buffer_size = runtime->buffer_size;
 	period_size = runtime->period_size;
 
+	/* EP 0x86 is bulk endpoint: each 64 bytes = 1 frame (4 channels x 4 bytes S32_LE)
+	 * Packet size variable up to 512 bytes, but payload must be 64-byte aligned */
 	if (urb->actual_length % 64 != 0)
 		dev_warn_ratelimited(&tascam->dev->dev, "Unaligned capture packet size: %d\n", urb->actual_length);
 	frames_received = urb->actual_length / 64;
