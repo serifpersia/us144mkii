@@ -53,14 +53,18 @@ enum tascam_mode_value {
 };
 
 enum tascam_register {
-	REG_ADDR_UNKNOWN_0D = 0x0d04,
-	REG_ADDR_UNKNOWN_0E = 0x0e00,
-	REG_ADDR_UNKNOWN_0F = 0x0f00,
+	/* Undocumented registers - part of device initialization sequence */
+	/* Purpose: Device state setup (see us144mkii_configure_device_for_rate) */
+	REG_ADDR_INIT_0D = 0x0d04,
+	REG_ADDR_INIT_0E = 0x0e00,
+	REG_ADDR_INIT_0F = 0x0f00,
+	/* Sample rate configuration registers (US-144MKII only) */
 	REG_ADDR_RATE_44100 = 0x1000,
 	REG_ADDR_RATE_48000 = 0x1002,
 	REG_ADDR_RATE_88200 = 0x1008,
 	REG_ADDR_RATE_96000 = 0x100a,
-	REG_ADDR_UNKNOWN_11 = 0x110b,
+	/* Undocumented finalization register (see tascam_write_regs) */
+	REG_ADDR_INIT_11 = 0x110b,
 };
 
 #define REG_VAL_ENABLE 0x0101
@@ -89,6 +93,10 @@ enum tascam_register {
 #define PLL_FILTER_DIVISOR (PLL_FILTER_OLD_WEIGHT + PLL_FILTER_NEW_WEIGHT)
 
 #define USB_CTRL_TIMEOUT_MS 1000
+
+/* Helper macros for device variant checks */
+#define is_us122mkii(tascam) ((tascam)->dev_id == USB_PID_TASCAM_US122MKII)
+#define is_us144mkii(tascam) ((tascam)->dev_id == USB_PID_TASCAM_US144MKII)
 
 struct tascam_card {
 	struct usb_device *dev;
