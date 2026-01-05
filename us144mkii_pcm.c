@@ -111,32 +111,39 @@ int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
 	unsigned int rate = params_rate(params);
 	int err;
+	unsigned long flags;
 
-	if (tascam->current_rate != rate) {
-		if (atomic_read(&tascam->playback_active) ||
-			atomic_read(&tascam->capture_active)) {
-			return -EBUSY;
-			}
-
-			usb_kill_anchored_urbs(&tascam->playback_anchor);
-		usb_kill_anchored_urbs(&tascam->feedback_anchor);
-		usb_kill_anchored_urbs(&tascam->capture_anchor);
-
-		atomic_set(&tascam->active_urbs, 0);
-
-		err = us144mkii_configure_device_for_rate(tascam, rate);
-		if (err < 0) {
-			tascam->current_rate = 0;
-			return err;
-		}
-		tascam->current_rate = rate;
+	spin_lock_irqsave(&tascam->lock, flags);
+	if (tascam->current_rate == rate) {
+		spin_unlock_irqrestore(&tascam->lock, flags);
+		return 0;
 	}
-	return 0;
-}
 
-void tascam_stop_pcm_work_handler(struct work_struct *work)
-{
-	struct tascam_card *tascam = container_of(work, struct tascam_card, stop_pcm_work);
+	if (atomic_read(&tascam->playback_active) ||
+		atomic_read(&tascam->capture_active)) {
+		spin_unlock_irqrestore(&tascam->lock, flags);
+		return -EBUSY;
+	}
+	spin_unlock_irqrestore(&tascam->lock, flags);
+
+	usb_kill_anchored_urbs(&tascam->playback_anchor);
+	usb_kill_anchored_urbs(&tascam->feedback_anchor);
+	usb_kill_anchored_urbs(&tascam->capture_anchor);
+
+	atomic_set(&tascam->active_urbs, 0);
+
+	err = us144mkii_configure_device_for_rate(tascam, rate);
+	if (err < 0) {
+		spin_lock_irqsave(&tascam->lock, flags);
+		tascam->current_rate = 0;
+		spin_unlock_irqrestore(&tascam->lock, flags);
+		return err;
+	}
+
+	spin_lock_irqsave(&tascam->lock, flags);
+	tascam->current_rate = rate;
+	spin_unlock_irqrestore(&tascam->lock, flags);
+
 
 	if (tascam->playback_substream)
 		snd_pcm_stop(tascam->playback_substream, SNDRV_PCM_STATE_XRUN);

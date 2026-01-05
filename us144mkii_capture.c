@@ -265,6 +265,7 @@ void capture_urb_complete(struct urb *urb)
 	if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
 		usb_unanchor_urb(urb);
 		atomic_dec(&tascam->active_urbs);
+		return;
 	}
 }
 
@@ -352,6 +353,7 @@ void capture_urb_complete_122(struct urb *urb)
 	if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
 		usb_unanchor_urb(urb);
 		atomic_dec(&tascam->active_urbs);
+		return;
 	}
 }
 

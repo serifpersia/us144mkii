@@ -135,13 +135,16 @@ int tascam_alloc_urbs(struct tascam_card *tascam)
 	if (is_us122mkii(tascam)) {
 		for (i = 0; i < NUM_CAPTURE_URBS; i++) {
 			struct urb *urb = usb_alloc_urb(US122_ISO_PACKETS, GFP_KERNEL);
+			int alloc_size = US122_ISO_PACKETS * US122_URB_ALLOC_SIZE;
+			void *buf;
+			int j;
+
 			if (!urb)
 				return -ENOMEM;
 			tascam->capture_urbs[i] = urb;
 
-			int alloc_size = US122_ISO_PACKETS * US122_URB_ALLOC_SIZE;
-			void *buf = usb_alloc_coherent(tascam->dev, alloc_size,
-										   GFP_KERNEL, &urb->transfer_dma);
+			buf = usb_alloc_coherent(tascam->dev, alloc_size,
+									   GFP_KERNEL, &urb->transfer_dma);
 			if (!buf)
 				return -ENOMEM;
 
@@ -154,7 +157,7 @@ int tascam_alloc_urbs(struct tascam_card *tascam)
 			urb->context = tascam;
 			urb->complete = capture_urb_complete_122;
 
-			for(int j=0; j < US122_ISO_PACKETS; j++) {
+		for (j = 0; j < US122_ISO_PACKETS; j++) {
 				urb->iso_frame_desc[j].offset = j * US122_URB_ALLOC_SIZE;
 				urb->iso_frame_desc[j].length = US122_URB_ALLOC_SIZE;
 			}
@@ -162,12 +165,13 @@ int tascam_alloc_urbs(struct tascam_card *tascam)
 	} else {
 		for (i = 0; i < NUM_CAPTURE_URBS; i++) {
 			struct urb *urb = usb_alloc_urb(0, GFP_KERNEL);
+			void *buf;
 
 			if (!urb)
 				return -ENOMEM;
 			tascam->capture_urbs[i] = urb;
-			void *buf = usb_alloc_coherent(tascam->dev, CAPTURE_PACKET_SIZE,
-										   GFP_KERNEL, &urb->transfer_dma);
+			buf = usb_alloc_coherent(tascam->dev, CAPTURE_PACKET_SIZE,
+									   GFP_KERNEL, &urb->transfer_dma);
 			if (!buf)
 				return -ENOMEM;
 			usb_fill_bulk_urb(urb, tascam->dev,
@@ -225,6 +229,8 @@ static int tascam_resume(struct usb_interface *intf)
 {
 	struct tascam_card *tascam = usb_get_intfdata(intf);
 	int err;
+	unsigned long flags;
+	int current_rate;
 
 	if (!tascam)
 		return 0;
@@ -240,8 +246,12 @@ static int tascam_resume(struct usb_interface *intf)
 	if (err < 0)
 		return err;
 
-	if (tascam->current_rate > 0)
-		us144mkii_configure_device_for_rate(tascam, tascam->current_rate);
+	spin_lock_irqsave(&tascam->lock, flags);
+	current_rate = tascam->current_rate;
+	spin_unlock_irqrestore(&tascam->lock, flags);
+
+	if (current_rate > 0)
+		us144mkii_configure_device_for_rate(tascam, current_rate);
 
 	return 0;
 }
