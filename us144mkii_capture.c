@@ -28,7 +28,7 @@ static int tascam_capture_open(struct snd_pcm_substream *substream)
 
 	substream->runtime->hw = tascam_capture_hw;
 
-	if (tascam->dev_id == USB_PID_TASCAM_US122MKII) {
+	if (is_us122mkii(tascam)) {
 		substream->runtime->hw.channels_min = 2;
 		substream->runtime->hw.channels_max = 2;
 	}
@@ -229,7 +229,6 @@ void capture_urb_complete(struct urb *urb)
 		}
 
 		write_pos = tascam->driver_capture_pos;
-
 		u32 *dma_ptr = (u32 *)(runtime->dma_area + frames_to_bytes(runtime, write_pos));
 
 		if (write_pos + frames_received <= buffer_size) {

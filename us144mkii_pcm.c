@@ -21,7 +21,7 @@ static int tascam_write_regs(struct tascam_card *tascam, const u16 *regs, size_t
 int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate)
 {
 	struct usb_device *dev = tascam->dev;
-	u8 *rate_payload_buf;
+	u8 rate_payload[3];
 	int err = 0;
 	const u8 *current_payload_src;
 	u16 rate_reg;
@@ -52,56 +52,57 @@ int us144mkii_configure_device_for_rate(struct tascam_card *tascam, int rate)
 			return -EINVAL;
 	}
 
-	rate_payload_buf = kmemdup(current_payload_src, 3, GFP_KERNEL);
-	if (!rate_payload_buf)
-		return -ENOMEM;
+	memcpy(rate_payload, current_payload_src, 3);
 
-	if (tascam->dev_id == USB_PID_TASCAM_US122MKII) {
+	if (is_us122mkii(tascam)) {
 		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR,
 							  RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL,
-						EP_AUDIO_IN_122, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
-		if (err < 0) goto fail;
+						EP_AUDIO_IN_122, rate_payload, 3, USB_CTRL_TIMEOUT_MS);
+		if (err < 0)
+			return err;
 
 		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR,
 							  RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL,
-						EP_AUDIO_OUT, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
-		if (err < 0) goto fail;
+						EP_AUDIO_OUT, rate_payload, 3, USB_CTRL_TIMEOUT_MS);
+		if (err < 0)
+			return err;
 	} else {
 		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
 							  VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV,
 						MODE_VAL_CONFIG, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
 		if (err < 0)
-			goto fail;
+			return err;
 
-		usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR,
+		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR,
 						RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL,
-				  EP_AUDIO_IN, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
-		usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR,
+				  EP_AUDIO_IN, rate_payload, 3, USB_CTRL_TIMEOUT_MS);
+		if (err < 0)
+			return err;
+
+		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), UAC_SET_CUR,
 						RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL,
-				  EP_AUDIO_OUT, rate_payload_buf, 3, USB_CTRL_TIMEOUT_MS);
+				  EP_AUDIO_OUT, rate_payload, 3, USB_CTRL_TIMEOUT_MS);
+		if (err < 0)
+			return err;
 
 		{
 			const u16 regs_to_write[] = {
-				REG_ADDR_UNKNOWN_0D, REG_ADDR_UNKNOWN_0E,
-				REG_ADDR_UNKNOWN_0F, rate_reg, REG_ADDR_UNKNOWN_11
+				REG_ADDR_INIT_0D, REG_ADDR_INIT_0E,
+				REG_ADDR_INIT_0F, rate_reg, REG_ADDR_INIT_11
 			};
 			err = tascam_write_regs(tascam, regs_to_write, ARRAY_SIZE(regs_to_write));
 			if (err < 0)
-				goto fail;
+				return err;
 		}
 
 		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
 							  VENDOR_REQ_MODE_CONTROL, RT_H2D_VENDOR_DEV,
 						MODE_VAL_STREAM_START, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
 		if (err < 0)
-			goto fail;
+			return err;
 	}
 
-	kfree(rate_payload_buf);
 	return 0;
-	fail:
-	kfree(rate_payload_buf);
-	return err;
 }
 
 int tascam_pcm_hw_params(struct snd_pcm_substream *substream,
