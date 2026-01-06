@@ -87,7 +87,8 @@ int tascam_alloc_urbs(struct tascam_card *tascam)
 {
 	int i;
 
-	tascam->playback_urb_alloc_size = PLAYBACK_URB_PACKETS * (12 + 2) * BYTES_PER_FRAME;
+	tascam->playback_urb_alloc_size = PLAYBACK_URB_PACKETS * 156;
+
 	for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
 		struct urb *urb = usb_alloc_urb(PLAYBACK_URB_PACKETS, GFP_KERNEL);
 
@@ -129,12 +130,13 @@ int tascam_alloc_urbs(struct tascam_card *tascam)
 
 	for (i = 0; i < NUM_CAPTURE_URBS; i++) {
 		struct urb *urb = usb_alloc_urb(0, GFP_KERNEL);
+		void *buf;
 
 		if (!urb)
 			return -ENOMEM;
 		tascam->capture_urbs[i] = urb;
-		void *buf = usb_alloc_coherent(tascam->dev, CAPTURE_PACKET_SIZE,
-									   GFP_KERNEL, &urb->transfer_dma);
+		buf = usb_alloc_coherent(tascam->dev, CAPTURE_PACKET_SIZE,
+								 GFP_KERNEL, &urb->transfer_dma);
 		if (!buf)
 			return -ENOMEM;
 		usb_fill_bulk_urb(urb, tascam->dev,
@@ -188,9 +190,6 @@ static int tascam_suspend(struct usb_interface *intf, pm_message_t message)
 	usb_kill_anchored_urbs(&tascam->capture_anchor);
 	usb_kill_anchored_urbs(&tascam->midi_anchor);
 
-	usb_control_msg(tascam->dev, usb_sndctrlpipe(tascam->dev, 0),
-					VENDOR_REQ_DEEP_SLEEP, RT_H2D_VENDOR_DEV,
-				 0x0000, 0x0000, NULL, 0, USB_CTRL_TIMEOUT_MS);
 	return 0;
 }
 
@@ -198,6 +197,8 @@ static int tascam_resume(struct usb_interface *intf)
 {
 	struct tascam_card *tascam = usb_get_intfdata(intf);
 	int err;
+	unsigned long flags;
+	int current_rate;
 
 	if (!tascam)
 		return 0;
@@ -205,12 +206,17 @@ static int tascam_resume(struct usb_interface *intf)
 	err = usb_set_interface(tascam->dev, 0, 1);
 	if (err < 0)
 		return err;
+
 	err = usb_set_interface(tascam->dev, 1, 1);
 	if (err < 0)
 		return err;
 
-	if (tascam->current_rate > 0)
-		us144mkii_configure_device_for_rate(tascam, tascam->current_rate);
+	spin_lock_irqsave(&tascam->lock, flags);
+	current_rate = tascam->current_rate;
+	spin_unlock_irqrestore(&tascam->lock, flags);
+
+	if (current_rate > 0)
+		us144mkii_configure_device_for_rate(tascam, current_rate);
 
 	return 0;
 }
@@ -249,6 +255,8 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	tascam->card = card;
 	tascam->iface0 = intf;
 
+	tascam->dev_id = le16_to_cpu(dev->descriptor.idProduct);
+
 	spin_lock_init(&tascam->lock);
 	init_usb_anchor(&tascam->playback_anchor);
 	init_usb_anchor(&tascam->feedback_anchor);
@@ -259,7 +267,7 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	INIT_WORK(&tascam->stop_pcm_work, tascam_stop_pcm_work_handler);
 
 	strscpy(card->driver, DRIVER_NAME, sizeof(card->driver));
-	if (le16_to_cpu(dev->descriptor.idProduct) == USB_PID_TASCAM_US144)
+	if (tascam->dev_id == USB_PID_TASCAM_US144)
 		strscpy(card->shortname, "US-144", sizeof(card->shortname));
 	else
 		strscpy(card->shortname, "US-144MKII", sizeof(card->shortname));
@@ -326,7 +334,7 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	usb_set_intfdata(intf, tascam);
 	return 0;
 
-free_card:
+	free_card:
 	snd_card_free(card);
 	atomic_dec(&dev_idx);
 	return err;

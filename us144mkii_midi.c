@@ -22,10 +22,11 @@ static void tascam_midi_out_complete(struct urb *urb)
 		spin_unlock_irqrestore(&tascam->midi_lock, flags);
 		return;
 	}
-	spin_unlock_irqrestore(&tascam->midi_lock, flags);
 
-	if (!active)
+	if (!active) {
+		spin_unlock_irqrestore(&tascam->midi_lock, flags);
 		return;
+	}
 
 	count = snd_rawmidi_transmit(substream, tascam->midi_out_buf, MIDI_PAYLOAD_SIZE);
 	if (count > 0) {
@@ -36,20 +37,18 @@ static void tascam_midi_out_complete(struct urb *urb)
 		urb->transfer_buffer_length = MIDI_PACKET_SIZE;
 		submit = true;
 	} else {
-		spin_lock_irqsave(&tascam->midi_lock, flags);
 		tascam->midi_out_active = false;
-		spin_unlock_irqrestore(&tascam->midi_lock, flags);
 	}
 
 	if (submit) {
 		usb_anchor_urb(urb, &tascam->midi_anchor);
 		if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
 			usb_unanchor_urb(urb);
-			spin_lock_irqsave(&tascam->midi_lock, flags);
 			tascam->midi_out_active = false;
-			spin_unlock_irqrestore(&tascam->midi_lock, flags);
 		}
 	}
+
+	spin_unlock_irqrestore(&tascam->midi_lock, flags);
 }
 
 static void tascam_midi_output_trigger(struct snd_rawmidi_substream *substream, int up)
@@ -57,18 +56,14 @@ static void tascam_midi_output_trigger(struct snd_rawmidi_substream *substream, 
 	struct tascam_card *tascam = substream->rmidi->private_data;
 	unsigned long flags;
 	int count;
-	bool do_submit = false;
+
+	spin_lock_irqsave(&tascam->midi_lock, flags);
 
 	if (up) {
-		spin_lock_irqsave(&tascam->midi_lock, flags);
 		tascam->midi_output = substream;
 		if (!tascam->midi_out_active) {
 			tascam->midi_out_active = true;
-			do_submit = true;
-		}
-		spin_unlock_irqrestore(&tascam->midi_lock, flags);
 
-		if (do_submit) {
 			count = snd_rawmidi_transmit(substream, tascam->midi_out_buf, MIDI_PAYLOAD_SIZE);
 			if (count > 0) {
 				if (count < MIDI_PAYLOAD_SIZE)
@@ -80,21 +75,17 @@ static void tascam_midi_output_trigger(struct snd_rawmidi_substream *substream, 
 				usb_anchor_urb(tascam->midi_out_urb, &tascam->midi_anchor);
 				if (usb_submit_urb(tascam->midi_out_urb, GFP_ATOMIC) < 0) {
 					usb_unanchor_urb(tascam->midi_out_urb);
-					spin_lock_irqsave(&tascam->midi_lock, flags);
 					tascam->midi_out_active = false;
-					spin_unlock_irqrestore(&tascam->midi_lock, flags);
 				}
 			} else {
-				spin_lock_irqsave(&tascam->midi_lock, flags);
 				tascam->midi_out_active = false;
-				spin_unlock_irqrestore(&tascam->midi_lock, flags);
 			}
 		}
 	} else {
-		spin_lock_irqsave(&tascam->midi_lock, flags);
 		tascam->midi_output = NULL;
-		spin_unlock_irqrestore(&tascam->midi_lock, flags);
 	}
+
+	spin_unlock_irqrestore(&tascam->midi_lock, flags);
 }
 
 static void tascam_midi_in_complete(struct urb *urb)

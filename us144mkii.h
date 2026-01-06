@@ -41,7 +41,6 @@ enum uac_control_selector {
 
 enum tascam_vendor_request {
 	VENDOR_REQ_REGISTER_WRITE = 0x41,
-	VENDOR_REQ_DEEP_SLEEP = 0x44,
 	VENDOR_REQ_MODE_CONTROL = 0x49,
 };
 
@@ -52,25 +51,25 @@ enum tascam_mode_value {
 };
 
 enum tascam_register {
-	REG_ADDR_UNKNOWN_0D = 0x0d04,
-	REG_ADDR_UNKNOWN_0E = 0x0e00,
-	REG_ADDR_UNKNOWN_0F = 0x0f00,
+	REG_ADDR_INIT_0D = 0x0d04,
+	REG_ADDR_INIT_0E = 0x0e00,
+	REG_ADDR_INIT_0F = 0x0f00,
 	REG_ADDR_RATE_44100 = 0x1000,
 	REG_ADDR_RATE_48000 = 0x1002,
 	REG_ADDR_RATE_88200 = 0x1008,
 	REG_ADDR_RATE_96000 = 0x100a,
-	REG_ADDR_UNKNOWN_11 = 0x110b,
+	REG_ADDR_INIT_11 = 0x110b,
 };
 
 #define REG_VAL_ENABLE 0x0101
 
-#define NUM_PLAYBACK_URBS 4
-#define PLAYBACK_URB_PACKETS 4
-#define NUM_FEEDBACK_URBS 2
+#define NUM_PLAYBACK_URBS 2
+#define PLAYBACK_URB_PACKETS 8
+#define NUM_FEEDBACK_URBS 4
 #define FEEDBACK_URB_PACKETS 1
 #define FEEDBACK_PACKET_SIZE 3
 #define NUM_CAPTURE_URBS 8
-#define CAPTURE_PACKET_SIZE 512
+#define CAPTURE_PACKET_SIZE 4096
 
 #define MIDI_PACKET_SIZE 9
 #define MIDI_PAYLOAD_SIZE 8
@@ -136,6 +135,8 @@ struct tascam_card {
 	struct snd_card *card;
 	struct snd_pcm *pcm;
 	struct snd_rawmidi *rmidi;
+
+	u16 dev_id;
 
 	u8 *scratch_buf;
 
