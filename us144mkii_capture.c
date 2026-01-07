@@ -16,8 +16,8 @@ const struct snd_pcm_hardware tascam_capture_hw = {
 	.channels_min = NUM_CHANNELS,
 	.channels_max = NUM_CHANNELS,
 	.buffer_bytes_max = 1024 * 1024,
-	.period_bytes_min = 48 * BYTES_PER_FRAME,
-	.period_bytes_max = 1024 * BYTES_PER_FRAME,
+	.period_bytes_min = 768,
+	.period_bytes_max = 1024 * 1024,
 	.periods_min = 2,
 	.periods_max = 1024,
 };

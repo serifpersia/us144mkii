@@ -15,8 +15,8 @@ const struct snd_pcm_hardware tascam_playback_hw = {
 	.channels_min = NUM_CHANNELS,
 	.channels_max = NUM_CHANNELS,
 	.buffer_bytes_max = 1024 * 1024,
-	.period_bytes_min = 48 * BYTES_PER_FRAME,
-	.period_bytes_max = 1024 * BYTES_PER_FRAME,
+	.period_bytes_min = 576,
+	.period_bytes_max = 1024 * 1024,
 	.periods_min = 2,
 	.periods_max = 1024,
 };
@@ -49,7 +49,7 @@ static int tascam_playback_prepare(struct snd_pcm_substream *substream)
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
 	struct snd_pcm_runtime *runtime = substream->runtime;
 	int i, u;
-	size_t nominal_bytes = (runtime->rate / 8000) * BYTES_PER_FRAME;
+	size_t nominal_bytes = (runtime->rate / 8000) * PLAYBACK_FRAME_SIZE;
 
 	usb_kill_anchored_urbs(&tascam->playback_anchor);
 	usb_kill_anchored_urbs(&tascam->feedback_anchor);
@@ -246,7 +246,7 @@ void playback_urb_complete(struct urb *urb)
 			frames_for_packet = 13;
 
 		urb->iso_frame_desc[i].offset = total_bytes_for_urb;
-		urb->iso_frame_desc[i].length = frames_for_packet * BYTES_PER_FRAME;
+		urb->iso_frame_desc[i].length = frames_for_packet * PLAYBACK_FRAME_SIZE;
 		total_bytes_for_urb += urb->iso_frame_desc[i].length;
 	}
 	urb->transfer_buffer_length = total_bytes_for_urb;
