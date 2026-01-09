@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * ALSA Driver for TASCAM US-122MKII (Corrected Rate Support)
+ * ALSA Driver for TASCAM US-122MKII
  *
  * Copyright (c) 2026 Šerif Rami
  */
@@ -22,7 +22,6 @@ MODULE_LICENSE("GPL");
 #define EP_CAPTURE              0x81
 #define EP_PLAYBACK             0x02
 
-/* 24-bit Stereo = 6 bytes per frame on the wire (Packed) */
 #define BYTES_PER_FRAME         6
 #define MAX_PACKET_SIZE         78
 #define PACKET_SIZE_BASE        36
@@ -50,7 +49,6 @@ struct tascam_us122mkii {
 
 	spinlock_t lock;
 
-	/* State Flags */
 	int usb_stream_running;
 	int capture_is_running;
 	int playback_is_running;
@@ -67,20 +65,12 @@ static int tascam_set_rate(struct tascam_us122mkii *tascam, unsigned int rate)
 	int err;
 	u8 payload[3];
 
-	/* Block rate change if stream is running to prevent freeze */
 	if (tascam->usb_stream_running) {
 		if (tascam->current_rate == rate) return 0;
 		printk(KERN_WARNING "TASCAM: Attempt to change rate to %d while running! Ignored.\n", rate);
 		return -EBUSY;
 	}
 
-	/*
-	 * STANDARD UAC1 FORMAT (Little Endian 3-byte integer)
-	 * 44100 (0x00AC44) -> 44 AC 00
-	 * 48000 (0x00BB80) -> 80 BB 00
-	 * 88200 (0x015888) -> 88 58 01
-	 * 96000 (0x017700) -> 00 77 01
-	 */
 	switch (rate) {
 		case 44100:
 			payload[0] = 0x44; payload[1] = 0xAC; payload[2] = 0x00;
@@ -113,8 +103,6 @@ static int tascam_set_rate(struct tascam_us122mkii *tascam, unsigned int rate)
 	return 0;
 }
 
-/* --- URB Callbacks --- */
-
 static void playback_complete(struct urb *urb)
 {
 	struct tascam_us122mkii *tascam = urb->context;
@@ -141,7 +129,7 @@ static void playback_complete(struct urb *urb)
 	runtime = (substream) ? substream->runtime : NULL;
 
 	for (i = 0; i < ISO_PACKETS_PER_URB; i++) {
-		/* Accumulator for fractional rates (44.1k / 88.2k) */
+
 		tascam->accum += tascam->current_rate;
 		frames = tascam->accum / 8000;
 		tascam->accum %= 8000;
@@ -154,7 +142,6 @@ static void playback_complete(struct urb *urb)
 
 		dst = urb->transfer_buffer + urb->iso_frame_desc[i].offset;
 
-		/* Default to silence */
 		memset(dst, 0, bytes);
 
 		if (tascam->playback_is_running && runtime) {
@@ -166,10 +153,6 @@ static void playback_complete(struct urb *urb)
 			if (pos_bytes + chunk_bytes > frames_to_bytes(runtime, runtime->buffer_size))
 				chunk_bytes = frames_to_bytes(runtime, runtime->buffer_size) - pos_bytes;
 
-			/*
-			 * S32_LE (ALSA) -> 24-bit LE (Device)
-			 * We take the TOP 24 bits (>> 8) to ensure full volume.
-			 */
 			int frames1 = bytes_to_frames(runtime, chunk_bytes);
 			for (f = 0; f < frames1; f++) {
 				dst[0] = (src[0] >> 8); dst[1] = (src[0] >> 16); dst[2] = (src[0] >> 24);
@@ -242,7 +225,6 @@ static void capture_complete(struct urb *urb)
 			if (pos_bytes + chunk > frames_to_bytes(runtime, runtime->buffer_size))
 				chunk = frames_to_bytes(runtime, runtime->buffer_size) - pos_bytes;
 
-			/* Decode 24-bit LE -> S32_LE (Pad LSB with 0) */
 			int frames1 = bytes_to_frames(runtime, chunk);
 			for (f = 0; f < frames1; f++) {
 				dst[0] = (src[2] << 24) | (src[1] << 16) | (src[0] << 8);
@@ -266,7 +248,6 @@ static void capture_complete(struct urb *urb)
 		}
 	}
 
-	/* Reset descriptors */
 	for (i = 0; i < ISO_PACKETS_PER_URB; i++) {
 		urb->iso_frame_desc[i].offset = i * MAX_PACKET_SIZE;
 		urb->iso_frame_desc[i].length = MAX_PACKET_SIZE;
@@ -280,8 +261,6 @@ static void capture_complete(struct urb *urb)
 
 	usb_submit_urb(urb, GFP_ATOMIC);
 }
-
-/* --- ALSA Operations --- */
 
 static int pcm_open(struct snd_pcm_substream *substream)
 {
@@ -340,7 +319,6 @@ static int pcm_close(struct snd_pcm_substream *substream)
 static int pcm_hw_params(struct snd_pcm_substream *substream, struct snd_pcm_hw_params *params)
 {
 	struct tascam_us122mkii *tascam = snd_pcm_substream_chip(substream);
-	/* Attempt to set rate on hardware */
 	return tascam_set_rate(tascam, params_rate(params));
 }
 
@@ -352,7 +330,6 @@ static int pcm_prepare(struct snd_pcm_substream *substream)
 		tascam->capture_hw_ptr = 0;
 	else {
 		tascam->playback_hw_ptr = 0;
-		/* Reset accumulator only if we are the ones starting the stream */
 		if (!tascam->usb_stream_running) tascam->accum = 0;
 	}
 	spin_unlock_irq(&tascam->lock);
@@ -454,7 +431,7 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 	sprintf(card->longname, "%s at bus %d device %d", card->shortname, dev->bus->busnum, dev->devnum);
 
 	usb_set_interface(dev, 1, 1);
-	tascam_set_rate(tascam, 48000); /* Init 48k */
+	tascam_set_rate(tascam, 48000);
 
 	alloc_size = ISO_PACKETS_PER_URB * MAX_PACKET_SIZE;
 
