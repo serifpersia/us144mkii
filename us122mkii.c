@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * ALSA Driver for TASCAM US-122MKII (Duplex 48kHz Only)
+ * ALSA Driver for TASCAM US-122MKII (Duplex 48kHz Implicit Feedback)
  *
  * Copyright (c) 2026 Šerif Rami <ramiserifpersia@gmail.com>
  */
@@ -33,7 +33,8 @@ MODULE_LICENSE("GPL");
 #define PACKET_SIZE             36
 #define MAX_PACKET_SIZE         36 /* Strictly 48kHz */
 
-#define NUM_URBS                2
+
+#define NUM_URBS                4
 #define ISO_PACKETS_PER_URB     8
 
 #define RT_H2D_CLASS_EP         (USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_ENDPOINT)
@@ -66,16 +67,29 @@ struct tascam_us122mkii {
 };
 
 /*
- * Fixed 48kHz Rate Setting
- * Payload: 80 80 BB (Little Endian for 48000Hz?)
- * Based on logs, Tascam US-122MKII uses this specific sequence for 48k.
+ * Fixed 48kHz Rate Setting.
+ * MUST use kmalloc for usb_control_msg data (no stack memory allowed for DMA).
  */
 static int tascam_set_rate_48k(struct usb_device *dev)
 {
-	u8 rate_payload[3] = { 0x80, 0x80, 0xbb }; /* Fixed 48kHz */
-	return usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
-						   UAC_SET_CUR, RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL,
-						EP_CAPTURE, rate_payload, 3, 1000);
+	u8 *rate_payload;
+	int err;
+
+	rate_payload = kmalloc(3, GFP_KERNEL);
+	if (!rate_payload)
+		return -ENOMEM;
+
+	/* 48000Hz -> 80 80 BB (Little Endian) */
+	rate_payload[0] = 0x80;
+	rate_payload[1] = 0x80;
+	rate_payload[2] = 0xbb;
+
+	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0),
+						  UAC_SET_CUR, RT_H2D_CLASS_EP, UAC_SAMPLING_FREQ_CONTROL,
+					   EP_CAPTURE, rate_payload, 3, 1000);
+
+	kfree(rate_payload);
+	return err;
 }
 
 /* --- Packet Processing Helpers --- */
@@ -98,6 +112,7 @@ static inline void process_capture_data(struct tascam_us122mkii *tascam,
 		int chunk1 = bytes_to_frames(runtime, frames_to_bytes(runtime, runtime->buffer_size) - pos_bytes);
 		int chunk2 = frames - chunk1;
 
+		/* Convert 24-bit USB (B0 B1 B2) to 32-bit ALSA (00 B0 B1 B2) MSB aligned */
 		for (i = 0; i < chunk1; i++) {
 			dst[0] = (src[2] << 24) | (src[1] << 16) | (src[0] << 8);
 			dst[1] = (src[5] << 24) | (src[4] << 16) | (src[3] << 8);
@@ -138,6 +153,7 @@ static inline void prepare_playback_data(struct tascam_us122mkii *tascam,
 
 	src = (u32 *)(runtime->dma_area + pos_bytes);
 
+	/* Convert 32-bit ALSA to 24-bit USB */
 	if (pos_bytes + frames_to_bytes(runtime, frames) > frames_to_bytes(runtime, runtime->buffer_size)) {
 		int chunk1 = bytes_to_frames(runtime, frames_to_bytes(runtime, runtime->buffer_size) - pos_bytes);
 		int chunk2 = frames - chunk1;
@@ -180,7 +196,7 @@ static void playback_complete(struct urb *urb)
 		snd_pcm_period_elapsed(tascam->playback_substream);
 	spin_unlock_irqrestore(&tascam->lock, flags);
 
-	/* DO NOT resubmit here. Capture callback submits this. */
+	/* DO NOT resubmit here. Capture callback submits this URB to sync timing. */
 }
 
 static void capture_complete(struct urb *urb)
@@ -195,7 +211,7 @@ static void capture_complete(struct urb *urb)
 	if (urb->status == -ENOENT || urb->status == -ECONNRESET || urb->status == -ESHUTDOWN)
 		return;
 
-	/* Identify which URB index completed to pair with playback URB */
+	/* Identify which URB index completed */
 	for (i = 0; i < NUM_URBS; i++) {
 		if (tascam->capture_urbs[i] == urb) {
 			urb_idx = i;
@@ -216,6 +232,7 @@ static void capture_complete(struct urb *urb)
 	if (tascam->playback_is_running && tascam->playback_substream)
 		pb_rt = tascam->playback_substream->runtime;
 
+	/* Select the paired Playback URB */
 	if (urb_idx >= 0)
 		pb_urb = tascam->playback_urbs[urb_idx];
 
@@ -227,11 +244,12 @@ static void capture_complete(struct urb *urb)
 		if (cap_rt && len > 0)
 			process_capture_data(tascam, cap_rt, cap_src, len);
 
-		/* 2. Process Playback (Implicit Sync) */
+		/* 2. Process Playback (Implicit Sync: Input Length = Output Length) */
 		if (pb_urb) {
 			/* Force output length to match input length (Lock to Clock) */
 			pb_urb->iso_frame_desc[i].offset = i * MAX_PACKET_SIZE;
-			pb_urb->iso_frame_desc[i].length = len ? len : PACKET_SIZE; /* Fallback to 36 if len 0 */
+			/* Handle case where device sends 0-length packet */
+			pb_urb->iso_frame_desc[i].length = len ? len : PACKET_SIZE;
 			pb_urb->iso_frame_desc[i].status = 0;
 
 			u8 *pb_dst = pb_urb->transfer_buffer + pb_urb->iso_frame_desc[i].offset;
@@ -239,7 +257,7 @@ static void capture_complete(struct urb *urb)
 			if (pb_rt && len > 0) {
 				prepare_playback_data(tascam, pb_rt, pb_dst, len);
 			} else {
-				/* Send silence if not playing or len is 0 */
+				/* Send silence if not playing or empty slot */
 				memset(pb_dst, 0, pb_urb->iso_frame_desc[i].length);
 			}
 		}
@@ -279,7 +297,7 @@ static int pcm_open(struct snd_pcm_substream *substream)
 		.rate_min = 48000, .rate_max = 48000,
 		.channels_min = 2, .channels_max = 2,
 		.buffer_bytes_max = 1024 * 1024,
-		.period_bytes_min = 384, /* 48 frames * 8 bytes */
+		.period_bytes_min = 384,
 		.period_bytes_max = 1024 * 1024,
 		.periods_min = 2, .periods_max = 1024,
 	};
@@ -310,9 +328,9 @@ static int pcm_close(struct snd_pcm_substream *substream)
 	}
 
 	if (!tascam->capture_substream && !tascam->playback_substream) {
-		/* Both streams closed, stop physical USB */
 		atomic_set(&tascam->stream_running, 0);
 		spin_unlock_irq(&tascam->lock);
+		/* Safe to kill anchored URBs here */
 		usb_kill_anchored_urbs(&tascam->anchor);
 	} else {
 		spin_unlock_irq(&tascam->lock);
@@ -324,7 +342,6 @@ static int pcm_close(struct snd_pcm_substream *substream)
 static int pcm_hw_params(struct snd_pcm_substream *substream, struct snd_pcm_hw_params *params)
 {
 	struct tascam_us122mkii *tascam = snd_pcm_substream_chip(substream);
-	/* Force 48kHz on device */
 	return tascam_set_rate_48k(tascam->dev);
 }
 
@@ -360,14 +377,11 @@ static int pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 		if (atomic_read(&tascam->stream_running) == 0) {
 			atomic_set(&tascam->stream_running, 1);
 
-			/*
-			 * CRITICAL: Submit CAPTURE URBs only.
-			 * The Capture Callback will submit the Playback URBs (Implicit Feedback).
-			 */
 			for (i = 0; i < NUM_URBS; i++) {
-				/* Pre-anchor playback URBs so they are ready */
+				/* Anchor Playback (so it's ready for completion callback) */
 				usb_anchor_urb(tascam->playback_urbs[i], &tascam->anchor);
 
+				/* Anchor and Submit Capture (The Master Clock) */
 				usb_anchor_urb(tascam->capture_urbs[i], &tascam->anchor);
 				if ((err = usb_submit_urb(tascam->capture_urbs[i], GFP_ATOMIC)) < 0) {
 					atomic_set(&tascam->stream_running, 0);
@@ -460,7 +474,7 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 			tascam->capture_urbs[i]->iso_frame_desc[j].length = MAX_PACKET_SIZE;
 		}
 
-		/* Playback URB (Slave) - Zero it out initially */
+		/* Playback URB (Slave) */
 		tascam->playback_urbs[i] = usb_alloc_urb(ISO_PACKETS_PER_URB, GFP_KERNEL);
 		tascam->playback_urbs[i]->transfer_buffer = usb_alloc_coherent(dev, alloc_size, GFP_KERNEL, &tascam->playback_urbs[i]->transfer_dma);
 		memset(tascam->playback_urbs[i]->transfer_buffer, 0, alloc_size);
@@ -473,7 +487,6 @@ static int tascam_probe(struct usb_interface *intf, const struct usb_device_id *
 		tascam->playback_urbs[i]->complete = playback_complete;
 		tascam->playback_urbs[i]->number_of_packets = ISO_PACKETS_PER_URB;
 
-		/* Playback descriptors are set dynamically in capture_complete, but safe to init */
 		for (j = 0; j < ISO_PACKETS_PER_URB; j++) {
 			tascam->playback_urbs[i]->iso_frame_desc[j].offset = j * MAX_PACKET_SIZE;
 			tascam->playback_urbs[i]->iso_frame_desc[j].length = MAX_PACKET_SIZE;
@@ -508,7 +521,6 @@ static void tascam_disconnect(struct usb_interface *intf)
 	if (!card) return;
 	tascam = card->private_data;
 
-	/* Stop Everything */
 	spin_lock_irq(&tascam->lock);
 	atomic_set(&tascam->stream_running, 0);
 	tascam->capture_is_running = 0;
