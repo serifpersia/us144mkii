@@ -1,6 +1,7 @@
 # ALSA Driver for TASCAM US-144MKII
 
-An unofficial ALSA kernel module for the TASCAM US-144MKII USB audio interface.
+An unofficial ALSA kernel module for the TASCAM US-144MKII & US-144 USB audio interface.
+
 For TASCAM US-122MKII check us122mkii branch.
 
 ## 📢 Project Status
