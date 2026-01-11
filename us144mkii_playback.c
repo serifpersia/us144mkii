@@ -37,9 +37,10 @@ static int tascam_playback_close(struct snd_pcm_substream *substream)
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
 
 	atomic_set(&tascam->playback_active, 0);
-	cancel_work_sync(&tascam->stop_pcm_work);
+
 	usb_kill_anchored_urbs(&tascam->playback_anchor);
 	usb_kill_anchored_urbs(&tascam->feedback_anchor);
+
 	tascam->playback_substream = NULL;
 	return 0;
 }
@@ -58,7 +59,9 @@ static int tascam_playback_prepare(struct snd_pcm_substream *substream)
 	tascam->playback_frames_consumed = 0;
 	tascam->last_pb_period_pos = 0;
 	tascam->feedback_synced = false;
-	tascam->feedback_urb_skip_count = NUM_FEEDBACK_URBS;
+
+	tascam->feedback_urb_skip_count = 4;
+
 	tascam->phase_accum = 0;
 	tascam->freq_q16 = div_u64(((u64)runtime->rate << 16), 8000);
 
@@ -75,14 +78,18 @@ static int tascam_playback_prepare(struct snd_pcm_substream *substream)
 
 	for (u = 0; u < NUM_PLAYBACK_URBS; u++) {
 		struct urb *urb = tascam->playback_urbs[u];
-		int num_packets = PLAYBACK_URB_PACKETS;
+		size_t total_bytes = 0;
 
-		urb->number_of_packets = num_packets;
-		urb->transfer_buffer_length = num_packets * nominal_bytes;
-		for (i = 0; i < num_packets; i++) {
+		urb->number_of_packets = PLAYBACK_URB_PACKETS;
+
+		for (i = 0; i < PLAYBACK_URB_PACKETS; i++) {
 			urb->iso_frame_desc[i].offset = i * nominal_bytes;
 			urb->iso_frame_desc[i].length = nominal_bytes;
+			total_bytes += nominal_bytes;
 		}
+
+		urb->transfer_buffer_length = total_bytes;
+		memset(urb->transfer_buffer, 0, total_bytes);
 	}
 	return 0;
 }
@@ -92,94 +99,80 @@ static snd_pcm_uframes_t tascam_playback_pointer(struct snd_pcm_substream *subst
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
 	unsigned long flags;
 	u64 pos;
-	snd_pcm_uframes_t buffer_size = substream->runtime->buffer_size;
 
 	if (!atomic_read(&tascam->playback_active))
 		return 0;
+
 	spin_lock_irqsave(&tascam->lock, flags);
 	pos = tascam->playback_frames_consumed;
 	spin_unlock_irqrestore(&tascam->lock, flags);
 
-	return (snd_pcm_uframes_t)(pos % buffer_size);
+	return (snd_pcm_uframes_t)(pos % substream->runtime->buffer_size);
 }
 
 static int tascam_playback_trigger(struct snd_pcm_substream *substream, int cmd)
 {
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
 	int i, ret = 0;
-	bool start = false;
-	bool stop = false;
 	unsigned long flags;
 
-	spin_lock_irqsave(&tascam->lock, flags);
 	switch (cmd) {
 		case SNDRV_PCM_TRIGGER_START:
 		case SNDRV_PCM_TRIGGER_RESUME:
-			if (!atomic_read(&tascam->playback_active)) {
-				atomic_set(&tascam->playback_active, 1);
-				tascam->feedback_synced = false;
-				tascam->feedback_urb_skip_count = NUM_FEEDBACK_URBS;
-				start = true;
+			spin_lock_irqsave(&tascam->lock, flags);
+			if (atomic_read(&tascam->playback_active)) {
+				spin_unlock_irqrestore(&tascam->lock, flags);
+				return 0;
+			}
+			atomic_set(&tascam->playback_active, 1);
+			tascam->feedback_synced = false;
+			spin_unlock_irqrestore(&tascam->lock, flags);
+
+			for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
+				usb_anchor_urb(tascam->feedback_urbs[i], &tascam->feedback_anchor);
+				if (usb_submit_urb(tascam->feedback_urbs[i], GFP_ATOMIC) < 0) {
+					usb_unanchor_urb(tascam->feedback_urbs[i]);
+					ret = -EIO;
+					goto error;
+				}
+				atomic_inc(&tascam->active_urbs);
+			}
+
+			for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
+				usb_anchor_urb(tascam->playback_urbs[i], &tascam->playback_anchor);
+				if (usb_submit_urb(tascam->playback_urbs[i], GFP_ATOMIC) < 0) {
+					usb_unanchor_urb(tascam->playback_urbs[i]);
+					ret = -EIO;
+					goto error;
+				}
+				atomic_inc(&tascam->active_urbs);
 			}
 			break;
+
 		case SNDRV_PCM_TRIGGER_STOP:
 		case SNDRV_PCM_TRIGGER_SUSPEND:
 		case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
 			atomic_set(&tascam->playback_active, 0);
-			stop = true;
+			for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
+				if (tascam->playback_urbs[i])
+					usb_unlink_urb(tascam->playback_urbs[i]);
+			}
+			for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
+				if (tascam->feedback_urbs[i])
+					usb_unlink_urb(tascam->feedback_urbs[i]);
+			}
 			break;
+
 		default:
-			ret = -EINVAL;
-			break;
-	}
-	spin_unlock_irqrestore(&tascam->lock, flags);
-
-	if (stop) {
-		smp_mb();
-		for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
-			if (tascam->feedback_urbs[i])
-				usb_unlink_urb(tascam->feedback_urbs[i]);
-		}
-		for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
-			if (tascam->playback_urbs[i])
-				usb_unlink_urb(tascam->playback_urbs[i]);
-		}
+			return -EINVAL;
 	}
 
-	if (start) {
-		for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
-			usb_anchor_urb(tascam->feedback_urbs[i], &tascam->feedback_anchor);
-			if (usb_submit_urb(tascam->feedback_urbs[i], GFP_ATOMIC) < 0) {
-				usb_unanchor_urb(tascam->feedback_urbs[i]);
-				atomic_set(&tascam->playback_active, 0);
-				smp_mb();
-				for (int j = 0; j < i; j++)
-					usb_unlink_urb(tascam->feedback_urbs[j]);
-				ret = -EIO;
-				goto error;
-			}
-			atomic_inc(&tascam->active_urbs);
-		}
-		for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
-			usb_anchor_urb(tascam->playback_urbs[i], &tascam->playback_anchor);
-			if (usb_submit_urb(tascam->playback_urbs[i], GFP_ATOMIC) < 0) {
-				usb_unanchor_urb(tascam->playback_urbs[i]);
-				atomic_set(&tascam->playback_active, 0);
-				smp_mb();
-				for (int j = 0; j < NUM_FEEDBACK_URBS; j++)
-					usb_unlink_urb(tascam->feedback_urbs[j]);
-				for (int j = 0; j < i; j++)
-					usb_unlink_urb(tascam->playback_urbs[j]);
-				ret = -EIO;
-				goto error;
-			}
-			atomic_inc(&tascam->active_urbs);
-		}
-	} else if (stop && ret == 0) {
-		schedule_work(&tascam->stop_work);
-	}
+	return 0;
 
 	error:
+	atomic_set(&tascam->playback_active, 0);
+	usb_kill_anchored_urbs(&tascam->playback_anchor);
+	usb_kill_anchored_urbs(&tascam->feedback_anchor);
 	return ret;
 }
 
@@ -197,43 +190,23 @@ void playback_urb_complete(struct urb *urb)
 	struct snd_pcm_substream *substream;
 	struct snd_pcm_runtime *runtime;
 	size_t total_bytes_for_urb = 0;
-	snd_pcm_uframes_t offset_frames;
 	snd_pcm_uframes_t frames_to_copy;
 	int i;
 	unsigned long flags;
 	bool need_period_elapsed = false;
-	snd_pcm_uframes_t buffer_size, period_size;
 
-	if (!tascam)
-		return;
+	if (urb->status == -ENOENT || urb->status == -ECONNRESET ||
+		urb->status == -ESHUTDOWN || !tascam) {
+		goto exit_clear;
+		}
 
-	if (urb->status) {
-		usb_unanchor_urb(urb);
-		atomic_dec(&tascam->active_urbs);
-		return;
-	}
+		if (!atomic_read(&tascam->playback_active))
+			goto exit_clear;
 
 	substream = tascam->playback_substream;
-	if (!substream || !substream->runtime) {
-		atomic_dec(&tascam->active_urbs);
-		return;
-	}
 	runtime = substream->runtime;
-	if (!runtime->dma_area) {
-		atomic_dec(&tascam->active_urbs);
-		return;
-	}
-
-	buffer_size = runtime->buffer_size;
-	period_size = runtime->period_size;
 
 	spin_lock_irqsave(&tascam->lock, flags);
-
-	if (!atomic_read(&tascam->playback_active)) {
-		spin_unlock_irqrestore(&tascam->lock, flags);
-		atomic_dec(&tascam->active_urbs);
-		return;
-	}
 
 	for (i = 0; i < urb->number_of_packets; i++) {
 		unsigned int frames_for_packet;
@@ -242,8 +215,8 @@ void playback_urb_complete(struct urb *urb)
 		frames_for_packet = tascam->phase_accum >> 16;
 		tascam->phase_accum &= 0xFFFF;
 
-		if (frames_for_packet > 13)
-			frames_for_packet = 13;
+		if (frames_for_packet > MAX_FRAMES_PER_PACKET)
+			frames_for_packet = MAX_FRAMES_PER_PACKET;
 
 		urb->iso_frame_desc[i].offset = total_bytes_for_urb;
 		urb->iso_frame_desc[i].length = frames_for_packet * PLAYBACK_FRAME_SIZE;
@@ -251,17 +224,13 @@ void playback_urb_complete(struct urb *urb)
 	}
 	urb->transfer_buffer_length = total_bytes_for_urb;
 
-	offset_frames = tascam->driver_playback_pos;
-	frames_to_copy = bytes_to_frames(runtime, total_bytes_for_urb);
-
-	tascam->driver_playback_pos = (offset_frames + frames_to_copy) % buffer_size;
-
 	if (total_bytes_for_urb > 0) {
 		u8 *dst_buf = urb->transfer_buffer;
-		size_t ptr_bytes = frames_to_bytes(runtime, offset_frames);
+		size_t ptr_bytes = frames_to_bytes(runtime, tascam->driver_playback_pos);
+		frames_to_copy = bytes_to_frames(runtime, total_bytes_for_urb);
 
-		if (offset_frames + frames_to_copy > buffer_size) {
-			size_t part1 = buffer_size - offset_frames;
+		if (tascam->driver_playback_pos + frames_to_copy > runtime->buffer_size) {
+			size_t part1 = runtime->buffer_size - tascam->driver_playback_pos;
 			size_t part1_bytes = frames_to_bytes(runtime, part1);
 
 			memcpy(dst_buf, runtime->dma_area + ptr_bytes, part1_bytes);
@@ -269,15 +238,15 @@ void playback_urb_complete(struct urb *urb)
 		} else {
 			memcpy(dst_buf, runtime->dma_area + ptr_bytes, total_bytes_for_urb);
 		}
-	}
 
-	tascam->playback_frames_consumed += frames_to_copy;
+		tascam->driver_playback_pos += frames_to_copy;
+		if (tascam->driver_playback_pos >= runtime->buffer_size)
+			tascam->driver_playback_pos -= runtime->buffer_size;
 
-	if (period_size > 0) {
-		u64 current_period = div_u64(tascam->playback_frames_consumed, period_size);
+		tascam->playback_frames_consumed += frames_to_copy;
 
-		if (current_period > tascam->last_pb_period_pos) {
-			tascam->last_pb_period_pos = current_period;
+		if (div_u64(tascam->playback_frames_consumed, runtime->period_size) > tascam->last_pb_period_pos) {
+			tascam->last_pb_period_pos = div_u64(tascam->playback_frames_consumed, runtime->period_size);
 			need_period_elapsed = true;
 		}
 	}
@@ -287,11 +256,14 @@ void playback_urb_complete(struct urb *urb)
 		snd_pcm_period_elapsed(substream);
 
 	usb_anchor_urb(urb, &tascam->playback_anchor);
-	if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
-		usb_unanchor_urb(urb);
-		atomic_dec(&tascam->active_urbs);
-		return;
-	}
+	if (usb_submit_urb(urb, GFP_ATOMIC) < 0)
+		goto exit_clear;
+
+	return;
+
+	exit_clear:
+	usb_unanchor_urb(urb);
+	atomic_dec(&tascam->active_urbs);
 }
 
 /**
@@ -308,27 +280,16 @@ void playback_urb_complete(struct urb *urb)
 void feedback_urb_complete(struct urb *urb)
 {
 	struct tascam_card *tascam = urb->context;
-	int ret, p;
 	unsigned long flags;
-	bool playback_active;
+	int p;
 
-	if (!tascam)
-		return;
-
-	if (urb->status) {
+	if (urb->status || !tascam || !atomic_read(&tascam->playback_active)) {
 		usb_unanchor_urb(urb);
 		atomic_dec(&tascam->active_urbs);
 		return;
 	}
 
 	spin_lock_irqsave(&tascam->lock, flags);
-	playback_active = atomic_read(&tascam->playback_active);
-	if (!playback_active) {
-		spin_unlock_irqrestore(&tascam->lock, flags);
-		usb_unanchor_urb(urb);
-		atomic_dec(&tascam->active_urbs);
-		return;
-	}
 
 	if (tascam->feedback_urb_skip_count > 0) {
 		tascam->feedback_urb_skip_count--;
@@ -337,15 +298,21 @@ void feedback_urb_complete(struct urb *urb)
 	}
 
 	for (p = 0; p < urb->number_of_packets; p++) {
-		if (urb->iso_frame_desc[p].status == 0 && urb->iso_frame_desc[p].actual_length >= 3) {
-
+		if (urb->iso_frame_desc[p].status == 0 && urb->iso_frame_desc[p].actual_length >= 1) {
 			u8 *data = (u8 *)urb->transfer_buffer + urb->iso_frame_desc[p].offset;
-			u32 sum_frames_3ms = data[0] + data[1] + data[2];
-			u32 target_freq_q16 = (sum_frames_3ms * 65536) / 24;
+			u32 sum_frames_3ms;
+			u32 target_freq_q16;
+
+			if (urb->iso_frame_desc[p].actual_length >= 3) {
+				sum_frames_3ms = data[0] + data[1] + data[2];
+			} else {
+				sum_frames_3ms = data[0] * 3;
+			}
+
+			target_freq_q16 = (sum_frames_3ms << 16) / 24;
 
 			tascam->freq_q16 = (tascam->freq_q16 * PLL_FILTER_OLD_WEIGHT +
-			target_freq_q16 * PLL_FILTER_NEW_WEIGHT +
-			(PLL_FILTER_DIVISOR >> 1)) / PLL_FILTER_DIVISOR;
+			target_freq_q16 * PLL_FILTER_NEW_WEIGHT) / PLL_FILTER_DIVISOR;
 
 			tascam->feedback_synced = true;
 		}
@@ -354,8 +321,7 @@ void feedback_urb_complete(struct urb *urb)
 
 	resubmit:
 	usb_anchor_urb(urb, &tascam->feedback_anchor);
-	ret = usb_submit_urb(urb, GFP_ATOMIC);
-	if (ret < 0) {
+	if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
 		usb_unanchor_urb(urb);
 		atomic_dec(&tascam->active_urbs);
 	}
