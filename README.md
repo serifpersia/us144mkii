@@ -21,7 +21,8 @@ For TASCAM US-122MKII check us122mkii branch.
 
 This is an out-of-tree kernel module, meaning you must compile it against the headers for your specific kernel version.
 
-For Arch users, a community-maintained DKMS package is available in AUR.
+Old version of this driver has been merged and is available on rolling release distros like Arch(6.18.x).
+For Arch users, a community-maintained DKMS package is available in AUR if user intends to install improved driver.
 Install it via:
 ```bash
 paru -S us144mkii-dkms-git
