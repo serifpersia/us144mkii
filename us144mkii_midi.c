@@ -93,7 +93,6 @@ static void tascam_midi_in_complete(struct urb *urb)
 	struct tascam_card *tascam = urb->context;
 	struct snd_rawmidi_substream *substream;
 	unsigned long flags;
-	int i;
 
 	if (urb->status)
 		return;
@@ -104,12 +103,14 @@ static void tascam_midi_in_complete(struct urb *urb)
 
 	if (urb->actual_length == MIDI_PACKET_SIZE && substream) {
 		u8 *data = urb->transfer_buffer;
+		int len = 0;
 
-		for (i = 0; i < MIDI_PAYLOAD_SIZE; i++) {
-			if (data[i] == 0xFD)
-				break;
-			snd_rawmidi_receive(substream, &data[i], 1);
-		}
+		/* Find the actual length of the MIDI message (stop at 0xFD padding) */
+		while (len < MIDI_PAYLOAD_SIZE && data[len] != 0xFD)
+			len++;
+
+		if (len > 0)
+			snd_rawmidi_receive(substream, data, len);
 	}
 
 	usb_anchor_urb(urb, &tascam->midi_anchor);
@@ -123,10 +124,11 @@ static void tascam_midi_input_trigger(struct snd_rawmidi_substream *substream, i
 	unsigned long flags;
 
 	spin_lock_irqsave(&tascam->midi_lock, flags);
-	if (up)
+	if (up) {
 		tascam->midi_input = substream;
-	else
+	} else {
 		tascam->midi_input = NULL;
+	}
 	spin_unlock_irqrestore(&tascam->midi_lock, flags);
 }
 

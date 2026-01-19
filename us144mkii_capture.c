@@ -73,7 +73,7 @@ static snd_pcm_uframes_t tascam_capture_pointer(struct snd_pcm_substream *substr
 static int tascam_capture_trigger(struct snd_pcm_substream *substream, int cmd)
 {
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
-	int i, u, ret = 0;
+	int i, ret = 0;
 	bool start = false;
 	bool stop = false;
 	unsigned long flags;
@@ -97,17 +97,9 @@ static int tascam_capture_trigger(struct snd_pcm_substream *substream, int cmd)
 			ret = -EINVAL;
 			break;
 	}
-	spin_unlock_irqrestore(&tascam->lock, flags);
 
 	if (stop) {
-		smp_mb();
-		for (i = 0; i < NUM_CAPTURE_URBS; i++) {
-			if (tascam->capture_urbs[i])
-				usb_unlink_urb(tascam->capture_urbs[i]);
-		}
-
 		if (tascam->running_ghost_playback) {
-			atomic_set(&tascam->playback_active, 0);
 			tascam->running_ghost_playback = false;
 
 			for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
@@ -136,8 +128,8 @@ static int tascam_capture_trigger(struct snd_pcm_substream *substream, int cmd)
 			atomic_inc(&tascam->active_urbs);
 		}
 
-		if (!atomic_read(&tascam->playback_active)) {
-			atomic_set(&tascam->playback_active, 1);
+		if (ret == 0 && !atomic_read(&tascam->playback_active)) {
+			int u;
 			tascam->running_ghost_playback = true;
 			tascam->phase_accum = 0;
 			tascam->freq_q16 = div_u64(((u64)tascam->current_rate << 16), 8000);
@@ -155,7 +147,6 @@ static int tascam_capture_trigger(struct snd_pcm_substream *substream, int cmd)
 				usb_anchor_urb(f_urb, &tascam->feedback_anchor);
 				if (usb_submit_urb(f_urb, GFP_ATOMIC) < 0) {
 					usb_unanchor_urb(f_urb);
-					atomic_dec(&tascam->active_urbs);
 				} else {
 					atomic_inc(&tascam->active_urbs);
 				}
@@ -177,39 +168,41 @@ static int tascam_capture_trigger(struct snd_pcm_substream *substream, int cmd)
 				usb_anchor_urb(urb, &tascam->playback_anchor);
 				if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
 					usb_unanchor_urb(urb);
-					atomic_dec(&tascam->active_urbs);
 				} else {
 					atomic_inc(&tascam->active_urbs);
 				}
 			}
 		}
 	}
+	spin_unlock_irqrestore(&tascam->lock, flags);
 	return ret;
 }
 
 static inline void tascam_unpack_8bytes(const u8 *src, u8 *out_bit0, u8 *out_bit1)
 {
-	u64 val = get_unaligned_le64(src);
+	/* The hardware sends bits in a layout that requires both transposition
+	 * and bit-reversal within the result. swab64() + Butterfly Transpose
+	 * achieves exactly the same mapping as the original bit-by-bit loop.
+	 */
+	u64 x = get_unaligned_le64(src);
+	u64 t;
 
-	*out_bit0 =
-	(((val >> 0)  & 1) << 7) |
-	(((val >> 8)  & 1) << 6) |
-	(((val >> 16) & 1) << 5) |
-	(((val >> 24) & 1) << 4) |
-	(((val >> 32) & 1) << 3) |
-	(((val >> 40) & 1) << 2) |
-	(((val >> 48) & 1) << 1) |
-	(((val >> 56) & 1) << 0);
+	/* Stage 0: Reverse byte order to handle the hardware's MSB-first nature */
+	x = __builtin_bswap64(x);
 
-	*out_bit1 =
-	(((val >> 1)  & 1) << 7) |
-	(((val >> 9)  & 1) << 6) |
-	(((val >> 17) & 1) << 5) |
-	(((val >> 25) & 1) << 4) |
-	(((val >> 33) & 1) << 3) |
-	(((val >> 41) & 1) << 2) |
-	(((val >> 49) & 1) << 1) |
-	(((val >> 57) & 1) << 0);
+	/* 8x8 Bit Transposition (Butterfly) */
+	t = (x ^ (x >> 7)) & 0x00AA00AA00AA00AAULL;
+	x = x ^ t ^ (t << 7);
+
+	t = (x ^ (x >> 14)) & 0x0000CCCC0000CCCCULL;
+	x = x ^ t ^ (t << 14);
+
+	t = (x ^ (x >> 28)) & 0x00000000F0F0F0F0ULL;
+	x = x ^ t ^ (t << 28);
+
+	/* Extract the untangled bits for the first two sample planes */
+	*out_bit0 = (u8)(x >> 0);
+	*out_bit1 = (u8)(x >> 8);
 }
 
 static void tascam_decode_capture_chunk(const u8 *src, u32 *dst, int frames_to_decode)
@@ -229,10 +222,10 @@ static void tascam_decode_capture_chunk(const u8 *src, u32 *dst, int frames_to_d
 		tascam_unpack_8bytes(p_src_b + 8, &m[1], &m[3]);
 		tascam_unpack_8bytes(p_src_b + 16, &l[1], &l[3]);
 
-		*dst++ = (h[0] << 24) | (m[0] << 16) | (l[0] << 8);
-		*dst++ = (h[1] << 24) | (m[1] << 16) | (l[1] << 8);
-		*dst++ = (h[2] << 24) | (m[2] << 16) | (l[2] << 8);
-		*dst++ = (h[3] << 24) | (m[3] << 16) | (l[3] << 8);
+		put_unaligned_le32((h[0] << 24) | (m[0] << 16) | (l[0] << 8), dst++);
+		put_unaligned_le32((h[1] << 24) | (m[1] << 16) | (l[1] << 8), dst++);
+		put_unaligned_le32((h[2] << 24) | (m[2] << 16) | (l[2] << 8), dst++);
+		put_unaligned_le32((h[3] << 24) | (m[3] << 16) | (l[3] << 8), dst++);
 	}
 }
 
@@ -318,18 +311,20 @@ void capture_urb_complete(struct urb *urb)
 				need_period_elapsed = true;
 			}
 		}
-		spin_unlock_irqrestore(&tascam->lock, flags);
-
-		if (need_period_elapsed)
-			snd_pcm_period_elapsed(substream);
 	}
 
 	usb_anchor_urb(urb, &tascam->capture_anchor);
 	if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
 		usb_unanchor_urb(urb);
 		atomic_dec(&tascam->active_urbs);
+		spin_unlock_irqrestore(&tascam->lock, flags);
 		return;
 	}
+
+	spin_unlock_irqrestore(&tascam->lock, flags);
+
+	if (need_period_elapsed && substream)
+		snd_pcm_period_elapsed(substream);
 }
 
 const struct snd_pcm_ops tascam_capture_ops = {
