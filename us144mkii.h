@@ -26,14 +26,10 @@
 #define EP_AUDIO_IN 0x86
 
 #define RT_H2D_CLASS_EP (USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_ENDPOINT)
-#define RT_D2H_CLASS_EP (USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_ENDPOINT)
 #define RT_H2D_VENDOR_DEV (USB_DIR_OUT | USB_TYPE_VENDOR | USB_RECIP_DEVICE)
 #define RT_D2H_VENDOR_DEV (USB_DIR_IN | USB_TYPE_VENDOR | USB_RECIP_DEVICE)
 
-enum uac_request {
-	UAC_SET_CUR = 0x01,
-	UAC_GET_CUR = 0x81,
-};
+#define UAC_SET_CUR 0x01
 
 enum uac_control_selector {
 	UAC_SAMPLING_FREQ_CONTROL = 0x0100,
@@ -50,17 +46,6 @@ enum tascam_mode_value {
 	MODE_VAL_STREAM_START = 0x0030,
 };
 
-enum tascam_register {
-	REG_ADDR_INIT_0D = 0x0d04,
-	REG_ADDR_INIT_0E = 0x0e00,
-	REG_ADDR_INIT_0F = 0x0f00,
-	REG_ADDR_RATE_44100 = 0x1000,
-	REG_ADDR_RATE_48000 = 0x1002,
-	REG_ADDR_RATE_88200 = 0x1008,
-	REG_ADDR_RATE_96000 = 0x100a,
-	REG_ADDR_INIT_11 = 0x110b,
-};
-
 #define REG_VAL_ENABLE 0x0101
 
 #define NUM_PLAYBACK_URBS 4
@@ -74,10 +59,7 @@ enum tascam_register {
 #define MIDI_PACKET_SIZE 9
 #define MIDI_PAYLOAD_SIZE 8
 
-#define BYTES_PER_SAMPLE 3
-#define NUM_CHANNELS 4
-
-#define PLAYBACK_FRAME_SIZE (NUM_CHANNELS * BYTES_PER_SAMPLE)
+#define PLAYBACK_FRAME_SIZE 12
 #define MAX_FRAMES_PER_PACKET 13
 
 #define PLL_FILTER_OLD_WEIGHT 3
@@ -93,6 +75,7 @@ enum tascam_register {
  * @card: pointer to the ALSA sound card
  * @pcm: pointer to the ALSA PCM device
  * @rmidi: pointer to the ALSA raw MIDI device
+ * @dev_id: USB Product ID (used to distinguish US-144 from MKII)
  * @scratch_buf: temporary buffer for control messages
  * @playback_substream: pointer to the PCM playback substream
  * @capture_substream: pointer to the PCM capture substream
@@ -116,6 +99,7 @@ enum tascam_register {
  * @lock: spinlock for PCM operations
  * @playback_active: atomic flag indicating if PCM playback is active
  * @capture_active: atomic flag indicating if PCM capture is active
+ * @stream_refs: reference count for implicit stream users (Capture/MIDI)
  * @active_urbs: atomic counter for active URBs
  * @current_rate: current sample rate
  * @playback_frames_consumed: number of frames consumed by the playback device
@@ -140,7 +124,6 @@ struct tascam_card {
 	struct snd_rawmidi *rmidi;
 
 	u16 dev_id;
-
 	u8 *scratch_buf;
 
 	struct snd_pcm_substream *playback_substream;
@@ -169,6 +152,7 @@ struct tascam_card {
 	spinlock_t lock;
 	atomic_t playback_active;
 	atomic_t capture_active;
+	atomic_t stream_refs;
 	atomic_t active_urbs;
 	int current_rate;
 
@@ -193,9 +177,10 @@ struct tascam_card {
 void tascam_free_urbs(struct tascam_card *tascam);
 int tascam_alloc_urbs(struct tascam_card *tascam);
 void tascam_stop_work_handler(struct work_struct *work);
+void us144mkii_maybe_start_stream(struct tascam_card *tascam);
+void us144mkii_maybe_stop_stream(struct tascam_card *tascam);
 
 #include "us144mkii_pcm.h"
-
 int tascam_create_midi(struct tascam_card *tascam);
 
 #endif /* __US144MKII_H */

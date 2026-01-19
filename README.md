@@ -14,7 +14,6 @@ For TASCAM US-122MKII check us122mkii branch.
 *   **MIDI IN/OUT:**
 
 ### 📝 To-Do & Known Limitations
-*   *MIDI IN/OUT works only in active audio streaming(DAW ALSA/JACK or browser audio)
 *   Non MKII US-144 needs testing to see if the driver will work with it.
 
 ## Installation and Usage
