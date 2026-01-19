@@ -128,6 +128,7 @@ enum tascam_register {
  * @freq_q16: current frequency for the playback PLL in Q16.16 format
  * @feedback_synced: flag indicating if feedback is synced
  * @feedback_urb_skip_count: number of feedback URBs to skip at startup
+ * @running_ghost_playback: flag indicating if implicit playback is running
  * @stop_work: work struct for stopping all streams
  * @stop_pcm_work: work struct for stopping PCM streams
  */
@@ -183,6 +184,7 @@ struct tascam_card {
 	u32 freq_q16;
 	bool feedback_synced;
 	unsigned int feedback_urb_skip_count;
+	bool running_ghost_playback;
 
 	struct work_struct stop_work;
 	struct work_struct stop_pcm_work;

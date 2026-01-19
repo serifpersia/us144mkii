@@ -59,6 +59,7 @@ static int tascam_playback_prepare(struct snd_pcm_substream *substream)
 	tascam->playback_frames_consumed = 0;
 	tascam->last_pb_period_pos = 0;
 	tascam->feedback_synced = false;
+	tascam->running_ghost_playback = false;
 
 	tascam->feedback_urb_skip_count = 4;
 
@@ -204,7 +205,6 @@ void playback_urb_complete(struct urb *urb)
 			goto exit_clear;
 
 	substream = tascam->playback_substream;
-	runtime = substream->runtime;
 
 	spin_lock_irqsave(&tascam->lock, flags);
 
@@ -225,34 +225,39 @@ void playback_urb_complete(struct urb *urb)
 	urb->transfer_buffer_length = total_bytes_for_urb;
 
 	if (total_bytes_for_urb > 0) {
-		u8 *dst_buf = urb->transfer_buffer;
-		size_t ptr_bytes = frames_to_bytes(runtime, tascam->driver_playback_pos);
-		frames_to_copy = bytes_to_frames(runtime, total_bytes_for_urb);
+		if (substream) {
+			runtime = substream->runtime;
+			u8 *dst_buf = urb->transfer_buffer;
+			size_t ptr_bytes = frames_to_bytes(runtime, tascam->driver_playback_pos);
+			frames_to_copy = bytes_to_frames(runtime, total_bytes_for_urb);
 
-		if (tascam->driver_playback_pos + frames_to_copy > runtime->buffer_size) {
-			size_t part1 = runtime->buffer_size - tascam->driver_playback_pos;
-			size_t part1_bytes = frames_to_bytes(runtime, part1);
+			if (tascam->driver_playback_pos + frames_to_copy > runtime->buffer_size) {
+				size_t part1 = runtime->buffer_size - tascam->driver_playback_pos;
+				size_t part1_bytes = frames_to_bytes(runtime, part1);
 
-			memcpy(dst_buf, runtime->dma_area + ptr_bytes, part1_bytes);
-			memcpy(dst_buf + part1_bytes, runtime->dma_area, total_bytes_for_urb - part1_bytes);
+				memcpy(dst_buf, runtime->dma_area + ptr_bytes, part1_bytes);
+				memcpy(dst_buf + part1_bytes, runtime->dma_area, total_bytes_for_urb - part1_bytes);
+			} else {
+				memcpy(dst_buf, runtime->dma_area + ptr_bytes, total_bytes_for_urb);
+			}
+
+			tascam->driver_playback_pos += frames_to_copy;
+			if (tascam->driver_playback_pos >= runtime->buffer_size)
+				tascam->driver_playback_pos -= runtime->buffer_size;
+
+			tascam->playback_frames_consumed += frames_to_copy;
+
+			if (div_u64(tascam->playback_frames_consumed, runtime->period_size) > tascam->last_pb_period_pos) {
+				tascam->last_pb_period_pos = div_u64(tascam->playback_frames_consumed, runtime->period_size);
+				need_period_elapsed = true;
+			}
 		} else {
-			memcpy(dst_buf, runtime->dma_area + ptr_bytes, total_bytes_for_urb);
-		}
-
-		tascam->driver_playback_pos += frames_to_copy;
-		if (tascam->driver_playback_pos >= runtime->buffer_size)
-			tascam->driver_playback_pos -= runtime->buffer_size;
-
-		tascam->playback_frames_consumed += frames_to_copy;
-
-		if (div_u64(tascam->playback_frames_consumed, runtime->period_size) > tascam->last_pb_period_pos) {
-			tascam->last_pb_period_pos = div_u64(tascam->playback_frames_consumed, runtime->period_size);
-			need_period_elapsed = true;
+			memset(urb->transfer_buffer, 0, total_bytes_for_urb);
 		}
 	}
 	spin_unlock_irqrestore(&tascam->lock, flags);
 
-	if (need_period_elapsed)
+	if (need_period_elapsed && substream)
 		snd_pcm_period_elapsed(substream);
 
 	usb_anchor_urb(urb, &tascam->playback_anchor);

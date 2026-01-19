@@ -73,7 +73,7 @@ static snd_pcm_uframes_t tascam_capture_pointer(struct snd_pcm_substream *substr
 static int tascam_capture_trigger(struct snd_pcm_substream *substream, int cmd)
 {
 	struct tascam_card *tascam = snd_pcm_substream_chip(substream);
-	int i, ret = 0;
+	int i, u, ret = 0;
 	bool start = false;
 	bool stop = false;
 	unsigned long flags;
@@ -105,6 +105,20 @@ static int tascam_capture_trigger(struct snd_pcm_substream *substream, int cmd)
 			if (tascam->capture_urbs[i])
 				usb_unlink_urb(tascam->capture_urbs[i]);
 		}
+
+		if (tascam->running_ghost_playback) {
+			atomic_set(&tascam->playback_active, 0);
+			tascam->running_ghost_playback = false;
+
+			for (i = 0; i < NUM_PLAYBACK_URBS; i++) {
+				if (tascam->playback_urbs[i])
+					usb_unlink_urb(tascam->playback_urbs[i]);
+			}
+			for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
+				if (tascam->feedback_urbs[i])
+					usb_unlink_urb(tascam->feedback_urbs[i]);
+			}
+		}
 	}
 
 	if (start) {
@@ -120,6 +134,54 @@ static int tascam_capture_trigger(struct snd_pcm_substream *substream, int cmd)
 				break;
 			}
 			atomic_inc(&tascam->active_urbs);
+		}
+
+		if (!atomic_read(&tascam->playback_active)) {
+			atomic_set(&tascam->playback_active, 1);
+			tascam->running_ghost_playback = true;
+			tascam->phase_accum = 0;
+			tascam->freq_q16 = div_u64(((u64)tascam->current_rate << 16), 8000);
+			tascam->feedback_urb_skip_count = 4;
+			tascam->feedback_synced = false;
+
+			for (i = 0; i < NUM_FEEDBACK_URBS; i++) {
+				struct urb *f_urb = tascam->feedback_urbs[i];
+				f_urb->number_of_packets = FEEDBACK_URB_PACKETS;
+				f_urb->transfer_buffer_length = FEEDBACK_URB_PACKETS * FEEDBACK_PACKET_SIZE;
+				for (u = 0; u < FEEDBACK_URB_PACKETS; u++) {
+					f_urb->iso_frame_desc[u].offset = u * FEEDBACK_PACKET_SIZE;
+					f_urb->iso_frame_desc[u].length = FEEDBACK_PACKET_SIZE;
+				}
+				usb_anchor_urb(f_urb, &tascam->feedback_anchor);
+				if (usb_submit_urb(f_urb, GFP_ATOMIC) < 0) {
+					usb_unanchor_urb(f_urb);
+					atomic_dec(&tascam->active_urbs);
+				} else {
+					atomic_inc(&tascam->active_urbs);
+				}
+			}
+
+			size_t nominal_bytes = (tascam->current_rate / 8000) * PLAYBACK_FRAME_SIZE;
+			for (u = 0; u < NUM_PLAYBACK_URBS; u++) {
+				struct urb *urb = tascam->playback_urbs[u];
+				size_t total_bytes = 0;
+				urb->number_of_packets = PLAYBACK_URB_PACKETS;
+				for (i = 0; i < PLAYBACK_URB_PACKETS; i++) {
+					urb->iso_frame_desc[i].offset = i * nominal_bytes;
+					urb->iso_frame_desc[i].length = nominal_bytes;
+					total_bytes += nominal_bytes;
+				}
+				urb->transfer_buffer_length = total_bytes;
+				memset(urb->transfer_buffer, 0, total_bytes);
+
+				usb_anchor_urb(urb, &tascam->playback_anchor);
+				if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
+					usb_unanchor_urb(urb);
+					atomic_dec(&tascam->active_urbs);
+				} else {
+					atomic_inc(&tascam->active_urbs);
+				}
+			}
 		}
 	}
 	return ret;
