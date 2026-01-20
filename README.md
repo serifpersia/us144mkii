@@ -4,17 +4,22 @@ An unofficial ALSA kernel module for the TASCAM US-144MKII & US-144 USB audio in
 
 For TASCAM US-122MKII check us122mkii branch.
 
-## 📢 Project Status
+## Project Status
 
-*--- OLD VERSION --- ✅ **Upstreamed** — This driver has been merged into the [`sound/for-next`](https://git.kernel.org/pub/scm/linux/kernel/git/tiwai/sound.git/log/?h=for-next) branch for inclusion in an upcoming Linux kernel release.
+**Upstream Status**  
+A version of this driver has been merged into the Linux kernel. However, the in-kernel driver
+is **older and lacks fixes and improvements present in this repository**.
 
-### ✅ Implemented Features
-*   **Audio Playback:**
-*   **Audio Capture (Recording):** 
-*   **MIDI IN/OUT:**
+This repository contains the **newest and most complete version** of the driver, with improved
+functionality and fixes not yet available in the upstream kernel.
 
-### 📝 To-Do & Known Limitations
-*   Non MKII US-144 needs testing to see if the driver will work with it.
+### Implemented Features
+- **Audio Playback**
+- **Audio Capture (Recording)**
+- **MIDI IN / OUT**
+
+### Known Limitations
+- Non-MKII US-144 devices need more testing
 
 ## Installation and Usage
 
