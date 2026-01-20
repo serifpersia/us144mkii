@@ -1,3 +1,9 @@
+
+
+## ARCHIVED!!!! My US-144MKI stopped working so I won't develop this any longer. 
+
+## Feel free to fork and improve it yourself.
+
 # ALSA Driver for TASCAM US-144MKII
 
 An unofficial ALSA kernel module for the TASCAM US-144MKII & US-144 USB audio interface.
