@@ -1,12 +1,39 @@
 # ALSA Driver for TASCAM US-144MKII
 
+## ✅ Stable Branch (Recommended)
+
+This is the **most stable and tested version** of the driver.
+
+If you are looking for a working driver, **use this branch**.
+
+---
+
+## 📦 Installation (Quick Start)
+
+```bash
+git clone https://github.com/serifpersia/us144mkii.git
+cd us144mkii
+git checkout stable-us144mkii
+```
+
+---
+
+## 📢 Project Status
+
+* ✔ Stable and tested
+* ✔ Based on last known working version
+* ⚠ No longer actively developed
+
+A version of this driver has been merged upstream into the Linux kernel, but it lacks fixes and improvements present here.
+
+
 An unofficial ALSA kernel module for the TASCAM US-144MKII & US-144 USB audio interface.
 
 For TASCAM US-122MKII check us122mkii branch.
 
 ## 📢 Project Status
 
-*--- OLD VERSION --- ✅ **Upstreamed** — This driver has been merged into the [`sound/for-next`](https://git.kernel.org/pub/scm/linux/kernel/git/tiwai/sound.git/log/?h=for-next) branch for inclusion in an upcoming Linux kernel release.
+*--- OLD VERSION --- ✅ **Upstreamed** — This driver has been merged into the 6.18 kernel release.
 
 ### ✅ Implemented Features
 *   **Audio Playback:**
@@ -15,6 +42,7 @@ For TASCAM US-122MKII check us122mkii branch.
 
 ### 📝 To-Do & Known Limitations
 *   *MIDI IN/OUT works only in active audio streaming(DAW ALSA/JACK or browser audio)
+*   Recording works only in Jack use case, dev branch has fixes for this but lacks fixes for system stablity on system boot
 *   Non MKII US-144 needs testing to see if the driver will work with it.
 
 ## Installation and Usage
@@ -105,6 +133,7 @@ This process will build the module from source and load it for your current sess
 ```bash
 git clone https://github.com/serifpersia/us144mkii.git
 cd us144mkii/
+git checkout stable-us144mkii
 ```
 
 2.  Compile the module:
