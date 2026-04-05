@@ -1,8 +1,30 @@
 
 
-## ARCHIVED!!!! My US-144MKI stopped working so I won't develop this any longer. 
+## ⚠️ PROJECT STATUS: ARCHIVED / DEVELOPMENT ONLY
 
-## Feel free to fork and improve it yourself.
+My US-144MKII stopped working, so **active development has ended**.
+
+This branch (`dev`) is **NOT recommended for use**. Recent commits introduced system instablity on boot with device connected!
+
+---
+
+## ✅ Stable Version (Recommended)
+
+For the most stable and tested version of the driver, use the `stable-us144mkii` branch:
+
+```bash
+git clone https://github.com/serifpersia/us144mkii.git
+cd us144mkii
+git checkout stable-us144mkii
+```
+
+This branch is kept for:
+
+* experimental changes
+* unfinished work
+* reference/history
+
+Feel free to fork and continue development if you're interested.
 
 # ALSA Driver for TASCAM US-144MKII
 
